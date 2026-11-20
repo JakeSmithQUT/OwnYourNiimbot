@@ -1,6 +1,6 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, session, shell, type MenuItemConstructorOptions } from 'electron';
 import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { readLimited } from './files';
+import { readLimited, safeFileName } from './files';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -335,7 +335,7 @@ function registerIpc(): void {
       const bytes = encoding === 'base64' ? Math.floor((data.length * 3) / 4) : Buffer.byteLength(data, 'utf8');
       if (bytes > MAX_OPEN_BYTES) throw new Error('The data is too large to save.');
       const result = await dialog.showSaveDialog(mainWindow, {
-        defaultPath: typeof opts?.defaultName === 'string' ? opts.defaultName : 'label.json',
+        defaultPath: safeFileName(opts?.defaultName, 'label.json'),
         filters: Array.isArray(opts?.filters) ? opts.filters : undefined,
       });
       if (result.canceled || !result.filePath) return false;
