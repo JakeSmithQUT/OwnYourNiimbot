@@ -1,27 +1,10 @@
 import { useState } from 'react';
 import { ClipboardPaste, FileSpreadsheet, Trash2 } from 'lucide-react';
-import Papa from 'papaparse';
 import readXlsxFile from 'read-excel-file';
 import { api, base64ToBytes } from '../api';
 import { appStore, toast } from '../state/app';
 import type { Dataset } from '../editor/template';
-
-function toDataset(name: string, matrix: unknown[][]): Dataset {
-  const rows = matrix
-    .map((r) => r.map((c) => (c === null || c === undefined ? '' : c instanceof Date ? c.toLocaleDateString() : String(c))))
-    .filter((r) => r.some((c) => c.trim() !== ''));
-  if (!rows.length) throw new Error('The file has no data.');
-  if (rows.length > 20001) throw new Error('The file has more than 20,000 rows. Split it into smaller files.');
-  if (rows[0].length > 200) throw new Error('The file has more than 200 columns.');
-  const header = rows[0].map((h, i) => h.trim() || `Column ${i + 1}`);
-  const seen = new Map<string, number>();
-  const columns = header.map((h) => {
-    const n = (seen.get(h) ?? 0) + 1;
-    seen.set(h, n);
-    return n > 1 ? `${h} ${n}` : h;
-  });
-  return { name, columns, rows: rows.slice(1).map((r) => columns.map((_, i) => r[i] ?? '')) };
-}
+import { checkXlsxSize, parseDelimited, toDataset } from '../dataImport';
 
 export async function loadDataFile(): Promise<void> {
   const file = await api.files.open({
@@ -36,12 +19,12 @@ export async function loadDataFile(): Promise<void> {
   let dataset: Dataset;
   if (ext === 'xlsx') {
     const bytes = base64ToBytes(file.data);
+    checkXlsxSize(bytes);
     const rows = await readXlsxFile(new Blob([bytes as BlobPart]));
     dataset = toDataset(file.name, rows as unknown[][]);
   } else {
     const text = new TextDecoder().decode(base64ToBytes(file.data)).replace(/^﻿/, '');
-    const parsed = Papa.parse<string[]>(text, { skipEmptyLines: true, delimiter: ext === 'tsv' ? '\t' : '' });
-    dataset = toDataset(file.name, parsed.data);
+    dataset = toDataset(file.name, parseDelimited(text, ext === 'tsv' ? '\t' : ''));
   }
   appStore.set({ dataset });
   toast(`Loaded ${dataset.rows.length} rows from ${file.name}`, 'success');
@@ -53,9 +36,8 @@ export function DataView() {
 
   const paste = async () => {
     try {
-      const text = await navigator.clipboard.readText();
-      const parsed = Papa.parse<string[]>(text, { skipEmptyLines: true, delimiter: text.includes('\t') ? '\t' : '' });
-      const ds = toDataset('Pasted data', parsed.data);
+      const text = await api.clipboard.readText();
+      const ds = toDataset('Pasted data', parseDelimited(text, text.includes('\t') ? '\t' : ''));
       appStore.set({ dataset: ds });
       toast(`Pasted ${ds.rows.length} rows`, 'success');
     } catch (err) {

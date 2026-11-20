@@ -32,6 +32,54 @@ const COLOUR_PROPS = ['fill', 'stroke', 'backgroundColor', 'textBackgroundColor'
 
 export class LabelFileError extends Error {}
 
+const KINDS = new Set(['text', 'datetime', 'serial', 'image', 'shape', 'icon']);
+const IMAGE_MODES = new Set(['threshold', 'floyd', 'atkinson', 'grey']);
+
+function clampNumber(v: unknown, min: number, max: number, fallback: number): number {
+  return typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback;
+}
+
+/**
+ * Cleans the editor data of an element ("oyn"). Keeps only the keys that the
+ * app uses, with values in safe ranges. The limits are the same as for labels
+ * from AI assistants. Returns undefined if there is no usable data.
+ */
+function cleanEditorData(v: unknown): Record<string, unknown> | undefined {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+  const d = v as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  if (typeof d.kind === 'string' && KINDS.has(d.kind)) out.kind = d.kind;
+  if (typeof d.locked === 'boolean') out.locked = d.locked;
+  if (typeof d.format === 'string') out.format = d.format.slice(0, 40);
+  if (d.offsetDays !== undefined) out.offsetDays = Math.round(clampNumber(d.offsetDays, -36500, 36500, 0));
+  if (typeof d.name === 'string') out.name = d.name.slice(0, 60);
+  if (d.serial && typeof d.serial === 'object' && !Array.isArray(d.serial)) {
+    const s = d.serial as Record<string, unknown>;
+    out.serial = {
+      start: clampNumber(s.start, -1e9, 1e9, 1),
+      step: clampNumber(s.step, -1e6, 1e6, 1),
+      digits: Math.round(clampNumber(s.digits, 1, 12, 4)),
+      prefix: typeof s.prefix === 'string' ? s.prefix.slice(0, 20) : '',
+      suffix: typeof s.suffix === 'string' ? s.suffix.slice(0, 20) : '',
+    };
+  }
+  if (d.original !== undefined) {
+    checkImageSrc(d.original, 'An image');
+    out.original = d.original;
+  }
+  if (d.settings && typeof d.settings === 'object' && !Array.isArray(d.settings)) {
+    const s = d.settings as Record<string, unknown>;
+    out.settings = {
+      mode: typeof s.mode === 'string' && IMAGE_MODES.has(s.mode) ? s.mode : 'floyd',
+      threshold: clampNumber(s.threshold, 0, 255, 128),
+      brightness: clampNumber(s.brightness, -100, 100, 0),
+      contrast: clampNumber(s.contrast, -100, 100, 0),
+      invert: s.invert === true,
+    };
+  }
+  return out;
+}
+
 function fail(msg: string): never {
   throw new LabelFileError(msg);
 }
@@ -71,11 +119,12 @@ function checkObject(o: unknown, depth: number, count: { n: number }): void {
   delete obj.resizeFilter;
   delete obj.styles;
 
-  if (type === 'image') {
-    checkImageSrc(obj.src, 'An image');
-    const extra = obj.oyn as Record<string, unknown> | undefined;
-    if (extra && extra.original !== undefined) checkImageSrc(extra.original, 'An image');
+  if ('oyn' in obj) {
+    const extra = cleanEditorData(obj.oyn);
+    if (extra) obj.oyn = extra;
+    else delete obj.oyn;
   }
+  if (type === 'image') checkImageSrc(obj.src, 'An image');
   if (type === 'labelbarcode') {
     if (typeof obj.value !== 'string' || obj.value.length > 4000) fail('A barcode value is too long.');
     if (typeof obj.format !== 'string' || !/^[a-z0-9-]{2,30}$/i.test(obj.format)) fail('A barcode type is not valid.');
@@ -145,6 +194,7 @@ function validDataset(d: unknown): LabelTemplate['dataset'] {
   const ds = d as Record<string, unknown>;
   if (!Array.isArray(ds.columns) || !Array.isArray(ds.rows) || ds.columns.length > 200 || ds.rows.length > 20000) return undefined;
   if (!ds.columns.every((c) => typeof c === 'string')) return undefined;
-  if (!ds.rows.every((r) => Array.isArray(r) && r.every((c) => typeof c === 'string'))) return undefined;
+  if (!ds.columns.every((c) => (c as string).length <= 4000)) return undefined;
+  if (!ds.rows.every((r) => Array.isArray(r) && r.length <= 200 && r.every((c) => typeof c === 'string' && c.length <= 4000))) return undefined;
   return { name: typeof ds.name === 'string' ? ds.name.slice(0, 200) : 'Data', columns: ds.columns as string[], rows: ds.rows as string[][] };
 }

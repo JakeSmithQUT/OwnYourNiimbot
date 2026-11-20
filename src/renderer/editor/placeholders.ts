@@ -56,7 +56,9 @@ export interface SerialSettings {
 
 export function formatSerial(s: SerialSettings, index: number): string {
   const n = s.start + index * s.step;
-  const body = n < 0 ? `-${String(-n).padStart(s.digits, '0')}` : String(n).padStart(s.digits, '0');
+  // The label file check limits the digits too. This keeps a bad value from making a huge string.
+  const digits = Math.max(1, Math.min(12, Math.floor(Number(s.digits)) || 1));
+  const body = n < 0 ? `-${String(-n).padStart(digits, '0')}` : String(n).padStart(digits, '0');
   return `${s.prefix}${body}${s.suffix}`;
 }
 
