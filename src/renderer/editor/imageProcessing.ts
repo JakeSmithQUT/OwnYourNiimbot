@@ -29,10 +29,15 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
  * Converts an image to black and white at the given size in dots.
  * The result is a PNG data URL with transparent white areas.
  */
+/** Largest side of a processed image, in dots. A 500 mm label at 300 dpi is about 5,900 dots. */
+const MAX_IMAGE_PX = 6000;
+
 export async function processImage(src: string, widthPx: number, heightPx: number, s: ImageSettings): Promise<string> {
   const img = await loadImage(src);
-  const w = Math.max(1, Math.round(widthPx));
-  const h = Math.max(1, Math.round(heightPx));
+  // Keep the aspect ratio when the size is more than the limit.
+  const fit = Math.min(1, MAX_IMAGE_PX / Math.max(1, widthPx, heightPx));
+  const w = Math.max(1, Math.round((Number.isFinite(widthPx) ? widthPx : 1) * fit));
+  const h = Math.max(1, Math.round((Number.isFinite(heightPx) ? heightPx : 1) * fit));
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;

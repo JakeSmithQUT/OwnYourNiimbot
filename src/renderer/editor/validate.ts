@@ -107,6 +107,10 @@ function checkObject(o: unknown, depth: number, count: { n: number }): void {
   if ('fontSize' in obj) finite(obj.fontSize, 'fontSize', 0, 5000);
   if ('width' in obj) finite(obj.width, 'width', 0, 1e5);
   if ('height' in obj) finite(obj.height, 'height', 0, 1e5);
+  // The scaled size counts too. A small image with a large scale would need a very large canvas.
+  // 20,000 units is 2 m, four times the longest label.
+  const scaled = (size: unknown, scale: unknown) => Math.abs(Number(size ?? 0) * Number(scale ?? 1));
+  if (scaled(obj.width, obj.scaleX) > 2e4 || scaled(obj.height, obj.scaleY) > 2e4) fail('An element of the label is too large.');
 
   for (const k of COLOUR_PROPS) {
     if (k in obj && obj[k] !== null && obj[k] !== undefined && typeof obj[k] !== 'string') fail(`${k} must be a colour.`);

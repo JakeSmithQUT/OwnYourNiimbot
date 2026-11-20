@@ -31,6 +31,12 @@ describe('editor data in label files', () => {
     expect((t.canvas.objects![1] as { oyn: unknown }).oyn).toEqual({});
   });
 
+  it('refuses an element that is very large after scaling', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    expect(() => validateTemplate(label([{ type: 'Image', src: png, width: 100, height: 100, scaleX: 1000, scaleY: 1 }]))).toThrow(/too large/);
+    expect(() => validateTemplate(label([{ type: 'Image', src: png, width: 100, height: 100, scaleX: 5, scaleY: 5 }]))).not.toThrow();
+  });
+
   it('formatSerial limits the digits even without the file check', () => {
     expect(formatSerial({ start: 7, step: 1, digits: 1e8, prefix: '', suffix: '' }, 0)).toBe('000000000007');
     expect(formatSerial({ start: 7, step: 1, digits: Number.NaN, prefix: 'A', suffix: '' }, 2)).toBe('A9');
