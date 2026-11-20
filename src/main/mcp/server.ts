@@ -125,7 +125,9 @@ export async function startMcp(config: McpConfig, bridge: ToolBridge, version: s
         await mcp.connect(transport);
         await transport.handleRequest(req, res, body);
       } catch (err) {
-        send(res, 500, (err as Error).message);
+        // Keep internal details, for example file paths, out of the reply.
+        console.error('MCP request failed:', err);
+        send(res, 500, 'The request failed.');
       }
     })().catch(() => undefined);
   });
