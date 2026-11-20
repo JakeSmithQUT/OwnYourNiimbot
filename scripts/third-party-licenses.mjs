@@ -44,5 +44,6 @@ const out = [
   ]),
 ].join('\n');
 
-writeFileSync('THIRD_PARTY_LICENSES.txt', out);
+// Some packages have Windows line endings in their licence files. Use one style.
+writeFileSync('THIRD_PARTY_LICENSES.txt', out.replace(/\r\n?/g, '\n'));
 console.log(`Wrote THIRD_PARTY_LICENSES.txt (${entries.length} packages)`);
