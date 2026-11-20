@@ -64,7 +64,9 @@ function AssistantSettings() {
     }
   };
   // The bridge reads the token from the settings file, so these setups do not contain it.
-  const claudeCodeBridge = `claude mcp add --scope user ownyourniimbot -e ELECTRON_RUN_AS_NODE=1 -- ${quote(cfg.command)} ${quote(cfg.bridge)} --config ${quote(cfg.configFile)}`;
+  // No "--" and no option after the command: PowerShell removes a bare "--", and Command Prompt keeps quotes around "'--'".
+  // With -e at the end, the same command works in PowerShell, Command Prompt and other shells.
+  const claudeCodeBridge = `claude mcp add --scope user ownyourniimbot ${quote(cfg.command)} ${quote(cfg.bridge)} ${quote(cfg.configFile)} -e ELECTRON_RUN_AS_NODE=1`;
   const claudeCodeHttp = async () =>
     `claude mcp add --scope user --transport http ownyourniimbot ${cfg.url} --header "Authorization: Bearer ${await api.mcp.getToken()}"`;
   const desktopJson = JSON.stringify(
@@ -109,7 +111,11 @@ function AssistantSettings() {
           </div>
           {cfg.bridgeAvailable ? (
             <>
-              <CopyBox label="Claude Code command" value={claudeCodeBridge} />
+              <CopyBox
+                label="Claude Code command"
+                value={claudeCodeBridge}
+                hint="Run it one time in a terminal: PowerShell, Command Prompt, or Terminal on macOS and Linux. Then start a new Claude Code session."
+              />
               <CopyBox label="Claude Desktop (claude_desktop_config.json)" value={desktopJson} />
               {!cfg.packaged && <p className="muted">In development, run npm run build first, so that the bridge file exists.</p>}
             </>

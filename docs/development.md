@@ -103,7 +103,9 @@ To test with data that is apart from your own app data, start a development buil
 2. Run `npm run build`, then start the app with `OYN_USER_DATA=<folder> npx electron .`.
 3. Connect an MCP client to `http://127.0.0.1:47899/mcp` with the header `Authorization: Bearer <token>`.
 
-To test the stdio bridge, run `ELECTRON_RUN_AS_NODE=1 npx electron dist/main/mcp-bridge.js --config <folder>/mcp.json` and send JSON-RPC messages on stdin.
+To test the stdio bridge, run `ELECTRON_RUN_AS_NODE=1 npx electron dist/main/mcp-bridge.js <folder>/mcp.json` and send JSON-RPC messages on stdin. The bridge also accepts `--config <folder>/mcp.json`, which earlier versions of the setup used.
+
+The **Claude Code command** in the settings has no `--` and puts `-e` last. PowerShell removes a bare `--` from the arguments, and Command Prompt keeps the quotes around `'--'`. Test a change to this command in PowerShell, Command Prompt and bash.
 
 ## Test the update check
 

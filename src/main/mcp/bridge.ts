@@ -1,7 +1,9 @@
 // Stdio bridge for MCP clients that start a local command, such as Claude
 // Desktop. The app's own executable runs this script in Node mode:
 //
-//   ELECTRON_RUN_AS_NODE=1 <app executable> <path>/mcp-bridge.js --config <path>/mcp.json
+//   ELECTRON_RUN_AS_NODE=1 <app executable> <path>/mcp-bridge.js <path>/mcp.json
+//
+// "--config <path>/mcp.json" also works. Earlier versions of the setup used it.
 //
 // The bridge reads JSON-RPC messages from stdin, sends them to the running
 // app's local endpoint and writes the replies to stdout. It reads the token
@@ -11,6 +13,7 @@
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
+import { configArg } from './bridgeArgs';
 
 interface BridgeConfig {
   enabled: boolean;
@@ -20,8 +23,7 @@ interface BridgeConfig {
 
 type Message = { jsonrpc: '2.0'; id?: string | number | null; method?: string };
 
-const args = process.argv.slice(2);
-const configPath = args[args.indexOf('--config') + 1];
+const configPath = configArg(process.argv.slice(2)) ?? '';
 
 function loadConfig(): BridgeConfig {
   try {
@@ -109,7 +111,7 @@ async function handle(line: string): Promise<void> {
 }
 
 if (!configPath) {
-  process.stderr.write('Usage: mcp-bridge.js --config <path to mcp.json>\n');
+  process.stderr.write('Usage: mcp-bridge.js <path to mcp.json>\n');
   process.exit(2);
 }
 
