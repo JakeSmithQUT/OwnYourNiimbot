@@ -22,6 +22,12 @@ class FakePrinter implements Transport {
 
   /** Paper info to return for 0x59, or undefined to answer "not supported". */
   paperInfo?: number[];
+  /**
+   * Behaves like the H1S: after Page end it prints one more label at each
+   * status poll until Print end, and it always reports a feed progress of 0.
+   */
+  repeatsUntilEnd = false;
+  private running = false;
 
   constructor(private modelId = 4096) {}
 
@@ -73,13 +79,20 @@ class FakePrinter implements Transport {
         case Req.PageEnd:
           if (this.current) {
             this.pages.push(this.current);
-            this.printed += this.current.copies;
+            if (this.repeatsUntilEnd) this.running = true;
+            else this.printed += this.current.copies;
           }
           this.current = undefined;
           this.reply(0xe4, [1]);
           break;
-        case Req.PrintStatus: this.reply(0xb3, [this.printed >> 8, this.printed & 0xff, 100, 100]); break;
-        case Req.PrintEnd: this.reply(0xf4, [1]); break;
+        case Req.PrintStatus:
+          if (this.running) this.printed++;
+          this.reply(0xb3, [this.printed >> 8, this.printed & 0xff, 100, this.repeatsUntilEnd ? 0 : 100]);
+          break;
+        case Req.PrintEnd:
+          this.running = false;
+          this.reply(0xf4, [1]);
+          break;
         case Req.GetPaperInfo:
           if (this.paperInfo) this.reply(0x69, this.paperInfo);
           else this.reply(0x00, [0]);
@@ -152,6 +165,18 @@ describe('print job against a simulated printer', () => {
       expect(fake.commands[fake.commands.length - 1]).toBe(Req.PrintEnd);
     });
   }
+
+  it('ends the job at the label count on a printer that repeats the page (H1S)', async () => {
+    const fake = new FakePrinter(4352);
+    fake.repeatsUntilEnd = true;
+    const client = new NiimbotClient();
+    await client.connect(fake);
+    const image = testImage();
+    await client.print({ pages: [{ image, copies: 2 }, { image, copies: 1 }], density: 2, labelType: 3, variant: 'd110', headDots: 96 });
+    expect(fake.printed).toBe(3);
+    expect(fake.commands[fake.commands.length - 1]).toBe(Req.PrintEnd);
+    await client.disconnect();
+  });
 
   it('stops when the printer reports an error', async () => {
     const fake = new FakePrinter(4096);
