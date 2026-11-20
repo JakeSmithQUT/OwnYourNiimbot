@@ -5,6 +5,8 @@ import { appStore, toast } from '../state/app';
 import { batteryPercent } from '../../printer/client';
 import { AUTO_SHUTDOWN_OPTIONS, LABEL_TYPE_NAMES } from '../../printer/protocol';
 import { defaultVariant, MODELS, PRINT_VARIANTS } from '../../printer/models';
+import { forgetRoll, rollLabel, rollStore } from '../state/roll';
+import { SOURCE_TEXT } from '../components/LabelPicker';
 
 function yesNo(v: boolean | undefined, yes: string, no: string) {
   if (v === undefined) return <span className="muted">Unknown</span>;
@@ -22,6 +24,7 @@ async function run(label: string, fn: () => Promise<unknown>) {
 
 export function PrinterView() {
   const p = usePrinter();
+  const { roll } = rollStore.use();
   const [showLog, setShowLog] = useState(false);
   const [calType, setCalType] = useState(1);
   const logRef = useRef<HTMLDivElement>(null);
@@ -175,6 +178,16 @@ export function PrinterView() {
           <h3>
             <Tag size={16} /> Label roll
           </h3>
+          {roll && (
+            <dl className="kv" style={{ marginBottom: 10 }}>
+              <dt>Label size</dt>
+              <dd>
+                {roll.widthMm && roll.lengthMm ? <strong>{rollLabel(roll)}</strong> : 'Unknown'}
+                {roll.widthMm && roll.lengthMm ? <span className="muted"> (width × length)</span> : null}
+                <div className="muted">{SOURCE_TEXT[roll.source]}{roll.gapMm ? `, gap ${roll.gapMm} mm` : ''}</div>
+              </dd>
+            </dl>
+          )}
           {!rfid ? (
             <p className="muted">The printer did not report label roll data.</p>
           ) : !rfid.present ? (
@@ -194,6 +207,21 @@ export function PrinterView() {
               <dt>Label type</dt>
               <dd>{rfid.type !== undefined ? (LABEL_TYPE_NAMES[rfid.type] ?? rfid.type) : '–'}</dd>
             </dl>
+          )}
+          <div className="btn-row" style={{ marginTop: 12 }}>
+            <button className="btn small" onClick={() => void run('Label roll read again', () => printer.refreshRoll())}>
+              Detect the roll again
+            </button>
+            {roll?.source === 'remembered' && roll.barcode && (
+              <button className="btn small ghost" onClick={() => void forgetRoll(roll.barcode!)}>
+                Forget the saved size
+              </button>
+            )}
+          </div>
+          {p.paperInfoSupported === false && (
+            <p className="muted" style={{ marginBottom: 0 }}>
+              This printer firmware does not report the label size. Select the size once in the design view and save it for the roll.
+            </p>
           )}
         </div>
 

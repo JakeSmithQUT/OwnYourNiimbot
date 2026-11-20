@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
 import { api, newId } from '../api';
 import { appStore, confirmDiscard, newTemplate, openTemplate, toast } from '../state/app';
-import { LABEL_PRESETS, sizeLabel, type LabelTemplate } from '../editor/template';
+import type { LabelTemplate } from '../editor/template';
+import { LabelPicker } from '../components/LabelPicker';
+import { activeModel, usePrinter } from '../state/printer';
+import { rollEditorSize, rollStore } from '../state/roll';
 import { sampleTemplates } from '../editor/samples';
 import { Field, Modal, NumberInput } from '../components/ui';
 
@@ -11,8 +14,18 @@ function formatDate(ms: number): string {
 }
 
 function NewLabelDialog(props: { onClose: () => void }) {
-  const [w, setW] = useState(50);
-  const [h, setH] = useState(30);
+  usePrinter();
+  const model = activeModel();
+  const { roll } = rollStore.use();
+  // The default size in the model table is already in screen orientation.
+  const start = (roll && rollEditorSize(roll)) ?? { widthMm: model.defaultLabelMm.width, heightMm: model.defaultLabelMm.height };
+  const [w, setW] = useState(start.widthMm);
+  const [h, setH] = useState(start.heightMm);
+  const [labelType, setLabelType] = useState<number | undefined>(roll?.labelType);
+  const create = () => {
+    void newTemplate(w, h, labelType);
+    props.onClose();
+  };
   return (
     <Modal
       title="New label"
@@ -22,18 +35,25 @@ function NewLabelDialog(props: { onClose: () => void }) {
           <button className="btn" onClick={props.onClose}>
             Cancel
           </button>
-          <button
-            className="btn primary"
-            onClick={() => {
-              void newTemplate(w, h);
-              props.onClose();
-            }}
-          >
+          <button className="btn primary" onClick={create}>
             Create
           </button>
         </>
       }
     >
+      <Field label={`NIIMBOT roll for the ${model.name}`} hint={roll?.widthMm ? 'The roll in the printer is selected.' : undefined}>
+        <LabelPicker
+          model={model}
+          widthMm={w}
+          heightMm={h}
+          labelType={labelType}
+          onPick={(p) => {
+            setW(p.widthMm);
+            setH(p.heightMm);
+            setLabelType(p.labelType);
+          }}
+        />
+      </Field>
       <div className="field-row">
         <Field label="Width">
           <NumberInput unit="mm" min={5} max={300} value={w} onChange={setW} />
@@ -42,30 +62,6 @@ function NewLabelDialog(props: { onClose: () => void }) {
           <NumberInput unit="mm" min={5} max={500} value={h} onChange={setH} />
         </Field>
       </div>
-      <Field label="Common sizes">
-        <div className="preset-list">
-          {LABEL_PRESETS.map((g) => (
-            <div key={g.group}>
-              <div className="group">{g.group}</div>
-              {g.sizes.map((s) => (
-                <button
-                  key={`${g.group}-${sizeLabel(s)}`}
-                  onDoubleClick={() => {
-                    void newTemplate(s.widthMm, s.heightMm, s.labelType);
-                    props.onClose();
-                  }}
-                  onClick={() => {
-                    setW(s.widthMm);
-                    setH(s.heightMm);
-                  }}
-                >
-                  {sizeLabel(s)}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-      </Field>
     </Modal>
   );
 }

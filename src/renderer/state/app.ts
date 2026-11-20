@@ -15,6 +15,8 @@ export interface Settings {
   gridMm: number;
   snap: boolean;
   densityByModel: Record<string, number>;
+  /** Give a blank label the size of the roll that is loaded in the printer. */
+  autoLabelSize: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -26,6 +28,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gridMm: 0.5,
   snap: true,
   densityByModel: {},
+  autoLabelSize: true,
 };
 
 export interface AppState {
@@ -114,4 +117,21 @@ export async function newTemplate(widthMm: number, heightMm: number, labelType?:
 
 export function confirmDiscard(): boolean {
   return !appStore.get().dirty || window.confirm('The current label has changes that are not saved. Continue and lose the changes?');
+}
+
+/** True when the open label has no elements. */
+export function isTemplateBlank(): boolean {
+  if (editor.canvas) return editor.allObjects().length === 0;
+  return (appStore.get().template.canvas.objects?.length ?? 0) === 0;
+}
+
+/** Changes the size (and optionally the label type) of the open label. */
+export function applyLabelSize(widthMm: number, heightMm: number, labelType?: number): void {
+  const w = Math.round(widthMm * 10) / 10;
+  const h = Math.round(heightMm * 10) / 10;
+  if (editor.canvas) editor.setLabelSize(w, h);
+  const t = appStore.get().template;
+  appStore.set({ template: { ...t, widthMm: w, heightMm: h, labelType: labelType ?? t.labelType } });
+  markDirty();
+  window.dispatchEvent(new Event('oyn-fit'));
 }

@@ -55,6 +55,7 @@ Values are hexadecimal. The response command is the command that the printer sen
 | `27` | Set auto power-off time | 1 = 15 min, 2 = 30 min, 3 = 45 min, 4 = 60 min | `37` |
 | `58` | Sound setting | `01`, sound type (1 = connect, 2 = power), on (1) or off (0) | `68` |
 | `8E` | Label position calibration | label type | `8F` |
+| `59` | Paper information | `01` | `69` (refer to "Label size") |
 
 All 16-bit values are big-endian. A response with data `01` means that the printer accepted the request.
 
@@ -138,6 +139,29 @@ The app sends a row once with a repeat count when the next rows are the same. It
 Narrow printers, for example the D11, D110 and B18, feed the label sideways. The official printer list gives a print direction of 90 or 270 degrees for these models. The app turns the image by this angle before it sends the rows. Each row is then one line across the print head.
 
 The image width must not be more than the print head width. The app crops a wider image. The print head width is the maximum print width in the model table multiplied by the dots per millimetre (8 at 203 dpi, 11.81 at 300 dpi).
+
+## Label size
+
+Newer firmware (protocol version 4 and later) answers the paper information request (`59`) with the size of the loaded roll. Older firmware sends `00` or no response. The app then does not send the request again on that connection.
+
+The response has 18 data bytes. All values are u16 except where the table shows u8.
+
+| Offset | Value |
+|---|---|
+| 0 | Gap (dots) |
+| 2 | Total height (dots) |
+| 4 | Label type (u8) |
+| 5 | Gap (0.1 mm) |
+| 7 | Total height (0.1 mm) |
+| 9 | Width (dots) |
+| 11 | Width (0.1 mm) |
+| 13 | Direction (u8) |
+| 14 | Tail length (dots) |
+| 16 | Tail length (0.1 mm) |
+
+The width is across the print head. The total height is along the feed. On the B21 Pro (model ID 785), the total height includes the gap, so the app subtracts the gap.
+
+The RFID response (`1B`) does not contain the label size. The tag stores the size in an encrypted area that the printer uses for its own calibration.
 
 ## Status packets
 

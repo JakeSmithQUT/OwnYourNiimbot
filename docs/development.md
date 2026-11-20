@@ -78,6 +78,25 @@ git config core.hooksPath .githooks
 
 The installers are not code signed. To sign them, add the certificates as repository secrets and set the electron-builder signing variables in `.github/workflows/release.yml`.
 
+## Update the label roll list
+
+The roll list is in `src/printer/labels.json`. Each entry has these fields:
+
+| Field | Value |
+|---|---|
+| `widthMm` | Width across the print head |
+| `lengthMm` | Length along the feed. For cable labels, include the tail. |
+| `type` | Label type code (1 = gap, 3 = continuous, 5 = transparent) |
+| `shape` | `round` or `cable`, if the label is not a rectangle |
+| `tailMm` | Tail length of a cable label |
+| `series` | Printer series names from `models.json`, or model names |
+| `note` | Short text that shows in the list |
+| `barcodes` | EAN-13 codes that the RFID tag reports for the roll |
+
+The sizes come from the official NIIMBOT store and from retailer product pages. Add a barcode only if two sources agree, or if the barcode comes from an RFID read of the roll. The barcode field on the official store has copy errors.
+
+Run `npm test` after a change. The tests make sure that each series name exists and that no barcode links to two rolls.
+
 ## Add a printer model
 
 If a printer reports a model ID that is not in the table, the **Printer** page shows the ID. To add the model:

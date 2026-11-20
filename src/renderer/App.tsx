@@ -26,6 +26,7 @@ import { PrinterView } from './views/PrinterView';
 import { HistoryView } from './views/HistoryView';
 import { SettingsView } from './views/SettingsView';
 import { PrintDialog } from './components/PrintDialog';
+import { startRollTracking } from './state/roll';
 import { ConnectDialog } from './components/ConnectDialog';
 
 const NAV: { view: View; label: string; icon: typeof PenTool }[] = [
@@ -42,6 +43,7 @@ export function App() {
 
   useEffect(() => {
     void loadSettings();
+    startRollTracking();
     return editor.onContentChange(() => markDirty());
   }, []);
 

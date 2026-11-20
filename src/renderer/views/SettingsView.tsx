@@ -57,6 +57,9 @@ export function SettingsView() {
         <Check checked={settings.flip180} onChange={(flip180) => updateSettings({ flip180 })}>
           Turn every print 180°
         </Check>
+        <Check checked={settings.autoLabelSize} onChange={(autoLabelSize) => updateSettings({ autoLabelSize })}>
+          Give a new, empty label the size of the roll in the printer
+        </Check>
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>

@@ -6,6 +6,8 @@ The app does not need an account or an internet connection. Labels, print histor
 
 ## Features
 
+- Automatic label size. The app finds the size of the roll in the printer and gives a new label that size.
+- A list of the NIIMBOT rolls that fit the selected printer, with the loaded roll at the top.
 - Label editor with text, barcodes, QR codes, Data Matrix, PDF417, Aztec codes, images, rectangles, circles, lines, tables and symbols.
 - Date fields with an optional day offset, for best-before and expiry dates.
 - Serial number fields with a prefix, a suffix, a start value, a step and a fixed number of digits.
@@ -93,6 +95,20 @@ You do not need to pair the printer in the system Bluetooth settings.
 
 Some older models, for example the B3S, also show as a Bluetooth serial port after you pair them in the system settings. Select that port with the same procedure.
 
+## Label size detection
+
+When a printer connects, and each time that you close the cover after you change the roll, the app gets the size of the loaded roll. It uses the first of these sources that has a size:
+
+1. The printer. Newer firmware reads the size from the roll and reports it.
+2. A size that you saved for the roll barcode on this computer.
+3. The roll barcode list in the app.
+
+A new, empty label changes to the roll size. If the open label already has content, the design view shows the roll size and a button to use it. To turn off the automatic change, go to **Settings** and clear **Give a new, empty label the size of the roll in the printer**.
+
+If the app cannot find the size of a roll, select the size in the **NIIMBOT roll** list, then click **Save** under the list. The app uses that size the next time that you load a roll with the same barcode.
+
+The **NIIMBOT roll** list in the design view shows the rolls that fit the printer. The size is shown as on the box: width across the print head, then length. Narrow printers, for example the D110, print sideways. On these printers a 12 × 40 mm roll shows as a 40 × 12 mm label on the screen.
+
 ## Design and print a label
 
 1. On the **Labels** page, click **New label** and select the label size. You can also start from an example.
@@ -130,7 +146,7 @@ Refer to [docs/development.md](docs/development.md) for the project layout, the 
 
 OwnYourNiimbot is an independent project. NIIMBOT did not make, approve or support it. NIIMBOT is a trademark of its owner. The name is used only to identify compatible printers.
 
-The protocol was studied to make the printers work with more computers. This repository contains no code, images, fonts, templates or translations from the official app. The model table contains hardware facts only: model names, model IDs, resolution, print widths, density ranges and label types.
+The protocol was studied to make the printers work with more computers. This repository contains no code, images, fonts, templates or translations from the official app. The model table contains hardware facts only: model names, model IDs, resolution, print widths, density ranges and label types. The roll list contains sizes and retail barcodes from public product listings.
 
 ## Licence
 

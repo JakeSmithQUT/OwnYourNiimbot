@@ -23,6 +23,7 @@ import {
   RotateCw,
   Slash,
   Square,
+  Tag,
   SquareDashed,
   Table,
   Trash2,
@@ -41,6 +42,8 @@ import { ICONS, iconSvg } from '../editor/icons';
 import { oyn } from '../editor/render';
 import { api } from '../api';
 import { pixelsPerMm } from '../../printer/models';
+import { rollEditorSize, rollStore, applyRollSize } from '../state/roll';
+import { SOURCE_TEXT } from '../components/LabelPicker';
 
 export function useEditor(): number {
   return useVersion((fn) => editor.subscribe(fn), () => editor.version);
@@ -176,6 +179,28 @@ function Toolbar() {
   );
 }
 
+function RollSuggestion() {
+  const { suggestion } = rollStore.use();
+  useEditor();
+  if (!suggestion) return null;
+  const size = rollEditorSize(suggestion);
+  if (!size) return null;
+  return (
+    <div className="roll-banner">
+      <Tag size={16} />
+      <span>
+        The printer has {size.widthMm} × {size.heightMm} mm labels loaded ({SOURCE_TEXT[suggestion.source]}). This label is {editor.widthMm} × {editor.heightMm} mm.
+      </span>
+      <button className="btn small primary" onClick={() => applyRollSize(suggestion)}>
+        Use {size.widthMm} × {size.heightMm} mm
+      </button>
+      <button className="btn small ghost" onClick={() => rollStore.set({ suggestion: undefined })}>
+        Keep this size
+      </button>
+    </div>
+  );
+}
+
 function Stage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -250,6 +275,7 @@ function Stage() {
   return (
     <div className="stage-wrap">
       <Toolbar />
+      <RollSuggestion />
       <div className="stage" ref={stageRef}>
         <div className="stage-inner">
           <div className="label-frame" style={{ borderRadius: radiusPx }}>

@@ -9,6 +9,7 @@ import { LABEL_TYPE_NAMES } from '../../printer/protocol';
 import { MODELS, PRINT_VARIANTS, printheadDots, type PrintVariant } from '../../printer/models';
 import type { PrintPage, PrintProgress } from '../../printer/client';
 import { api, newId } from '../api';
+import { rollEditorSize, rollStore } from '../state/roll';
 
 const BUILT_INS = new Set(['date', 'time', 'datetime', 'index']);
 
@@ -52,7 +53,11 @@ export function PrintDialog(props: { onClose: () => void }) {
   const [labelCount, setLabelCount] = useState(1);
   const [copies, setCopies] = useState(1);
   const [density, setDensity] = useState(settings.densityByModel[model.name] ?? model.density.default);
-  const defaultType = model.paperTypes.includes(template.labelType) ? template.labelType : (model.paperTypes[0] ?? 1);
+  const { roll } = rollStore.use();
+  const rollSize = roll ? rollEditorSize(roll) : undefined;
+  const sizeMismatch = rollSize && (Math.abs(rollSize.widthMm - template.widthMm) >= 0.5 || Math.abs(rollSize.heightMm - template.heightMm) >= 0.5);
+  const preferredType = roll?.labelType && model.paperTypes.includes(roll.labelType) ? roll.labelType : template.labelType;
+  const defaultType = model.paperTypes.includes(preferredType) ? preferredType : (model.paperTypes[0] ?? 1);
   const [labelType, setLabelType] = useState(defaultType);
   const [variant, setVariant] = useState<'auto' | PrintVariant>(settings.variant);
   const [flip, setFlip] = useState(settings.flip180);
@@ -235,6 +240,11 @@ export function PrintDialog(props: { onClose: () => void }) {
             <p className="muted" style={{ marginTop: 0 }}>
               Printer: <strong>{connectedModel.name}</strong> on {p.transport?.kind === 'bluetooth' ? 'Bluetooth' : 'USB'}
             </p>
+          )}
+          {sizeMismatch && roll && rollSize && (
+            <div className="notice warn">
+              The printer has {rollSize.widthMm} × {rollSize.heightMm} mm labels loaded. This label is {template.widthMm} × {template.heightMm} mm.
+            </div>
           )}
           {unsupported && (
             <div className="notice warn">

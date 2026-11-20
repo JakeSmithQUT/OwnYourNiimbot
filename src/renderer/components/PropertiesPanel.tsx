@@ -18,9 +18,11 @@ import { listFonts } from '../editor/fonts';
 import { DATE_FORMATS, formatDate, formatSerial, type SerialSettings } from '../editor/placeholders';
 import { DEFAULT_IMAGE_SETTINGS, type ImageMode, type ImageSettings } from '../editor/imageProcessing';
 import { mmToUnits, ptToUnits, unitsToMm, unitsToPt } from '../editor/units';
-import { LABEL_PRESETS, sizeLabel } from '../editor/template';
-import { appStore, markDirty } from '../state/app';
-import { activeModel } from '../state/printer';
+import { appStore, applyLabelSize, markDirty, toast } from '../state/app';
+import { activeModel, usePrinter } from '../state/printer';
+import { rememberRoll, rollStore } from '../state/roll';
+import { physicalSize } from '../../printer/labels';
+import { LabelPicker } from './LabelPicker';
 import { LABEL_TYPE_NAMES } from '../../printer/protocol';
 import { Check, Field, NumberInput, Segmented, TextInput } from './ui';
 
@@ -482,12 +484,9 @@ function TableProps({ obj }: { obj: LabelTable }) {
 function LabelProps() {
   const { template, settings } = appStore.use();
   const model = activeModel();
-  const setSize = (w: number, h: number, labelType?: number) => {
-    editor.setLabelSize(w, h);
-    appStore.set({ template: { ...appStore.get().template, widthMm: w, heightMm: h, labelType: labelType ?? appStore.get().template.labelType } });
-    markDirty();
-    window.dispatchEvent(new Event('oyn-fit'));
-  };
+  const { roll } = rollStore.use();
+  usePrinter();
+  const setSize = (w: number, h: number, labelType?: number) => applyLabelSize(w, h, labelType);
   const setTemplate = (patch: Partial<typeof template>) => {
     appStore.set({ template: { ...appStore.get().template, ...patch } });
     markDirty();
@@ -497,6 +496,29 @@ function LabelProps() {
   return (
     <>
       <div className="section-title">Label</div>
+      <Field label="NIIMBOT roll">
+        <LabelPicker model={model} widthMm={editor.widthMm} heightMm={editor.heightMm} labelType={template.labelType} onPick={(p) => setSize(p.widthMm, p.heightMm, p.labelType)} />
+      </Field>
+      {roll && roll.source === 'unknown' && roll.barcode && (
+        <div className="notice">
+          <div>
+            The loaded roll ({roll.barcode}) has no known size. Select its size, then save it for this roll.
+            <div style={{ marginTop: 8 }}>
+              <button
+                className="btn small"
+                onClick={() => {
+                  const phys = physicalSize(editor.widthMm, editor.heightMm, model);
+                  void rememberRoll(roll.barcode!, phys.widthMm, phys.lengthMm, template.labelType).then(() =>
+                    toast(`Saved ${editor.widthMm} × ${editor.heightMm} mm for roll ${roll.barcode}`, 'success'),
+                  );
+                }}
+              >
+                Save {editor.widthMm} × {editor.heightMm} mm for this roll
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="field-row">
         <Field label="Width">
           <NumberInput unit="mm" min={5} max={300} value={editor.widthMm} onChange={(v) => setSize(v, editor.heightMm)} />
@@ -510,20 +532,6 @@ function LabelProps() {
           The {model.name} prints up to {maxHead} mm across the label. Content outside that width is cut off.
         </div>
       )}
-      <Field label="Common sizes">
-        <div className="preset-list">
-          {LABEL_PRESETS.map((g) => (
-            <div key={g.group}>
-              <div className="group">{g.group}</div>
-              {g.sizes.map((s) => (
-                <button key={`${g.group}-${s.widthMm}-${s.heightMm}-${s.note ?? ''}`} onClick={() => setSize(s.widthMm, s.heightMm, s.labelType)}>
-                  {sizeLabel(s)}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-      </Field>
       <Field label="Label type">
         <select value={template.labelType} onChange={(e) => setTemplate({ labelType: Number(e.target.value) })}>
           {Object.entries(LABEL_TYPE_NAMES).map(([k, v]) => (
