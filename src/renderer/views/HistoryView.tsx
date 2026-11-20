@@ -3,6 +3,7 @@ import { FolderOpen, Printer as PrinterIcon, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { appStore, confirmDiscard, openTemplate } from '../state/app';
 import type { HistoryEntry } from '../components/PrintDialog';
+import { isPreview } from '../editor/validate';
 
 export function HistoryView() {
   const [items, setItems] = useState<HistoryEntry[]>([]);
@@ -18,8 +19,8 @@ export function HistoryView() {
 
   const open = async (h: HistoryEntry, print: boolean) => {
     if (!confirmDiscard()) return;
-    await openTemplate({ ...h.template, thumbnail: h.thumbnail });
-    if (print) appStore.set({ printOpen: true });
+    const opened = await openTemplate({ ...h.template, thumbnail: h.thumbnail });
+    if (opened && print) appStore.set({ printOpen: true });
   };
 
   const remove = async (h: HistoryEntry) => {
@@ -54,7 +55,7 @@ export function HistoryView() {
         <div className="card" style={{ padding: 0 }}>
           {items.map((h) => (
             <div key={h.id} className="history-row">
-              {h.thumbnail ? <img src={h.thumbnail} alt="" /> : <div style={{ width: 72 }} />}
+              {isPreview(h.thumbnail) ? <img src={h.thumbnail} alt="" /> : <div style={{ width: 72 }} />}
               <div className="info">
                 <strong>{h.name}</strong>
                 <span className="muted">

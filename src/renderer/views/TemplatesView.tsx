@@ -3,6 +3,7 @@ import { Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
 import { api, newId } from '../api';
 import { appStore, confirmDiscard, newTemplate, openTemplate, toast } from '../state/app';
 import type { LabelTemplate } from '../editor/template';
+import { isPreview, validateTemplate } from '../editor/validate';
 import { LabelPicker } from '../components/LabelPicker';
 import { activeModel, usePrinter } from '../state/printer';
 import { rollEditorSize, rollStore } from '../state/roll';
@@ -109,8 +110,7 @@ export function TemplatesView() {
     if (!file) return;
     try {
       const parsed = JSON.parse(file.data);
-      const t: LabelTemplate = parsed.template ?? parsed;
-      if (!t.canvas || !t.widthMm || !t.heightMm) throw new Error('This file is not a label file.');
+      const t = validateTemplate(parsed?.template ?? parsed);
       const copy = { ...t, id: newId(), updatedAt: Date.now() };
       await api.store.put('templates', copy.id, copy);
       await reload();
@@ -150,7 +150,7 @@ export function TemplatesView() {
         <div className="template-grid">
           {items.map((t) => (
             <div key={t.id} className="template-card" onClick={() => open(t)}>
-              <div className="thumb">{t.thumbnail ? <img src={t.thumbnail} alt="" /> : <span className="muted">No preview</span>}</div>
+              <div className="thumb">{isPreview(t.thumbnail) ? <img src={t.thumbnail} alt="" /> : <span className="muted">No preview</span>}</div>
               <div className="meta" onClick={(e) => e.stopPropagation()}>
                 <div style={{ flex: 1, minWidth: 0 }} onClick={() => open(t)}>
                   <div className="name">{t.name}</div>

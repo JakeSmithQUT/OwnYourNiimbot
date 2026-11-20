@@ -135,8 +135,8 @@ export function LibraryView() {
   const open = async (design: TemplateDesign, [w, h]: Size) => {
     if (!confirmDiscard()) return;
     const t = await buildTemplate(design, w, h);
-    await openTemplate({ ...t, id: '', createdAt: Date.now(), updatedAt: Date.now() });
-    if (design.sampleData) {
+    const opened = await openTemplate({ ...t, id: '', createdAt: Date.now(), updatedAt: Date.now() });
+    if (opened && design.sampleData) {
       const have = new Set((dataset?.columns ?? []).map((c) => c.toLowerCase()));
       if (!design.sampleData.columns.every((c) => have.has(c.toLowerCase()))) {
         appStore.set({ dataset: design.sampleData });

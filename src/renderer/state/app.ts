@@ -2,6 +2,7 @@ import { api, newId } from '../api';
 import { createStore } from './store';
 import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/template';
 import { editor } from '../editor/EditorController';
+import { validateTemplate } from '../editor/validate';
 import type { PrintVariant } from '../../printer/models';
 
 export type View = 'design' | 'library' | 'templates' | 'data' | 'printer' | 'history' | 'settings';
@@ -104,9 +105,18 @@ export async function saveTemplate(): Promise<LabelTemplate> {
   return t;
 }
 
-export async function openTemplate(t: LabelTemplate): Promise<void> {
-  appStore.set({ template: t, dirty: false, dataset: t.dataset ?? appStore.get().dataset, view: 'design' });
-  await editor.load(t.canvas, t.widthMm, t.heightMm);
+/** Opens a label in the design view. Labels from files or the data folder are checked first. */
+export async function openTemplate(t: LabelTemplate): Promise<boolean> {
+  let safe: LabelTemplate;
+  try {
+    safe = validateTemplate(t);
+  } catch (err) {
+    toast(`This label cannot be opened. ${(err as Error).message}`, 'error');
+    return false;
+  }
+  appStore.set({ template: safe, dirty: false, dataset: safe.dataset ?? appStore.get().dataset, view: 'design' });
+  await editor.load(safe.canvas, safe.widthMm, safe.heightMm);
+  return true;
 }
 
 export async function newTemplate(widthMm: number, heightMm: number, labelType?: number): Promise<void> {

@@ -218,9 +218,12 @@ export class LabelTable extends FabricObject {
 
   constructor(options: Partial<LabelTableProps & FabricObjectProps> = {}) {
     super(options);
-    this.rows = options.rows ?? 3;
-    this.cols = options.cols ?? 2;
-    this.cells = options.cells?.map((r) => [...r]) ?? Array.from({ length: this.rows }, () => Array.from({ length: this.cols }, () => ''));
+    // Sizes come from label files too, so keep them in range.
+    this.rows = Math.max(1, Math.min(30, Math.round(Number(options.rows) || 3)));
+    this.cols = Math.max(1, Math.min(12, Math.round(Number(options.cols) || 2)));
+    this.cells = Array.from({ length: this.rows }, (_, r) =>
+      Array.from({ length: this.cols }, (_, c) => String(options.cells?.[r]?.[c] ?? '').slice(0, 1000)),
+    );
     this.colRatios = normaliseRatios(options.colRatios, this.cols);
     this.rowRatios = normaliseRatios(options.rowRatios, this.rows);
     this.fontFamily = options.fontFamily ?? 'Arial';

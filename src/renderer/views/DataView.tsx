@@ -11,6 +11,8 @@ function toDataset(name: string, matrix: unknown[][]): Dataset {
     .map((r) => r.map((c) => (c === null || c === undefined ? '' : c instanceof Date ? c.toLocaleDateString() : String(c))))
     .filter((r) => r.some((c) => c.trim() !== ''));
   if (!rows.length) throw new Error('The file has no data.');
+  if (rows.length > 20001) throw new Error('The file has more than 20,000 rows. Split it into smaller files.');
+  if (rows[0].length > 200) throw new Error('The file has more than 200 columns.');
   const header = rows[0].map((h, i) => h.trim() || `Column ${i + 1}`);
   const seen = new Map<string, number>();
   const columns = header.map((h) => {
