@@ -4,6 +4,8 @@ OwnYourNiimbot is a desktop app to design and print labels on NIIMBOT label prin
 
 The app does not need an account or an internet connection. Labels, print history and settings stay on your computer.
 
+![The design view with a 50 × 30 mm service record label. The insert tools and symbols are on the left. The label size, roll and type are on the right.](docs/images/editor.png)
+
 ## Features
 
 - A template library with 105 designs in 632 sizes, which you can filter by the connected printer and the loaded roll.
@@ -12,6 +14,7 @@ The app does not need an account or an internet connection. Labels, print histor
 - Automatic label size. The app finds the size of the roll in the printer and gives a new label that size.
 - A list of the NIIMBOT rolls that fit the selected printer, with the loaded roll at the top.
 - Label editor with text, barcodes, QR codes, Data Matrix, PDF417, Aztec codes, images, rectangles, circles, lines, tables and symbols.
+- Replace an element with a different type. Right-click the element, then select **Replace with**. For example, change a QR code to an image. The new element keeps the position, size and rotation, and the text or code value where possible.
 - Date fields with an optional day offset, for best-before and expiry dates.
 - Serial number fields with a prefix, a suffix, a start value, a step and a fixed number of digits.
 - Batch printing from Excel (.xlsx), CSV and TSV files, or from a table that you paste. Put a column on a label as a field, for example `{{Name}}`.
