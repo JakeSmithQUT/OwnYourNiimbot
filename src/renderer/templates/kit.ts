@@ -17,7 +17,12 @@ export type Category =
   | 'Shipping and storage'
   | 'Electrical and workshop'
   | 'Lab and health'
-  | 'School and events';
+  | 'School and events'
+  | 'Garden and pets'
+  | 'Hobbies and collections'
+  | 'Travel and vehicles'
+  | 'Safety and signs'
+  | 'Celebrations and seasons';
 
 export const CATEGORIES: Category[] = [
   'IT and servers',
@@ -32,6 +37,11 @@ export const CATEGORIES: Category[] = [
   'Electrical and workshop',
   'Lab and health',
   'School and events',
+  'Garden and pets',
+  'Hobbies and collections',
+  'Travel and vehicles',
+  'Safety and signs',
+  'Celebrations and seasons',
 ];
 
 export type Size = [number, number];

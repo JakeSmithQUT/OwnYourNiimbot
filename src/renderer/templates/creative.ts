@@ -871,7 +871,7 @@ const TECH: TemplateDesign[] = [
         ...text(brand, 'NORTH & PINE', { font: F.sans, bold: true, align: 'center', spacing: 260 }),
         ...text(name, 'Hand cream', { font: F.serif, italic: true, align: 'center' }),
         ...text(size, '75 ML', { font: F.sans, align: 'center', spacing: 120 }),
-        ...barcode(code, '9300000000001', 'ean13'),
+        ...barcode(code, '9300000000002', 'ean13'),
       ];
     },
   },

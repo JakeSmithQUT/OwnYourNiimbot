@@ -41,6 +41,9 @@ import {
   type TemplateDesign,
 } from './kit';
 import { CREATIVE } from './creative';
+import { PRACTICAL } from './practical';
+import { OCCASIONS } from './occasions';
+import { MAKERS } from './makers';
 
 export { CATEGORIES, type Category, type Size, type TemplateDesign } from './kit';
 
@@ -694,7 +697,7 @@ const FOOD: TemplateDesign[] = [
         ...text(wt, 'Net 250 g'),
         ...text(cols(bb, [1.3, 1], 0.5)[0], 'Best before', { align: 'right' }),
         ...date(cols(bb, [1.3, 1], 0.5)[1], 'DD/MM/YY', 60, { bold: true, align: 'right' }),
-        ...barcode(code, '9300000000001', 'ean13'),
+        ...barcode(code, '9300000000002', 'ean13'),
       ];
     },
   },
@@ -725,10 +728,10 @@ const RETAIL: TemplateDesign[] = [
       const a = area(w, h);
       if (h <= 22) {
         const [left, right] = cols(a, [1.2, 1], 1);
-        return [...stack(left, [{ t: 'Ceramic mug', bold: true }, { t: '$12.95', bold: true, weight: 1.8 }], 0.3), ...barcode(right, '9300000000001', 'ean13', true, 5)];
+        return [...stack(left, [{ t: 'Ceramic mug', bold: true }, { t: '$12.95', bold: true, weight: 1.8 }], 0.3), ...barcode(right, '9300000000002', 'ean13', true, 5)];
       }
       const [name, price, code] = rows(a, [1, 1.8, 1.6], 0.5);
-      return [...text(name, 'Ceramic mug, 350 ml', { bold: true }), ...text(price, '$12.95', { bold: true }), ...barcode(code, '9300000000001', 'ean13')];
+      return [...text(name, 'Ceramic mug, 350 ml', { bold: true }), ...text(price, '$12.95', { bold: true }), ...barcode(code, '9300000000002', 'ean13')];
     },
   },
   {
@@ -1081,7 +1084,22 @@ const SCHOOL: TemplateDesign[] = [
   },
 ];
 
-export const DESIGNS: TemplateDesign[] = [...IT, ...NETWORK, ...OFFICE, ...HOME, ...FOOD, ...RETAIL, ...SHIPPING, ...WORKSHOP, ...LAB, ...SCHOOL, ...CREATIVE];
+/** Size sets can overlap, for example the round rolls and the squares both have 50 × 50 mm. Each size shows one time. */
+function uniqueSizes(design: TemplateDesign): TemplateDesign {
+  const sizes = design.sizes.filter(([w, h], i) => design.sizes.findIndex(([a, b]) => a === w && b === h) === i);
+  return sizes.length === design.sizes.length ? design : { ...design, sizes };
+}
+
+export const DESIGNS: TemplateDesign[] = [...IT, ...NETWORK, ...OFFICE, ...HOME, ...FOOD, ...RETAIL, ...SHIPPING, ...WORKSHOP, ...LAB, ...SCHOOL, ...CREATIVE, ...PRACTICAL, ...MAKERS, ...OCCASIONS].map(uniqueSizes);
+
+// The assistant tools and the thumbnail cache find a design by its ID, so two designs must not share one.
+if (import.meta.env.DEV) {
+  const seen = new Set<string>();
+  for (const design of DESIGNS) {
+    if (seen.has(design.id)) console.error(`Two templates have the ID "${design.id}".`);
+    seen.add(design.id);
+  }
+}
 
 /** True when this design is a round label at this size. */
 export function isRoundSize(d: TemplateDesign, w: number, h: number): boolean {

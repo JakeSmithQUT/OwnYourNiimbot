@@ -6,11 +6,11 @@
 /** Pixels per millimetre for the SVG canvas. Higher than any print head. */
 const PX = 24;
 
-function svg(w: number, h: number, body: string): string {
+export function svg(w: number, h: number, body: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(w * PX)}" height="${Math.round(h * PX)}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
 }
 
-const n = (v: number) => Number(v.toFixed(3));
+export const n = (v: number) => Number(v.toFixed(3));
 
 /** Rounded frame, optionally with a second thin frame inside it. */
 export function frame(w: number, h: number, o: { stroke?: number; radius?: number; inner?: number; innerStroke?: number } = {}): string {
