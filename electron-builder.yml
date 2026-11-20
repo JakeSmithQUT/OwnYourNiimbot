@@ -34,9 +34,9 @@ win:
   icon: build/icon.png
 
 nsis:
-  oneClick: false
+  # One click, like Discord: an update shows a small window with the install progress.
+  oneClick: true
   perMachine: false
-  allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: OwnYourNiimbot

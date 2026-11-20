@@ -9,7 +9,7 @@ import { app, Notification } from 'electron';
 import { autoUpdater, type ProgressInfo, type UpdateInfo } from 'electron-updater';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { installAtLaunch, isNewerVersion, releaseUrl, updateMode, type UpdateMode } from './updateRules';
+import { inProgramFiles, installAtLaunch, isNewerVersion, releaseUrl, updateMode, type UpdateMode } from './updateRules';
 
 /** Time for the check before the app opens. A slow or missing connection must not keep the app closed. */
 const LAUNCH_CHECK_MS = 6000;
@@ -113,6 +113,9 @@ export async function startUpdates(notify: (s: UpdateStatus) => void): Promise<v
     portable: process.env.PORTABLE_EXECUTABLE_FILE,
     appImage: process.env.APPIMAGE,
     testFeed,
+    allUsers:
+      process.platform === 'win32' &&
+      inProgramFiles(process.execPath, [process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.ProgramW6432]),
   });
   const current = app.getVersion();
   const updatedFrom = config.lastVersion && isNewerVersion(current, config.lastVersion) ? config.lastVersion : undefined;
@@ -238,10 +241,11 @@ export async function setCheckOnLaunch(value: boolean): Promise<UpdateStatus> {
 }
 
 /**
- * Closes the app and installs the downloaded update. The installer has no
- * window, so a notification says what happens. The app opens again after the
- * install. Returns false when there is nothing to install. A test feed never
- * installs anything.
+ * Closes the app and installs the downloaded update. The app opens again after
+ * the install. On Windows the one-click installer shows a small window with
+ * the install progress until it starts the app again. The AppImage has no
+ * window, so a notification says what happens. Returns false when there is
+ * nothing to install. A test feed never installs anything.
  */
 export function installUpdate(): boolean {
   if (status.mode !== 'install' || status.state !== 'ready') return false;
@@ -249,17 +253,18 @@ export function installUpdate(): boolean {
     console.log(`Test feed: version ${status.version} is ready. A test does not install it.`);
     return false;
   }
-  if (Notification.isSupported()) {
+  const windows = process.platform === 'win32';
+  if (!windows && Notification.isSupported()) {
     new Notification({
       title: `Installing OwnYourNiimbot ${status.version}`,
-      body: 'OwnYourNiimbot opens again when the update is installed. This takes about half a minute.',
+      body: 'OwnYourNiimbot opens again when the update is installed.',
       silent: true,
     }).show();
   }
   // Record the attempt, so that a failed install does not start again at each start of the app.
   config = { ...config, installTried: status.version };
   const saved = saveConfig().catch(() => undefined);
-  // Give the notification and the update window a moment to show.
-  setTimeout(() => void saved.then(() => autoUpdater.quitAndInstall(true, true)), 1200);
+  // Give the update window a moment to show "Installing". Not silent on Windows, so that the installer shows its progress.
+  setTimeout(() => void saved.then(() => autoUpdater.quitAndInstall(!windows, true)), 1200);
   return true;
 }

@@ -63,6 +63,8 @@ To make sure that a download is complete and not changed, compare its SHA-256 ch
 2. If Windows SmartScreen shows "Windows protected your PC", click **More info**.
 3. Click **Run anyway**.
 
+The installer has no questions. It installs the app for your Windows user in `%LOCALAPPDATA%\Programs`, adds a Start menu and a desktop shortcut, then opens the app.
+
 ### Open the app on macOS
 
 1. Open the disk image and drag OwnYourNiimbot to the Applications folder.
@@ -294,6 +296,7 @@ The app checks the [Releases](https://github.com/JakeSmithQUT/OwnYourNiimbot/rel
 | Linux AppImage | The same as the Windows installer. |
 | macOS | A bar shows a link to the new release. Download and install it as in [Download](#download). macOS does not let an app that is not code signed replace itself. |
 | Windows portable app, Linux .deb | A bar shows a link to the new release. |
+| Windows, installed for all users in Program Files | A bar shows a link to the new release. The installer now installs for one user only, so it cannot replace this installation. To get updates again, uninstall the app, then install the new version. |
 
 ### Update window
 
@@ -301,7 +304,7 @@ When the app starts, a small window shows the update check before the main windo
 
 1. The window shows **Checking for updates**. If there is no new version, the main window opens. If GitHub does not answer in 6 seconds, the main window opens and the check continues.
 2. If there is a new version, the window shows the download progress: the percentage, the megabytes downloaded and the download speed.
-3. When the download is complete, the app checks the SHA-512 checksum of the update. Then the app closes, installs the update and opens again. A notification tells you that the update is installing. This takes about half a minute.
+3. When the download is complete, the app checks the SHA-512 checksum of the update. Then the app closes, and a small installer window shows the progress of the install. The installer window stays open until the app opens again. This takes about half a minute.
 4. When the app opens again, a bar shows the new version. Click **What's new** to read the release notes.
 
 To use the app while the update downloads, click **Start without updating**. The main window opens and the download continues in a bar at the top of the window. When the update is ready, a green **Restart to update** button shows in the top bar. Click it, or close the app to install the update. If the open label has changes that are not saved, the app saves the label before it restarts.

@@ -9,16 +9,24 @@ export type UpdateMode = 'install' | 'notify' | 'none';
  * The Windows installer and the AppImage can install an update. macOS cannot,
  * because the app is not code signed. The portable Windows app and the .deb
  * package cannot replace themselves, so they show a link to the release.
+ * An installation for all users (in Program Files) also shows a link: the
+ * installer installs for the current user only, so it cannot replace it.
  * A development build checks only when a test feed is set.
  */
-export function updateMode(o: { packaged: boolean; platform: string; portable?: string; appImage?: string; testFeed?: string }): UpdateMode {
+export function updateMode(o: {
+  packaged: boolean;
+  platform: string;
+  portable?: string;
+  appImage?: string;
+  testFeed?: string;
+  allUsers?: boolean;
+}): UpdateMode {
   if (!o.packaged) return o.testFeed ? 'install' : 'none';
-  if (o.platform === 'win32') return o.portable ? 'notify' : 'install';
+  if (o.platform === 'win32') return o.portable || o.allUsers ? 'notify' : 'install';
   if (o.platform === 'linux') return o.appImage ? 'install' : 'notify';
   return 'notify';
 }
 
-/** True when version `a` is newer than version `b`, for plain x.y.z version numbers. */
 /**
  * True when the app can install this version at start-up. False when the app
  * tried to install the same version before and still runs: that install
@@ -28,6 +36,16 @@ export function installAtLaunch(version: string | undefined, triedVersion: strin
   return Boolean(version) && version !== triedVersion;
 }
 
+/**
+ * True when the app runs from a Program Files folder, where the installer put
+ * it for all users. `folders` are the values of the ProgramFiles variables.
+ */
+export function inProgramFiles(execPath: string, folders: (string | undefined)[]): boolean {
+  const path = execPath.toLowerCase();
+  return folders.some((f) => Boolean(f) && path.startsWith(`${f!.toLowerCase().replace(/\\+$/, '')}\\`));
+}
+
+/** True when version `a` is newer than version `b`, for plain x.y.z version numbers. */
 export function isNewerVersion(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
   const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0);

@@ -125,7 +125,7 @@ To test **Start without updating**, click it while the update downloads. The mai
 
 `OYN_SMOKE_TEST=1` skips the update window.
 
-The Windows installer runs `build/installer.nsh` after it installs the files. It points the Start menu and desktop shortcuts at the installed app again, and it starts the app after an update from its own file, not through a shortcut. An update moves the old files to a temporary folder before it deletes them. A file that is in use, for example `OwnYourNiimbot.exe` of an AI assistant bridge, stays in that folder, and Windows can change the shortcuts to point at it. To test a change to this file, run the new installer with `--updated /S --force-run` while a copy of the installed app runs with `ELECTRON_RUN_AS_NODE=1`.
+The Windows installer runs `build/installer.nsh` after it installs the files. It points the Start menu and desktop shortcuts at the installed app again. Then it starts the app from its own file, not through a shortcut, and keeps the installer window open until the app shows a window. The first start after an install can take several seconds while Windows checks the new files. An update moves the old files to a temporary folder before it deletes them. A file that is in use, for example `OwnYourNiimbot.exe` of an AI assistant bridge, stays in that folder, and Windows can change the shortcuts to point at it. The installer is a one-click installer. An update runs it without `/S`, so that it shows its progress window. To test a change to this file, run the new installer with `--updated --force-run` (the arguments of an update) while a copy of the installed app runs with `ELECTRON_RUN_AS_NODE=1`.
 
 ## Release procedure
 

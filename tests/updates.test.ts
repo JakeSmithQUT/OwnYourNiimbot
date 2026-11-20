@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMegabytes, formatSpeed, installAtLaunch, isNewerVersion, releaseUrl, updateMode } from '../src/main/updateRules';
+import { formatMegabytes, formatSpeed, inProgramFiles, installAtLaunch, isNewerVersion, releaseUrl, updateMode } from '../src/main/updateRules';
 import { isAllowedExternal } from '../src/main/links';
 
 describe('update check', () => {
@@ -9,6 +9,16 @@ describe('update check', () => {
     expect(updateMode({ packaged: true, platform: 'linux', appImage: '/home/me/OwnYourNiimbot.AppImage' })).toBe('install');
     expect(updateMode({ packaged: true, platform: 'linux' })).toBe('notify');
     expect(updateMode({ packaged: true, platform: 'darwin' })).toBe('notify');
+  });
+
+  it('shows a link instead of installing for an installation for all users', () => {
+    expect(updateMode({ packaged: true, platform: 'win32', allUsers: true })).toBe('notify');
+    const folders = ['C:\\Program Files', 'C:\\Program Files (x86)', undefined];
+    expect(inProgramFiles('C:\\Program Files\\OwnYourNiimbot\\OwnYourNiimbot.exe', folders)).toBe(true);
+    expect(inProgramFiles('c:\\program files (x86)\\OwnYourNiimbot\\OwnYourNiimbot.exe', folders)).toBe(true);
+    expect(inProgramFiles('C:\\Users\\me\\AppData\\Local\\Programs\\OwnYourNiimbot\\OwnYourNiimbot.exe', folders)).toBe(false);
+    expect(inProgramFiles('C:\\Program Files Old\\OwnYourNiimbot.exe', ['C:\\Program Files'])).toBe(false);
+    expect(inProgramFiles('C:\\Apps\\OwnYourNiimbot.exe', [undefined])).toBe(false);
   });
 
   it('does not check in a development build without a test feed', () => {
