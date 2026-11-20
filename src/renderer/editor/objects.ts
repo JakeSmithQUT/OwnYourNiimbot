@@ -1,6 +1,11 @@
 import { classRegistry, FabricObject, type FabricObjectProps } from 'fabric';
 import { toCanvas } from 'bwip-js/browser';
 
+// Fabric 7 changed the default origin to the centre of the object. The editor,
+// the properties panel and saved labels use the top-left corner as the position.
+FabricObject.ownDefaults.originX = 'left';
+FabricObject.ownDefaults.originY = 'top';
+
 export interface BarcodeFormat {
   id: string;
   label: string;
