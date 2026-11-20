@@ -1,0 +1,57 @@
+{
+  "name": "ownyourniimbot",
+  "productName": "OwnYourNiimbot",
+  "version": "1.0.0",
+  "description": "Offline desktop label designer and print tool for NIIMBOT label printers",
+  "author": "Jake Smith",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/main/main.js",
+  "homepage": "https://github.com/JakeSmithQUT/OwnYourNiimbot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JakeSmithQUT/OwnYourNiimbot.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run typecheck && vite build --config vite.config.mts && node scripts/build-main.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vite.config.mts",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "icon": "node scripts/make-icon.mjs",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder --publish never",
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/w3c-web-serial": "^1.0.9",
+    "@types/web-bluetooth": "^0.0.22",
+    "@vitejs/plugin-react": "^6.3.0",
+    "bwip-js": "^4.11.4",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2",
+    "fabric": "^6.9.1",
+    "lucide-react": "^1.76.0",
+    "papaparse": "^5.7.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "read-excel-file": "^5.8.8",
+    "typescript": "~5.9",
+    "vite": "^8.3.8",
+    "vitest": "^4.1.12"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "electron-winstaller": false
+  }
+}

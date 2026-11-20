@@ -1,0 +1,32 @@
+# Dependencies and build output
+node_modules/
+dist/
+release/
+*.tsbuildinfo
+*.log
+
+# Official app packages and reverse engineering output. Never commit these.
+*.apk
+*.apks
+*.xapk
+*.aab
+*.dex
+*.smali
+re/
+decompiled/
+jadx*/
+apktool*/
+
+# Local secrets and environment
+.env
+.env.*
+*.pem
+*.p12
+*.pfx
+*.keystore
+
+# Editor and tool folders
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
