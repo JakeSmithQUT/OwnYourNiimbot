@@ -16,6 +16,7 @@
 | `npm run build` | Builds the interface to `dist/renderer` and the main process to `dist/main`. |
 | `npm start` | Opens the built app. |
 | `npm run dist` | Builds the installers for the current system to `release/`. |
+| `npm run install:local` | Windows only. Builds the x64 installer, installs it for the current user and makes sure that the installed app starts. Close the app first, or add `-- --force` to close it. |
 | `npm run check:secrets` | Checks the tracked files for keys, tokens and app packages. |
 
 ## Project layout
