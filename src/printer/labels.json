@@ -1,0 +1,1134 @@
+[
+ {
+  "widthMm": 12,
+  "lengthMm": 22,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743558",
+   "6971501224551"
+  ]
+ },
+ {
+  "widthMm": 12,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6971501224568",
+   "6972842743565",
+   "6971501229778"
+  ]
+ },
+ {
+  "widthMm": 12,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743572",
+   "6972842743688"
+  ]
+ },
+ {
+  "widthMm": 12,
+  "lengthMm": 75,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6975746632041"
+  ]
+ },
+ {
+  "widthMm": 13,
+  "lengthMm": 35,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "note": "glow in the dark",
+  "barcodes": [
+   "6975746633697"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 25,
+  "type": 5,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743848"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 28,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "note": "round labels, 13 mm",
+  "barcodes": [
+   "6975746633703"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6975746635707"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 30,
+  "type": 5,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743725"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 40,
+  "type": 5,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ]
+ },
+ {
+  "widthMm": 15,
+  "lengthMm": 26,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6971501224582"
+  ]
+ },
+ {
+  "widthMm": 15,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743589",
+   "6971501224599"
+  ]
+ },
+ {
+  "widthMm": 15,
+  "lengthMm": 50,
+  "type": 1,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743596",
+   "6971501224605"
+  ]
+ },
+ {
+  "widthMm": 12.5,
+  "lengthMm": 109,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 35,
+  "series": [
+   "D11",
+   "D110",
+   "D101",
+   "H1",
+   "H1S"
+  ],
+  "barcodes": [
+   "6972842743787",
+   "6972842743824",
+   "6972842743817",
+   "6972842743800",
+   "6972842743794",
+   "6977031210637"
+  ]
+ },
+ {
+  "widthMm": 15,
+  "lengthMm": 40,
+  "type": 3,
+  "series": [
+   "H1S"
+  ],
+  "note": "continuous 7.5 m roll, set any length",
+  "barcodes": [
+   "6975746634250"
+  ]
+ },
+ {
+  "widthMm": 20,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "D101"
+  ]
+ },
+ {
+  "widthMm": 20,
+  "lengthMm": 45,
+  "type": 1,
+  "series": [
+   "D101"
+  ]
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 50,
+  "type": 1,
+  "series": [
+   "D101"
+  ]
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 60,
+  "type": 1,
+  "series": [
+   "D101"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "B18 & N1"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "B18 & N1"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 50,
+  "type": 1,
+  "series": [
+   "B18 & N1"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 28,
+  "type": 1,
+  "series": [
+   "N1"
+  ],
+  "note": "round labels"
+ },
+ {
+  "widthMm": 12.5,
+  "lengthMm": 109,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 35,
+  "series": [
+   "N1"
+  ]
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "N1"
+  ],
+  "note": "liquid nitrogen"
+ },
+ {
+  "widthMm": 9.5,
+  "lengthMm": 25,
+  "type": 1,
+  "series": [
+   "N1"
+  ],
+  "note": "liquid nitrogen"
+ },
+ {
+  "widthMm": 9.5,
+  "lengthMm": 34.5,
+  "type": 1,
+  "series": [
+   "N1"
+  ],
+  "note": "liquid nitrogen"
+ },
+ {
+  "widthMm": 14,
+  "lengthMm": 40,
+  "type": 3,
+  "series": [
+   "N1"
+  ],
+  "note": "satin ribbon, set any length"
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6971501227941",
+   "6975746632782",
+   "6975746635738",
+   "6975746637930"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 5,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31",
+   "B4"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 20,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 20,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746635714"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 20,
+  "type": 5,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746632799"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 30,
+  "type": 5,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746632805"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 70,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746634540"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 80,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746635721"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 70,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746634472"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 80,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746633598"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 80,
+  "type": 5,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31",
+   "B4"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 90,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 170,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "note": "file folder"
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 25,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "note": "freezer"
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 15,
+  "type": 1,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "note": "two rows"
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 50,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "barcodes": [
+   "6975746633581"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 50,
+  "type": 5,
+  "shape": "round",
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31",
+   "B4"
+  ],
+  "barcodes": [
+   "6975746634397"
+  ]
+ },
+ {
+  "widthMm": 31,
+  "lengthMm": 31,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 34,
+  "lengthMm": 34,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "note": "wave edge"
+ },
+ {
+  "widthMm": 21,
+  "lengthMm": 21,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 78,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 40,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31",
+   "B4"
+  ],
+  "barcodes": [
+   "6975746634106"
+  ]
+ },
+ {
+  "widthMm": 30,
+  "lengthMm": 70,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 45,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "note": "jewellery tag"
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 75,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 45,
+  "series": [
+   "B21",
+   "B1",
+   "B2",
+   "B203",
+   "B3S",
+   "B31"
+  ],
+  "note": "jewellery tag"
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "B21 Pro",
+   "B1 Pro",
+   "B2 Pro"
+  ],
+  "note": "red and black",
+  "barcodes": [
+   "6978061956014"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 80,
+  "type": 1,
+  "series": [
+   "B21 Pro",
+   "B1 Pro",
+   "B2 Pro"
+  ],
+  "note": "red and black"
+ },
+ {
+  "widthMm": 51,
+  "lengthMm": 51,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "B21 Pro",
+   "B1 Pro",
+   "B2 Pro"
+  ],
+  "note": "red and black"
+ },
+ {
+  "widthMm": 54,
+  "lengthMm": 67,
+  "type": 1,
+  "series": [
+   "B21 Pro",
+   "B1 Pro",
+   "B2 Pro"
+  ],
+  "note": "photo paper"
+ },
+ {
+  "widthMm": 54,
+  "lengthMm": 80,
+  "type": 1,
+  "series": [
+   "B21 Pro",
+   "B1 Pro",
+   "B2 Pro"
+  ],
+  "note": "photo paper"
+ },
+ {
+  "widthMm": 54,
+  "lengthMm": 84,
+  "type": 1,
+  "series": [
+   "B21 Pro",
+   "B1 Pro",
+   "B2 Pro"
+  ],
+  "note": "photo paper"
+ },
+ {
+  "widthMm": 60,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 60,
+  "lengthMm": 70,
+  "type": 1,
+  "series": [
+   "B3S",
+   "B31"
+  ]
+ },
+ {
+  "widthMm": 70,
+  "lengthMm": 100,
+  "type": 1,
+  "series": [
+   "B3S",
+   "B31",
+   "B4"
+  ]
+ },
+ {
+  "widthMm": 70,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "K3"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "K2",
+   "K3"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "K2",
+   "K3"
+  ],
+  "note": "900 labels",
+  "barcodes": [
+   "6977388392109"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 20,
+  "type": 1,
+  "series": [
+   "K2",
+   "K3"
+  ],
+  "note": "1300 labels"
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "K2",
+   "K3"
+  ],
+  "note": "900 labels",
+  "barcodes": [
+   "6977031215748"
+  ]
+ },
+ {
+  "widthMm": 60,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "K3"
+  ],
+  "note": "690 labels",
+  "barcodes": [
+   "6977388392116"
+  ]
+ },
+ {
+  "widthMm": 60,
+  "lengthMm": 80,
+  "type": 1,
+  "series": [
+   "K3"
+  ],
+  "note": "large roll"
+ },
+ {
+  "widthMm": 80,
+  "lengthMm": 50,
+  "type": 1,
+  "series": [
+   "K3"
+  ],
+  "note": "560 labels",
+  "barcodes": [
+   "6977388392147"
+  ]
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 254,
+  "type": 1,
+  "series": [
+   "K2",
+   "K3"
+  ],
+  "note": "wristband"
+ },
+ {
+  "widthMm": 30,
+  "lengthMm": 20,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 20,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 20,
+  "type": 5,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 40,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "square"
+ },
+ {
+  "widthMm": 40,
+  "lengthMm": 60,
+  "type": 5,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "barcodes": [
+   "6977388392178"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 30,
+  "type": 5,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 70,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 80,
+  "type": 5,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 90,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 20,
+  "lengthMm": 20,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 31,
+  "lengthMm": 31,
+  "type": 5,
+  "shape": "round",
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 50,
+  "lengthMm": 50,
+  "type": 1,
+  "shape": "round",
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 24,
+  "lengthMm": 13,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "two round labels, 10 mm"
+ },
+ {
+  "widthMm": 28,
+  "lengthMm": 15,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "two round labels, 12 mm"
+ },
+ {
+  "widthMm": 34,
+  "lengthMm": 17,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "two round labels, 14 mm"
+ },
+ {
+  "widthMm": 30,
+  "lengthMm": 70,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 45,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "jewellery tag"
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 78,
+  "type": 1,
+  "shape": "cable",
+  "tailMm": 40,
+  "series": [
+   "M2",
+   "M3"
+  ]
+ },
+ {
+  "widthMm": 35.25,
+  "lengthMm": 50,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "self-laminating"
+ },
+ {
+  "widthMm": 25,
+  "lengthMm": 9.5,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "liquid nitrogen"
+ },
+ {
+  "widthMm": 36.5,
+  "lengthMm": 9.5,
+  "type": 1,
+  "series": [
+   "M2",
+   "M3"
+  ],
+  "note": "liquid nitrogen"
+ },
+ {
+  "widthMm": 100,
+  "lengthMm": 150,
+  "type": 1,
+  "series": [
+   "B4"
+  ],
+  "note": "shipping label"
+ },
+ {
+  "widthMm": 100,
+  "lengthMm": 100,
+  "type": 1,
+  "series": [
+   "B4"
+  ]
+ }
+]

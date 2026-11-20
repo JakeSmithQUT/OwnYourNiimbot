@@ -46,6 +46,20 @@ export interface RfidInfo {
   type?: number;
 }
 
+/** Label size that the printer reads from the roll. Only newer firmware reports it. */
+export interface PaperInfo {
+  /** Label width across the print head. */
+  widthMm: number;
+  /** Label length along the feed, without the gap. */
+  lengthMm: number;
+  gapMm: number;
+  /** Tail length of cable labels. */
+  tailMm: number;
+  labelType: number;
+  widthDots: number;
+  lengthDots: number;
+}
+
 export interface PrintPage {
   image: MonoImage;
   copies: number;
@@ -96,6 +110,9 @@ export class NiimbotClient {
   info: PrinterInfo = {};
   status: PrinterStatus = { updatedAt: 0 };
   rfid?: RfidInfo;
+  paper?: PaperInfo;
+  /** False when the printer answered that it does not support the paper info command. */
+  paperInfoSupported?: boolean;
   printing = false;
   log: LogEntry[] = [];
 
@@ -105,6 +122,7 @@ export class NiimbotClient {
   private heartbeatTimer?: ReturnType<typeof setInterval>;
   private listeners = new Set<Listener>();
   private lastPrintError?: PrintError;
+  private rollTimer?: ReturnType<typeof setTimeout>;
 
   subscribe(fn: Listener): () => void {
     this.listeners.add(fn);
@@ -139,6 +157,7 @@ export class NiimbotClient {
     }
     await this.refreshInfo();
     if (this.info.model?.rfid !== false) await this.readRfid().catch(() => undefined);
+    await this.readPaperInfo().catch(() => undefined);
     await this.heartbeat().catch(() => undefined);
     this.heartbeatTimer = setInterval(() => {
       if (!this.printing) void this.heartbeat().catch(() => undefined);
@@ -159,9 +178,7 @@ export class NiimbotClient {
       this.addLog('info', 'Disconnected');
     }
     this.rejectAll(new Error('Disconnected'));
-    this.info = {};
-    this.status = { updatedAt: 0 };
-    this.rfid = undefined;
+    this.resetState();
     this.emit();
   }
 
@@ -171,10 +188,18 @@ export class NiimbotClient {
     this.transport = undefined;
     this.addLog('error', 'The printer connection closed');
     this.rejectAll(new Error('The printer connection closed'));
+    this.resetState();
+    this.emit();
+  }
+
+  private resetState(): void {
+    if (this.rollTimer) clearTimeout(this.rollTimer);
+    this.rollTimer = undefined;
     this.info = {};
     this.status = { updatedAt: 0 };
     this.rfid = undefined;
-    this.emit();
+    this.paper = undefined;
+    this.paperInfoSupported = undefined;
   }
 
   private rejectAll(err: Error): void {
@@ -289,10 +314,52 @@ export class NiimbotClient {
 
   async heartbeat(): Promise<PrinterStatus> {
     const p = await this.request(Req.Heartbeat, [1], HEARTBEAT_RESPONSES, 1500);
+    const prev = this.status;
     this.status = parseHeartbeat(p.data);
     if (this.status.batteryLevel !== undefined) this.info.batteryLevel = this.status.batteryLevel;
+    // A closed cover, newly loaded labels or a new tag read can mean a different roll.
+    const became = (a: boolean | undefined, b: boolean | undefined) => a === false && b === true;
+    if (
+      prev.updatedAt &&
+      (became(prev.lidClosed, this.status.lidClosed) || became(prev.paperLoaded, this.status.paperLoaded) || became(prev.rfidRead, this.status.rfidRead))
+    ) {
+      this.scheduleRollRefresh();
+    }
     this.emit();
     return this.status;
+  }
+
+  /** Reads the roll again after the printer has finished its own label calibration. */
+  private scheduleRollRefresh(delayMs = 2500): void {
+    if (this.rollTimer) clearTimeout(this.rollTimer);
+    this.rollTimer = setTimeout(() => {
+      this.rollTimer = undefined;
+      if (!this.printing) void this.refreshRoll();
+    }, delayMs);
+  }
+
+  /** Reads the RFID tag and the paper size of the loaded roll. */
+  async refreshRoll(): Promise<void> {
+    if (!this.transport) return;
+    if (this.info.model?.rfid !== false) await this.readRfid().catch(() => undefined);
+    await this.readPaperInfo().catch(() => undefined);
+    this.emit();
+  }
+
+  /** Asks the printer for the size of the loaded labels (command 0x59, newer firmware only). */
+  async readPaperInfo(): Promise<PaperInfo | undefined> {
+    if (this.paperInfoSupported === false) return undefined;
+    try {
+      const p = await this.request(Req.GetPaperInfo, [1], [Res.GetPaperInfo], 1200);
+      this.paperInfoSupported = true;
+      this.paper = parsePaperInfo(p.data, this.info.modelId);
+    } catch (err) {
+      // Older firmware rejects the command or does not answer. Do not ask again on this connection.
+      if (!(err instanceof PrintError)) this.paperInfoSupported = false;
+      this.paper = undefined;
+    }
+    this.emit();
+    return this.paper;
   }
 
   async readRfid(): Promise<RfidInfo> {
@@ -515,6 +582,33 @@ export function parseRfid(d: Uint8Array): RfidInfo {
   } catch {
     return { present: true };
   }
+}
+
+/** Model IDs whose paper info includes the gap in the total height. */
+const HEIGHT_INCLUDES_GAP = new Set([785]);
+
+/**
+ * Parses the 0x69 paper info response. The 18-byte layout is: gap (dots),
+ * total height (dots), paper type, gap (0.1 mm), total height (0.1 mm),
+ * width (dots), width (0.1 mm), direction, tail (dots), tail (0.1 mm).
+ * Shorter responses do not hold a usable size.
+ */
+export function parsePaperInfo(d: Uint8Array, modelId?: number): PaperInfo | undefined {
+  if (d.length !== 18) return undefined;
+  const gapDots = readU16(d, 0);
+  let lengthDots = readU16(d, 2);
+  const labelType = d[4];
+  const gapMm = readU16(d, 5) / 10;
+  let lengthMm = readU16(d, 7) / 10;
+  const widthDots = readU16(d, 9);
+  const widthMm = readU16(d, 11) / 10;
+  const tailMm = readU16(d, 16) / 10;
+  if (modelId !== undefined && HEIGHT_INCLUDES_GAP.has(modelId)) {
+    lengthMm -= gapMm;
+    lengthDots -= gapDots;
+  }
+  if (widthMm <= 0 || lengthMm <= 0) return undefined;
+  return { widthMm, lengthMm, gapMm, tailMm, labelType, widthDots, lengthDots };
 }
 
 /** Battery value to a percentage. Older models report a level from 1 to 4. */

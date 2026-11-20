@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NiimbotClient } from '../src/printer/client';
+import { NiimbotClient, parsePaperInfo } from '../src/printer/client';
 import { rgbaToMono, getPixel, type MonoImage } from '../src/printer/encoder';
 import { encodePacket, PacketParser, readU16, Req } from '../src/printer/protocol';
 import type { Transport } from '../src/printer/transports';
@@ -19,6 +19,9 @@ class FakePrinter implements Transport {
   private parser = new PacketParser();
   private current?: { rows: number; cols: number; copies: number; pixels: Set<string> };
   private quantity = 1;
+
+  /** Paper info to return for 0x59, or undefined to answer "not supported". */
+  paperInfo?: number[];
 
   constructor(private modelId = 4096) {}
 
@@ -77,6 +80,10 @@ class FakePrinter implements Transport {
           break;
         case Req.PrintStatus: this.reply(0xb3, [this.printed >> 8, this.printed & 0xff, 100, 100]); break;
         case Req.PrintEnd: this.reply(0xf4, [1]); break;
+        case Req.GetPaperInfo:
+          if (this.paperInfo) this.reply(0x69, this.paperInfo);
+          else this.reply(0x00, [0]);
+          break;
         case Req.CancelPrint: this.reply(0xd0, [1]); break;
         default: this.reply(0x00, [0]);
       }
@@ -159,6 +166,56 @@ describe('print job against a simulated printer', () => {
       client.print({ pages: [{ image: testImage(), copies: 1 }], density: 3, labelType: 1, variant: 'modern', headDots: 384 }),
     ).rejects.toThrow(/cover is open/i);
     expect(client.printing).toBe(false);
+    await client.disconnect();
+  });
+});
+
+/** 18-byte paper info: gap, total height, type, gap/10, height/10, width, width/10, direction, tail, tail/10. */
+function paperBytes(widthMm: number, heightMm: number, gapMm: number, dotsPerMm = 8, type = 1): number[] {
+  const u = (v: number) => [(v >> 8) & 0xff, v & 0xff];
+  return [
+    ...u(Math.round(gapMm * dotsPerMm)), ...u(Math.round(heightMm * dotsPerMm)), type,
+    ...u(Math.round(gapMm * 10)), ...u(Math.round(heightMm * 10)),
+    ...u(Math.round(widthMm * dotsPerMm)), ...u(Math.round(widthMm * 10)),
+    0, ...u(0), ...u(0),
+  ];
+}
+
+describe('label size from the printer', () => {
+  it('parses the 18-byte paper info response', () => {
+    const info = parsePaperInfo(new Uint8Array(paperBytes(50, 30, 2)), 4096);
+    expect(info).toMatchObject({ widthMm: 50, lengthMm: 30, gapMm: 2, labelType: 1, widthDots: 400, lengthDots: 240 });
+  });
+
+  it('takes the gap off the height for the B21 Pro', () => {
+    const info = parsePaperInfo(new Uint8Array(paperBytes(50, 33, 3)), 785);
+    expect(info?.lengthMm).toBe(30);
+  });
+
+  it('ignores short or empty responses', () => {
+    expect(parsePaperInfo(new Uint8Array([0, 0, 0, 0]))).toBeUndefined();
+    expect(parsePaperInfo(new Uint8Array(18))).toBeUndefined();
+  });
+
+  it('reads the label size on connect', async () => {
+    const fake = new FakePrinter(2304);
+    fake.paperInfo = paperBytes(12, 40, 3);
+    const client = new NiimbotClient();
+    await client.connect(fake);
+    expect(client.paperInfoSupported).toBe(true);
+    expect(client.paper).toMatchObject({ widthMm: 12, lengthMm: 40, gapMm: 3 });
+    await client.disconnect();
+  });
+
+  it('stops asking when the firmware does not support the command', async () => {
+    const fake = new FakePrinter(512);
+    const client = new NiimbotClient();
+    await client.connect(fake);
+    expect(client.paperInfoSupported).toBe(false);
+    expect(client.paper).toBeUndefined();
+    const before = fake.commands.filter((c) => c === Req.GetPaperInfo).length;
+    await client.readPaperInfo();
+    expect(fake.commands.filter((c) => c === Req.GetPaperInfo).length).toBe(before);
     await client.disconnect();
   });
 });
