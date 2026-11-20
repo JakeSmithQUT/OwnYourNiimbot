@@ -308,6 +308,8 @@ To use the app while the update downloads, click **Start without updating**. The
 
 An update found while the app is open downloads in the same way, and the **Restart to update** button shows when it is ready.
 
+If an install does not complete, the app does not try the same install again at the next start. The app opens, and the **Restart to update** button shows. Click it to try again.
+
 The installer closes the AI assistant bridge. After an update, reconnect the assistant. In Claude Code, run `/mcp`.
 
 ## Privacy

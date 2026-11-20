@@ -9,7 +9,7 @@ import { app, Notification } from 'electron';
 import { autoUpdater, type ProgressInfo, type UpdateInfo } from 'electron-updater';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { isNewerVersion, releaseUrl, updateMode, type UpdateMode } from './updateRules';
+import { installAtLaunch, isNewerVersion, releaseUrl, updateMode, type UpdateMode } from './updateRules';
 
 /** Time for the check before the app opens. A slow or missing connection must not keep the app closed. */
 const LAUNCH_CHECK_MS = 6000;
@@ -43,6 +43,8 @@ interface UpdateConfig {
   checkOnLaunch: boolean;
   /** The version that last ran, to see when an update was installed. */
   lastVersion?: string;
+  /** The version that the app last closed to install. */
+  installTried?: string;
 }
 
 const configPath = () => join(app.getPath('userData'), 'updates.json');
@@ -50,7 +52,11 @@ const configPath = () => join(app.getPath('userData'), 'updates.json');
 async function loadConfig(): Promise<UpdateConfig> {
   try {
     const raw = JSON.parse(await readFile(configPath(), 'utf8')) as Partial<UpdateConfig>;
-    return { checkOnLaunch: raw.checkOnLaunch !== false, lastVersion: typeof raw.lastVersion === 'string' ? raw.lastVersion : undefined };
+    return {
+      checkOnLaunch: raw.checkOnLaunch !== false,
+      lastVersion: typeof raw.lastVersion === 'string' ? raw.lastVersion : undefined,
+      installTried: typeof raw.installTried === 'string' ? raw.installTried : undefined,
+    };
   } catch {
     return { checkOnLaunch: true };
   }
@@ -110,8 +116,11 @@ export async function startUpdates(notify: (s: UpdateStatus) => void): Promise<v
   });
   const current = app.getVersion();
   const updatedFrom = config.lastVersion && isNewerVersion(current, config.lastVersion) ? config.lastVersion : undefined;
-  if (config.lastVersion !== current) {
+  // An install that worked: this version is the same as or newer than the one the app tried to install.
+  const installed = config.installTried !== undefined && !isNewerVersion(config.installTried, current);
+  if (config.lastVersion !== current || installed) {
     config.lastVersion = current;
+    if (installed) config.installTried = undefined;
     await saveConfig().catch(() => undefined);
   }
   status = { state: 'idle', mode, checkOnLaunch: config.checkOnLaunch, current, updatedFrom };
@@ -193,6 +202,15 @@ export async function checkAtLaunch(): Promise<'download' | 'open'> {
   return status.state === 'downloading' || status.state === 'ready' ? 'download' : 'open';
 }
 
+/**
+ * True when the app can install the downloaded update at start-up. False when
+ * an earlier install of the same version failed. Then the app opens, and the
+ * user can try again with "Restart to update".
+ */
+export function canInstallAtLaunch(): boolean {
+  return installAtLaunch(status.version, config.installTried);
+}
+
 /** Waits for the download. Resolves true when the update is ready to install. */
 export async function downloadFinished(): Promise<boolean> {
   await waitFor((s) => s.state === 'ready' || s.state === 'error');
@@ -238,7 +256,10 @@ export function installUpdate(): boolean {
       silent: true,
     }).show();
   }
+  // Record the attempt, so that a failed install does not start again at each start of the app.
+  config = { ...config, installTried: status.version };
+  const saved = saveConfig().catch(() => undefined);
   // Give the notification and the update window a moment to show.
-  setTimeout(() => autoUpdater.quitAndInstall(true, true), 1200);
+  setTimeout(() => void saved.then(() => autoUpdater.quitAndInstall(true, true)), 1200);
   return true;
 }

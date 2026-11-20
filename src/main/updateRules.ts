@@ -19,6 +19,15 @@ export function updateMode(o: { packaged: boolean; platform: string; portable?: 
 }
 
 /** True when version `a` is newer than version `b`, for plain x.y.z version numbers. */
+/**
+ * True when the app can install this version at start-up. False when the app
+ * tried to install the same version before and still runs: that install
+ * failed, so the app opens instead of trying again at each start.
+ */
+export function installAtLaunch(version: string | undefined, triedVersion: string | undefined): boolean {
+  return Boolean(version) && version !== triedVersion;
+}
+
 export function isNewerVersion(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
   const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0);

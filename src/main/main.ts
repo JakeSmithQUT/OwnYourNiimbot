@@ -11,6 +11,7 @@ import type { ToolBridge, WindowResult } from './mcp/tools';
 import { isAllowedExternal } from './links';
 import { releaseUrl } from './updateRules';
 import {
+  canInstallAtLaunch,
   checkAtLaunch,
   checkForUpdates,
   checkSoon,
@@ -561,7 +562,7 @@ async function updateBeforeStart(): Promise<boolean> {
   });
   if ((await Promise.race([checkAtLaunch(), skipped])) === 'download') {
     const ready = await Promise.race([downloadFinished(), skipped]);
-    if (ready === true && installUpdate()) return true;
+    if (ready === true && canInstallAtLaunch() && installUpdate()) return true;
   }
   skipUpdate = null;
   return false;
@@ -585,7 +586,9 @@ function registerUpdateIpc(): void {
   handle('updates:install', () => {
     // Show the update window with "Installing" while the app closes, so that the user sees what happens.
     if (updateStatus().state === 'ready' && updateStatus().mode === 'install') createUpdaterWindow();
-    return installUpdate();
+    const installing = installUpdate();
+    if (!installing && updaterWindow && !updaterWindow.isDestroyed()) updaterWindow.close();
+    return installing;
   });
   handle('updates:openRelease', async (_event, which: unknown) => {
     const url = which === 'current' ? releaseUrl(updateStatus().current) : updateStatus().url;

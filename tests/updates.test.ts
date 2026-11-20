@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMegabytes, formatSpeed, isNewerVersion, releaseUrl, updateMode } from '../src/main/updateRules';
+import { formatMegabytes, formatSpeed, installAtLaunch, isNewerVersion, releaseUrl, updateMode } from '../src/main/updateRules';
 import { isAllowedExternal } from '../src/main/links';
 
 describe('update check', () => {
@@ -29,6 +29,13 @@ describe('update check', () => {
     expect(isNewerVersion('2.0.0', '1.99.99')).toBe(true);
     expect(isNewerVersion('1.4.0', '1.4.0')).toBe(false);
     expect(isNewerVersion('1.3.1', '1.4.0')).toBe(false);
+  });
+
+  it('does not install a version again at start-up after its install failed', () => {
+    expect(installAtLaunch('1.5.0', undefined)).toBe(true);
+    expect(installAtLaunch('1.5.1', '1.5.0')).toBe(true);
+    expect(installAtLaunch('1.5.0', '1.5.0')).toBe(false);
+    expect(installAtLaunch(undefined, undefined)).toBe(false);
   });
 
   it('formats download sizes and speeds', () => {
