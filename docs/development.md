@@ -119,7 +119,11 @@ The installed app checks the GitHub releases. A development build checks only wh
 2. Serve the folder, for example with `python -m http.server 8765 --bind 127.0.0.1`.
 3. Run `npm run build`, then start the app with `OYN_USER_DATA=<empty folder> OYN_UPDATE_FEED=http://127.0.0.1:8765/ npx electron .`.
 
-After about 5 seconds, the app downloads the installer and checks its SHA-512 checksum. A test download goes to the `ownyourniimbot-updater-test` folder in the local app data folder, not to the folder of the installed app.
+The update window opens and shows the download progress. To see the progress bar, serve the folder at a limited speed. When the download is complete, the main window opens with the **Restart to update** button. A test feed never installs the update. A test download goes to the `ownyourniimbot-updater-test` folder in the local app data folder, not to the folder of the installed app. Delete this folder to download the update again in the next test.
+
+To test **Start without updating**, click it while the update downloads. The main window must open, and the download must continue in the bar at the top of the window.
+
+`OYN_SMOKE_TEST=1` skips the update window.
 
 ## Release procedure
 

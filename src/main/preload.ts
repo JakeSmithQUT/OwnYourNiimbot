@@ -21,6 +21,11 @@ export interface UpdateStatus {
   current: string;
   version?: string;
   percent?: number;
+  transferred?: number;
+  total?: number;
+  bytesPerSecond?: number;
+  /** The version before the update that was installed when the app started. */
+  updatedFrom?: string;
   url?: string;
   message?: string;
   checkedAt?: number;
@@ -84,8 +89,9 @@ const api = {
     getStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:getStatus'),
     check: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:check'),
     setCheckOnLaunch: (value: boolean): Promise<UpdateStatus> => ipcRenderer.invoke('updates:setCheckOnLaunch', value),
-    install: (): Promise<void> => ipcRenderer.invoke('updates:install'),
-    openRelease: (): Promise<void> => ipcRenderer.invoke('updates:openRelease'),
+    install: (): Promise<boolean> => ipcRenderer.invoke('updates:install'),
+    /** Opens the release page of the new version, or of the version that is running. */
+    openRelease: (which: 'new' | 'current'): Promise<void> => ipcRenderer.invoke('updates:openRelease', which),
     onStatus: (cb: (status: UpdateStatus) => void) => listen('updates:status', cb),
   },
   app: {

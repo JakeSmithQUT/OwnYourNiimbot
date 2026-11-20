@@ -79,7 +79,7 @@ function browserApi(): DesktopApi {
       getStatus: async () => NO_UPDATES,
       check: async () => NO_UPDATES,
       setCheckOnLaunch: async () => NO_UPDATES,
-      install: async () => undefined,
+      install: async () => false,
       openRelease: async () => undefined,
       onStatus: () => () => undefined,
     },

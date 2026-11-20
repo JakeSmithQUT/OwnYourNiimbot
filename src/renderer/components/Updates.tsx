@@ -1,11 +1,12 @@
-import { Download, RefreshCw, RotateCw, X } from 'lucide-react';
+import { CircleCheck, Download, RefreshCw, RotateCw, X } from 'lucide-react';
+import { formatMegabytes, formatSpeed } from '../../main/updateRules';
 import type { UpdateStatus } from '../../main/preload';
 import { api } from '../api';
 import { appStore, saveTemplate, toast } from '../state/app';
 import { createStore } from '../state/store';
 import { Check } from './ui';
 
-export const updateStore = createStore<{ status?: UpdateStatus; dismissed?: string }>({});
+export const updateStore = createStore<{ status?: UpdateStatus; dismissed?: string; updatedSeen?: boolean }>({});
 
 let started = false;
 
@@ -27,12 +28,53 @@ async function restartAndInstall(): Promise<void> {
   }
 }
 
-/** A bar under the top bar when a new version is ready to install, or available to download. */
+/** Download progress as text, for example "42% · 52 of 125 MB · 6.1 MB/s". */
+export function progressText(s: UpdateStatus): string {
+  const parts = [`${s.percent ?? 0}%`];
+  if (s.total) parts.push(`${formatMegabytes(s.transferred ?? 0)} of ${formatMegabytes(s.total)}`);
+  if (s.bytesPerSecond) parts.push(formatSpeed(s.bytesPerSecond));
+  return parts.join(' · ');
+}
+
+/**
+ * A bar under the top bar: the app was updated, a new version downloads, is
+ * ready to install, or is available to download.
+ */
 export function UpdateBanner() {
-  const { status, dismissed } = updateStore.use();
+  const { status, dismissed, updatedSeen } = updateStore.use();
   const { dirty } = appStore.use();
+  if (status?.updatedFrom && !updatedSeen && status.state !== 'ready') {
+    return (
+      <div className="update-banner" role="status">
+        <CircleCheck size={16} />
+        <span>OwnYourNiimbot is updated to version {status.current}.</span>
+        <button className="btn small" onClick={() => void api.updates.openRelease('current')}>
+          What's new
+        </button>
+        <button className="btn small ghost" onClick={() => updateStore.set({ updatedSeen: true })} aria-label="Close">
+          <X size={14} />
+        </button>
+      </div>
+    );
+  }
   if (!status?.version || dismissed === status.version) return null;
   const close = () => updateStore.set({ dismissed: status.version });
+  if (status.state === 'downloading') {
+    return (
+      <div className="update-banner" role="status">
+        <Download size={16} />
+        <span>
+          Downloading version {status.version}. {progressText(status)}
+          <span className="update-progress" aria-hidden="true">
+            <span style={{ width: `${status.percent ?? 0}%` }} />
+          </span>
+        </span>
+        <button className="btn small ghost" onClick={close}>
+          Hide
+        </button>
+      </div>
+    );
+  }
   if (status.state === 'ready') {
     return (
       <div className="update-banner" role="status">
@@ -54,7 +96,7 @@ export function UpdateBanner() {
       <div className="update-banner" role="status">
         <Download size={16} />
         <span>Version {status.version} is available. This version of the app cannot install it, so download it from the release page.</span>
-        <button className="btn small primary" onClick={() => void api.updates.openRelease()}>
+        <button className="btn small primary" onClick={() => void api.updates.openRelease('new')}>
           Open release page
         </button>
         <button className="btn small ghost" onClick={close} aria-label="Close">
@@ -66,6 +108,22 @@ export function UpdateBanner() {
   return null;
 }
 
+/** A button in the top bar while an update waits to install, like the download arrow in Discord. */
+export function UpdatePill() {
+  const { status } = updateStore.use();
+  const { dirty } = appStore.use();
+  if (status?.state !== 'ready' || status.mode !== 'install') return null;
+  return (
+    <button
+      className="update-pill"
+      onClick={() => void restartAndInstall()}
+      title={`Version ${status.version} is ready. ${dirty ? 'The app saves this label, then restarts' : 'The app restarts'} to install it.`}
+    >
+      <RotateCw size={14} /> Restart to update
+    </button>
+  );
+}
+
 function describe(s: UpdateStatus): string {
   switch (s.state) {
     case 'checking':
@@ -75,7 +133,7 @@ function describe(s: UpdateStatus): string {
     case 'available':
       return `Version ${s.version} is available. Download it from the release page.`;
     case 'downloading':
-      return `Downloading version ${s.version}… ${s.percent ?? 0}%`;
+      return `Downloading version ${s.version}… ${progressText(s)}`;
     case 'ready':
       return `Version ${s.version} is ready. Restart the app to install it.`;
     case 'error':
@@ -100,14 +158,14 @@ export function UpdateSettings() {
       ) : (
         <>
           <Check checked={status.checkOnLaunch} onChange={(v) => void api.updates.setCheckOnLaunch(v).then((s) => updateStore.set({ status: s }))}>
-            Check for updates when the app starts
+            Check for updates automatically
           </Check>
           <p className="muted">
             The app asks the GitHub releases of this project for the latest version. GitHub gets the app version and the IP address of this computer. No labels or
             other data are sent.{' '}
             {status.mode === 'install'
-              ? 'The app downloads an update, checks it, and installs it when the app restarts.'
-              : 'This version of the app cannot install updates itself. It shows a link to the release page.'}
+              ? 'The app checks when it starts and every 6 hours while it is open. It downloads an update, checks it, and installs it when the app restarts.'
+              : 'The app checks when it starts and every 6 hours while it is open. This version of the app cannot install updates itself. It shows a link to the release page.'}
           </p>
           <p>{describe(status)}</p>
           <div className="btn-row">
@@ -120,7 +178,7 @@ export function UpdateSettings() {
               </button>
             )}
             {status.state === 'available' && (
-              <button className="btn primary" onClick={() => void api.updates.openRelease()}>
+              <button className="btn primary" onClick={() => void api.updates.openRelease('new')}>
                 <Download size={15} /> Open release page
               </button>
             )}

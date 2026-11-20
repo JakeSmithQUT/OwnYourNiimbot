@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <title>OwnYourNiimbot</title>
+    <link rel="stylesheet" href="./updater/updater.css" />
+  </head>
+  <body>
+    <main class="updater" aria-live="polite">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+          <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+        </svg>
+      </div>
+      <h1>OwnYourNiimbot</h1>
+      <p id="status" class="status">Checking for updates…</p>
+      <div class="bar" role="progressbar" aria-labelledby="status" aria-valuemin="0" aria-valuemax="100">
+        <div id="fill" class="fill indeterminate"></div>
+      </div>
+      <p id="detail" class="detail">&nbsp;</p>
+      <button id="skip" type="button" class="skip" hidden>Start without updating</button>
+    </main>
+    <script type="module" src="./updater/updater.ts"></script>
+  </body>
+</html>

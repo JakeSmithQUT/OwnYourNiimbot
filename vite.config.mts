@@ -29,6 +29,13 @@ export default defineConfig({
     emptyOutDir: true,
     target: 'chrome130',
     chunkSizeWarningLimit: 4000,
+    // The app page and the small update window that shows at start-up.
+    rollupOptions: {
+      input: {
+        index: resolve(root, 'src/renderer/index.html'),
+        updater: resolve(root, 'src/renderer/updater.html'),
+      },
+    },
   },
   server: {
     port: 5173,

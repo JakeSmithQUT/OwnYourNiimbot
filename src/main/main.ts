@@ -9,10 +9,25 @@ import { configPath, loadConfig, newToken, saveConfig, type McpConfig } from './
 import { mcpStatus, startMcp, stopMcp } from './mcp/server';
 import type { ToolBridge, WindowResult } from './mcp/tools';
 import { isAllowedExternal } from './links';
-import { checkForUpdates, installUpdate, setCheckOnLaunch, startUpdates, updateStatus } from './updates';
+import { releaseUrl } from './updateRules';
+import {
+  checkAtLaunch,
+  checkForUpdates,
+  checkSoon,
+  downloadFinished,
+  installUpdate,
+  setCheckOnLaunch,
+  startUpdates,
+  updateAtLaunch,
+  updateStatus,
+  type UpdateStatus,
+} from './updates';
 
 // Development and tests only: keep test data apart from the real app data.
 if (!app.isPackaged && process.env.OYN_USER_DATA) app.setPath('userData', process.env.OYN_USER_DATA);
+
+// Windows shows notifications only for an app with this ID. It is the appId in electron-builder.yml.
+if (process.platform === 'win32') app.setAppUserModelId('io.github.jakesmithqut.ownyourniimbot');
 
 // The dev server URL is used only in development. A packaged app always loads its own files.
 const DEV_URL = app.isPackaged ? undefined : process.env.VITE_DEV_SERVER_URL;
@@ -31,9 +46,12 @@ const ALLOWED_PERMISSIONS = new Set(['local-fonts', 'clipboard-sanitized-write',
 // Web Bluetooth is behind this switch in Chromium on Linux.
 if (process.platform === 'linux') app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-}
+// A second copy of the app gives the start to the first copy and closes. See 'second-instance'.
+const isFirstInstance = app.requestSingleInstanceLock();
+if (!isFirstInstance) app.quit();
+
+/** True until the main window exists, so that closing the update window does not quit the app. */
+let startingUp = true;
 
 let mainWindow: BrowserWindow | null = null;
 let bluetoothCallback: ((deviceId: string) => void) | null = null;
@@ -133,6 +151,10 @@ function createWindow(): void {
 
   const win = mainWindow;
   win.once('ready-to-show', () => win.show());
+  // Show the window even if ready-to-show does not come, so that the app never runs without a window.
+  setTimeout(() => {
+    if (!win.isDestroyed() && !win.isVisible()) win.show();
+  }, 8000).unref();
   resetWindowReady();
   win.webContents.on('did-start-navigation', (_e, _url, _inPlace, isMainFrame) => {
     if (isMainFrame) resetWindowReady();
@@ -473,16 +495,100 @@ function registerMcpIpc(): void {
 
 // ---------- updates ----------
 
+let updaterWindow: BrowserWindow | null = null;
+let skipUpdate: (() => void) | null = null;
+
+function sendUpdateStatus(status: UpdateStatus): void {
+  mainWindow?.webContents.send('updates:status', status);
+  updaterWindow?.webContents.send('updater:status', status);
+}
+
+/** The small update window, like the ones that Discord and Steam show at start-up. */
+function createUpdaterWindow(): BrowserWindow {
+  if (updaterWindow && !updaterWindow.isDestroyed()) return updaterWindow;
+  const win = new BrowserWindow({
+    width: 380,
+    height: 260,
+    frame: false,
+    resizable: false,
+    maximizable: false,
+    minimizable: false,
+    fullscreenable: false,
+    center: true,
+    show: false,
+    title: 'OwnYourNiimbot',
+    backgroundColor: '#1a1d23',
+    webPreferences: {
+      preload: join(__dirname, 'updaterPreload.js'),
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      spellcheck: false,
+      devTools: !app.isPackaged,
+    },
+  });
+  updaterWindow = win;
+  win.once('ready-to-show', () => win.show());
+  win.on('closed', () => {
+    updaterWindow = null;
+    // Closing the window starts the app without the update.
+    skipUpdate?.();
+  });
+  // The window shows only its own page.
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.on('will-redirect', (e) => e.preventDefault());
+  if (DEV_URL) void win.loadURL(new URL('updater.html', DEV_URL).href);
+  else void win.loadFile(join(__dirname, '../renderer/updater.html'));
+  return win;
+}
+
+/**
+ * Checks for an update before the main window opens. Shows the check and the
+ * download in the update window, then closes the app to install the update.
+ * Resolves true when the app closes to install. Otherwise the app opens: no
+ * update, no connection, no answer in 6 seconds, or the user starts without
+ * the update. A download that the user skips goes on in the background.
+ */
+async function updateBeforeStart(): Promise<boolean> {
+  if (!updateAtLaunch() || process.env.OYN_SMOKE_TEST) {
+    checkSoon();
+    return false;
+  }
+  createUpdaterWindow();
+  const skipped = new Promise<'skip'>((resolve) => {
+    skipUpdate = () => resolve('skip');
+  });
+  if ((await Promise.race([checkAtLaunch(), skipped])) === 'download') {
+    const ready = await Promise.race([downloadFinished(), skipped]);
+    if (ready === true && installUpdate()) return true;
+  }
+  skipUpdate = null;
+  return false;
+}
+
 function registerUpdateIpc(): void {
+  // Messages from the update window. It can only ask for the status and start the app without the update.
+  ipcMain.on('updater:ready', (event) => {
+    if (updaterWindow && event.sender.id === updaterWindow.webContents.id) event.sender.send('updater:status', updateStatus());
+  });
+  ipcMain.on('updater:skip', (event) => {
+    if (updaterWindow && event.sender.id === updaterWindow.webContents.id) skipUpdate?.();
+  });
+
   handle('updates:getStatus', () => updateStatus());
   handle('updates:check', async () => {
     await checkForUpdates();
     return updateStatus();
   });
   handle('updates:setCheckOnLaunch', (_event, value: unknown) => setCheckOnLaunch(value === true));
-  handle('updates:install', () => installUpdate());
-  handle('updates:openRelease', async () => {
-    const url = updateStatus().url;
+  handle('updates:install', () => {
+    // Show the update window with "Installing" while the app closes, so that the user sees what happens.
+    if (updateStatus().state === 'ready' && updateStatus().mode === 'install') createUpdaterWindow();
+    return installUpdate();
+  });
+  handle('updates:openRelease', async (_event, which: unknown) => {
+    const url = which === 'current' ? releaseUrl(updateStatus().current) : updateStatus().url;
     if (url && isAllowedExternal(url)) await shell.openExternal(url);
   });
 }
@@ -510,12 +616,17 @@ function buildMenu(): void {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-{
+if (isFirstInstance) {
+  // A second start of the app brings this copy forward. It also shows a hidden window or makes a new one.
   app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
+    const win = mainWindow ?? updaterWindow;
+    if (!win) {
+      if (app.isReady() && !startingUp) createWindow();
+      return;
     }
+    if (win.isMinimized()) win.restore();
+    if (!win.isVisible()) win.show();
+    win.focus();
   });
 
   app.whenReady().then(async () => {
@@ -524,10 +635,11 @@ function buildMenu(): void {
     registerMcpIpc();
     registerUpdateIpc();
     buildMenu();
+    await startUpdates(sendUpdateStatus).catch((err) => console.error(`The update check did not start: ${String(err)}`));
+    if (await updateBeforeStart().catch(() => false)) return; // The app closes to install the update.
     createWindow();
-    void startUpdates((status) => mainWindow?.webContents.send('updates:status', status)).catch((err) =>
-      console.error(`The update check did not start: ${String(err)}`),
-    );
+    startingUp = false;
+    if (updaterWindow && !updaterWindow.isDestroyed()) updaterWindow.close();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
@@ -536,6 +648,8 @@ function buildMenu(): void {
   });
 
   app.on('window-all-closed', () => {
+    // The update window can close before the main window opens.
+    if (startingUp) return;
     if (process.platform !== 'darwin') app.quit();
   });
 }

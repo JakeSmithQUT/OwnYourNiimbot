@@ -26,7 +26,7 @@ The app does not need an account or an internet connection. Labels, print histor
 - Printer settings: automatic power-off time, sounds and label position calibration.
 - Saved labels, label import and export, print history and reprint.
 - Light and dark themes.
-- Updates from the GitHub releases of this project. The Windows installer and the Linux AppImage install them when the app restarts.
+- Updates from the GitHub releases of this project. The Windows installer and the Linux AppImage show an update window with the download progress when the app starts, then install the update and open again.
 
 ## Supported printers
 
@@ -286,16 +286,29 @@ Security:
 
 ## Updates
 
-When the app starts, it checks the [Releases](https://github.com/JakeSmithQUT/OwnYourNiimbot/releases) page of this project for a newer version. To turn off the check, go to **Settings**, **Updates**, and clear **Check for updates when the app starts**. **Check now** checks at any time.
+The app checks the [Releases](https://github.com/JakeSmithQUT/OwnYourNiimbot/releases) page of this project for a newer version when it starts, and every 6 hours while it is open. To turn off the check, go to **Settings**, **Updates**, and clear **Check for updates automatically**. **Check now** checks at any time.
 
 | Version of the app | Result of the update check |
 |---|---|
-| Windows installer | The app downloads the update and checks its SHA-512 checksum. A bar at the top of the window tells you when the update is ready. Click **Restart now**, or install the update the next time that you close the app. |
+| Windows installer | See [Update window](#update-window). |
 | Linux AppImage | The same as the Windows installer. |
 | macOS | A bar shows a link to the new release. Download and install it as in [Download](#download). macOS does not let an app that is not code signed replace itself. |
 | Windows portable app, Linux .deb | A bar shows a link to the new release. |
 
-If the open label has changes that are not saved, **Save and restart** saves the label before the app restarts.
+### Update window
+
+When the app starts, a small window shows the update check before the main window opens:
+
+1. The window shows **Checking for updates**. If there is no new version, the main window opens. If GitHub does not answer in 6 seconds, the main window opens and the check continues.
+2. If there is a new version, the window shows the download progress: the percentage, the megabytes downloaded and the download speed.
+3. When the download is complete, the app checks the SHA-512 checksum of the update. Then the app closes, installs the update and opens again. A notification tells you that the update is installing. This takes about half a minute.
+4. When the app opens again, a bar shows the new version. Click **What's new** to read the release notes.
+
+To use the app while the update downloads, click **Start without updating**. The main window opens and the download continues in a bar at the top of the window. When the update is ready, a green **Restart to update** button shows in the top bar. Click it, or close the app to install the update. If the open label has changes that are not saved, the app saves the label before it restarts.
+
+An update found while the app is open downloads in the same way, and the **Restart to update** button shows when it is ready.
+
+The installer closes the AI assistant bridge. After an update, reconnect the assistant. In Claude Code, run `/mcp`.
 
 ## Privacy
 

@@ -31,7 +31,7 @@ import { PrintDialog } from './components/PrintDialog';
 import { startRollTracking } from './state/roll';
 import { startMcpHandlers } from './mcp/handlers';
 import { ConnectDialog } from './components/ConnectDialog';
-import { startUpdateTracking, UpdateBanner } from './components/Updates';
+import { startUpdateTracking, UpdateBanner, UpdatePill } from './components/Updates';
 
 const NAV: { view: View; label: string; icon: typeof PenTool }[] = [
   { view: 'design', label: 'Design', icon: PenTool },
@@ -123,6 +123,7 @@ export function App() {
               <Save size={16} /> Save
             </button>
           )}
+          <UpdatePill />
           <button className="printer-pill" onClick={() => (p.connected ? appStore.set({ view: 'printer' }) : appStore.set({ connectOpen: true }))}>
             <span className={`dot${p.connected ? ' on' : ''}`} />
             {p.connected ? (
