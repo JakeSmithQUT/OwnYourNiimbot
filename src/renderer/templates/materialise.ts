@@ -1,5 +1,6 @@
 import { emptyTemplate, type LabelTemplate } from '../editor/template';
 import { renderLabel } from '../editor/render';
+import { loadBundledFonts } from '../editor/bundledFonts';
 import { compatibleLabels, physicalSize } from '../../printer/labels';
 import type { PrinterModel } from '../../printer/models';
 import { isRoundSize, type TemplateDesign } from './catalogue';
@@ -15,6 +16,7 @@ export function buildTemplate(design: TemplateDesign, w: number, h: number): Pro
   let p = templates.get(key);
   if (!p) {
     p = (async () => {
+      await loadBundledFonts();
       const objects = await Promise.all(design.build(w, h));
       const t = emptyTemplate(w, h, design.labelType);
       t.name = design.name;

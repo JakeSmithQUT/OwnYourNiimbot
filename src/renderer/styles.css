@@ -1276,3 +1276,50 @@ kbd {
   max-width: 100%;
   object-fit: contain;
 }
+
+.library-meta .fonts {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.chip-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-strong);
+  margin: 2px 4px;
+}
+
+.category-chips .chip svg {
+  vertical-align: -1px;
+}
+
+.copy-box {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.copy-box code {
+  flex: 1;
+  min-width: 0;
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 11.5px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+}
+
+pre.licences {
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  max-height: 60vh;
+  overflow: auto;
+  margin: 0;
+  user-select: text;
+}

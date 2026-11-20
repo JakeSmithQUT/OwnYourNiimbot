@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Database, Search } from 'lucide-react';
+import { Database, Search, Sparkles } from 'lucide-react';
 import { CATEGORIES, DESIGNS, isRoundSize, type Category, type Size, type TemplateDesign } from '../templates/catalogue';
 import { buildTemplate, fitFor, thumbnail, type Fit } from '../templates/materialise';
 import { appStore, confirmDiscard, openTemplate, toast } from '../state/app';
@@ -72,6 +72,7 @@ function DesignCard(props: {
           )}
         </div>
         <div className="desc">{props.design.description}</div>
+        {props.design.fonts && <div className="fonts">{props.design.fonts.join(' · ')}</div>}
         <div className="chips">
           {props.sizes.map(({ size, fit, loaded }) => (
             <button
@@ -98,6 +99,7 @@ export function LibraryView() {
   const rollSize = roll ? rollEditorSize(roll) : undefined;
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
+  const [decorative, setDecorative] = useState(false);
   const [compat, setCompat] = useState<Compat>(p.connected ? (rollSize ? 'loaded' : 'rolls') : 'all');
   const [sizeFilter, setSizeFilter] = useState('any');
 
@@ -116,11 +118,12 @@ export function LibraryView() {
         if (compat === 'fits') return s.fit !== 'no';
         return true;
       });
-      const textOk = !q || `${design.name} ${design.description} ${design.category}`.toLowerCase().includes(q);
+      const textOk = !q || `${design.name} ${design.description} ${design.category} ${(design.fonts ?? []).join(' ')}`.toLowerCase().includes(q);
       const catOk = category === 'all' || design.category === category;
-      return { design, sizes: shown, ok: textOk && catOk && shown.length > 0 };
+      const styleOk = !decorative || Boolean(design.fonts?.length);
+      return { design, sizes: shown, ok: textOk && catOk && styleOk && shown.length > 0 };
     });
-  }, [query, category, compat, sizeFilter, model, rollSize?.widthMm, rollSize?.heightMm]);
+  }, [query, category, decorative, compat, sizeFilter, model, rollSize?.widthMm, rollSize?.heightMm]);
 
   const visible = rows.filter((r) => r.ok);
   const counts = new Map<string, number>();
@@ -178,6 +181,10 @@ export function LibraryView() {
       </div>
 
       <div className="category-chips">
+        <button className={`chip${decorative ? ' on' : ''}`} title="Designs with the included fonts and ornaments" onClick={() => setDecorative(!decorative)}>
+          <Sparkles size={11} /> Decorative
+        </button>
+        <span className="chip-sep" />
         <button className={`chip${category === 'all' ? ' on' : ''}`} onClick={() => setCategory('all')}>
           All
         </button>

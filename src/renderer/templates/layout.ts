@@ -296,3 +296,15 @@ export function icon(b: Box, svg: string, align: 'start' | 'center' | 'end' = 'c
     }),
   ];
 }
+
+/** Places an ornament SVG so that it fills the box exactly. */
+export function art(b: Box, svg: string): Part[] {
+  const src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+  return [
+    FabricImage.fromURL(src).then((img) => {
+      img.set({ ...ORIGIN, left: u(b.x), top: u(b.y), scaleX: u(b.w) / (img.width || 1), scaleY: u(b.h) / (img.height || 1) });
+      (img as unknown as { oyn: OynData }).oyn = { kind: 'icon' };
+      return img as FabricObject;
+    }),
+  ];
+}
