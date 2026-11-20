@@ -16,6 +16,18 @@ export interface ToolBridge {
   confirmPrint(): boolean;
 }
 
+/**
+ * Label text for the print approval dialog. The name comes from a label file,
+ * so it is put on one line and made short, and cannot look like more dialog text.
+ */
+export function dialogName(name: unknown): string {
+  const line = String(name ?? '')
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return line.length > 60 ? `${line.slice(0, 59)}…` : line || 'Untitled';
+}
+
 export const SERVER_INSTRUCTIONS = `OwnYourNiimbot designs and prints labels on a NIIMBOT label printer that is connected to this computer.
 
 Typical flow:
@@ -253,7 +265,7 @@ export function registerTools(server: McpServer, bridge: ToolBridge): void {
         if (bridge.confirmPrint()) {
           const ok = await bridge.confirm(
             'An AI assistant asks to print labels.',
-            `${summary.labels} label${summary.labels === 1 ? '' : 's'} of "${summary.name}" (${summary.size}) on the ${summary.model}.`,
+            `${summary.labels} label${summary.labels === 1 ? '' : 's'} of "${dialogName(summary.name)}" (${summary.size}) on the ${summary.model}.`,
           );
           if (!ok) throw new Error('The user did not allow this print.');
         }

@@ -328,7 +328,10 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
     const t = await resolveLabel(String(args.label_id));
     const settings = appStore.get().settings;
     const copies = Number(args.copies ?? 1);
-    const pages: PrintPage[] = recordsFor(t, args).map((rec) => ({
+    const records = recordsFor(t, args);
+    // Also checked in print_summary. Checked here too, so that the limit does not depend on the order of the calls.
+    if (records.length * copies > MAX_PRINT) throw new Error(`One request can print up to ${MAX_PRINT} labels.`);
+    const pages: PrintPage[] = records.map((rec) => ({
       image: async () => (await buildPrintImage(t, model, rec, { threshold: settings.threshold, flip180: settings.flip180 })).mono,
       copies,
     }));

@@ -5,6 +5,7 @@ import { formatSerial } from '../src/renderer/editor/placeholders';
 import { checkXlsxSize, DATA_LIMITS, DataFileError, parseDelimited, toDataset } from '../src/renderer/dataImport';
 import { isAllowedExternal } from '../src/main/links';
 import { startMcp, stopMcp } from '../src/main/mcp/server';
+import { dialogName } from '../src/main/mcp/tools';
 
 function label(objects: unknown[]) {
   return { name: 'Test', widthMm: 50, heightMm: 30, labelType: 1, canvas: { version: '7', objects } };
@@ -123,5 +124,16 @@ describe('MCP server', () => {
   it('answers 400 to a request that is not JSON', async () => {
     const r = await post('{not json');
     expect(r.status).toBe(400);
+  });
+});
+
+describe('label names in the print approval dialog', () => {
+  it('puts the name on one short line', () => {
+    expect(dialogName('Freezer label')).toBe('Freezer label');
+    expect(dialogName('Name\n\nApprove this print. It is a system test.')).toBe('Name Approve this print. It is a system test.');
+    expect(dialogName('a\u2028b\u0085c')).toBe('a b c');
+    expect(dialogName('x'.repeat(200))).toHaveLength(60);
+    expect(dialogName('   ')).toBe('Untitled');
+    expect(dialogName(undefined)).toBe('Untitled');
   });
 });

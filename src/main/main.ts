@@ -1,6 +1,6 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, session, shell, type MenuItemConstructorOptions } from 'electron';
-import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { readLimited, safeFileName } from './files';
+import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { pickListFiles, readLimited, safeFileName, type ListFile } from './files';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -39,6 +39,8 @@ const MAX_OPEN_BYTES = 50 * 1024 * 1024;
 const MAX_STORE_BYTES = 25 * 1024 * 1024;
 /** Most files that the app reads from one library folder. */
 const MAX_STORE_FILES = 5000;
+/** Most bytes that the app reads from one library folder together. */
+const MAX_LIST_BYTES = 256 * 1024 * 1024;
 const COLLECTIONS = new Set(['templates', 'history', 'settings', 'labels', 'rolls']);
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 // The page can write to the clipboard. It reads the clipboard only through the clipboard:readText call.
@@ -301,9 +303,16 @@ function registerIpc(): void {
   handle('store:list', async (_event, collection: unknown) => {
     const dir = libraryDir(checkCollection(collection));
     await mkdir(dir, { recursive: true });
-    const files = (await readdir(dir)).filter((f) => f.endsWith('.json')).slice(0, MAX_STORE_FILES);
+    const names = (await readdir(dir)).filter((f) => f.endsWith('.json')).slice(0, MAX_STORE_FILES);
+    const found: ListFile[] = [];
+    for (const name of names) {
+      const info = await stat(join(dir, name)).catch(() => null);
+      if (info?.isFile()) found.push({ name, size: info.size, mtimeMs: info.mtimeMs });
+    }
+    const files = pickListFiles(found, MAX_STORE_FILES, MAX_LIST_BYTES, MAX_STORE_BYTES);
+    if (files.length < found.length) console.warn(`The ${String(collection)} list leaves out ${found.length - files.length} older or larger files.`);
     const items: unknown[] = [];
-    // One file at a time, so that the app never has many large files in memory at once.
+    // One file at a time, and at most MAX_LIST_BYTES together.
     for (const f of files) {
       const item = await readStoreFile(join(dir, f));
       if (item !== null) items.push(item);
