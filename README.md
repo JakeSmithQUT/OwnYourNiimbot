@@ -6,7 +6,9 @@ The app does not need an account or an internet connection. Labels, print histor
 
 ## Features
 
-- A template library with 65 designs in 396 sizes, which you can filter by the connected printer and the loaded roll.
+- A template library with 105 designs in 632 sizes, which you can filter by the connected printer and the loaded roll.
+- 19 fonts that ship with the app, so labels look the same on every computer and print offline.
+- An optional local MCP server, so that an AI assistant such as Claude can make, preview and print labels.
 - Automatic label size. The app finds the size of the roll in the printer and gives a new label that size.
 - A list of the NIIMBOT rolls that fit the selected printer, with the loaded roll at the top.
 - Label editor with text, barcodes, QR codes, Data Matrix, PDF417, Aztec codes, images, rectangles, circles, lines, tables and symbols.
@@ -98,7 +100,7 @@ Some older models, for example the B3S, also show as a Bluetooth serial port aft
 
 ## Template library
 
-The **Templates** page has ready-made labels in ten groups:
+The **Templates** page has ready-made labels in twelve groups:
 
 | Group | Examples |
 |---|---|
@@ -107,7 +109,9 @@ The **Templates** page has ready-made labels in ten groups:
 | Office | File folder tab, name badge, return address, address label, shelf label, lost property, desk number |
 | Home and kitchen | Pantry jar, spice jar lid, freezer meal, leftovers, storage box, moving box, children's name label, plant marker, charger tag |
 | Food and hospitality | Food prep and rotation, allergen notice, day of the week, product ingredients, table number |
-| Retail | Price tag with barcode, shelf price strip, sale sticker, thank you sticker, jewellery tag, clothing size, product SKU |
+| Retail | Price tag with barcode, shelf price strip, sale sticker, thank you sticker, jewellery tag, clothing size, product SKU, modern product label |
+| Small business | Coffee bag, bakery box, craft beer, wine bottle, "new" star burst, boutique price tag, review QR code, follow us, packed with care, market stall price card |
+| Gifts and crafts | Script gift tag, gift ticket, handmade seal, script thank you, wedding favour, party bag, ex libris bookplate, candle, soap, vintage jam jar, handwritten plant tag |
 | Shipping and storage | Shipping label, bin location, inventory item, fragile mark, box number |
 | Electrical and workshop | Circuit breaker, switchboard schedule, tool owner, inspection tag, warning sign |
 | Lab and health | Sample tube, specimen barcode, medication schedule, first aid kit |
@@ -124,7 +128,24 @@ Each design has a layout for each roll size that it suits. The size buttons on a
 
 The page uses the connected printer. If no printer is connected, it uses the model in **Settings**.
 
-Some templates count up for each label: the numbered asset tags, the moving box and the sample tube. Set the number of labels in the print dialog.
+Some templates count up for each label: the numbered asset tags, the moving box, the gift ticket and the sample tube. Set the number of labels in the print dialog.
+
+The **Decorative** filter shows the designs that use the included fonts and ornaments: frames, scalloped seals, star bursts, ribbons, ticket shapes, dividers and hazard stripes. Each card lists the fonts that it uses.
+
+### Fonts
+
+The app includes these fonts. All are under the SIL Open Font Licence 1.1 or the Apache Licence 2.0.
+
+| Style | Fonts |
+|---|---|
+| Sans serif | Inter, Montserrat, Oswald |
+| Display | Bebas Neue, Archivo Black, Abril Fatface, Righteous |
+| Serif | Playfair Display, Cinzel, Roboto Slab |
+| Script and handwriting | Pacifico, Great Vibes, Dancing Script, Caveat, Permanent Marker, Amatic SC |
+| Rounded | Fredoka |
+| Monospace | Space Mono, JetBrains Mono |
+
+The font list in the design view shows these fonts first, then the fonts on your computer.
 
 ### Server labels from a spreadsheet
 
@@ -166,9 +187,46 @@ To print one label for each row of a spreadsheet:
 3. Select a column in the **Insert a data field** list. The field shows as `{{Column name}}`.
 4. Click **Print** and set the range of rows.
 
+## Use with AI assistants (MCP)
+
+OwnYourNiimbot has an optional MCP (Model Context Protocol) server. An AI assistant on the same computer can use it to make labels, look at a preview and print.
+
+The server is off by default. To turn it on:
+
+1. Go to **Settings**, **AI assistants (MCP)**.
+2. Select **Allow AI assistants to use OwnYourNiimbot**.
+3. Copy the setup for your assistant from the same section.
+
+| Assistant | Setup |
+|---|---|
+| Claude Code | Run the **Claude Code command** from the settings. It adds the server with its address and token. |
+| Claude Desktop | Add the **Claude Desktop** JSON from the settings to `claude_desktop_config.json`, then restart Claude Desktop. The app's own executable acts as the connection, so you do not need Node.js. |
+| Other MCP clients | Use the address `http://127.0.0.1:47821/mcp` with the header `Authorization: Bearer <token>`. |
+
+The assistant can use these tools:
+
+| Tool | Result |
+|---|---|
+| `get_status` | The printer, the loaded roll, the open label, the fonts and the barcode types |
+| `list_label_sizes` | The NIIMBOT rolls for the printer |
+| `list_templates` | Templates from the library, with their sizes |
+| `create_label` | A new label from lines of text and a code, or from elements at set positions |
+| `create_from_template` | A label from a template, with the sample text replaced |
+| `edit_label_text` | A copy of a label with text replaced |
+| `preview_label` | An image of the label as the printer prints it |
+| `list_saved_labels`, `save_label` | Your saved labels |
+| `print_label` | Prints a label, with copies, data records or a serial count |
+
+Security:
+
+- The server accepts connections from this computer only, and each request must have the token. Requests from web pages are refused.
+- By default, the app asks you before an assistant prints. You can turn this off in the settings.
+- Labels from an assistant open in the editor only if the open label has no changes that are not saved.
+- To stop access, clear the setting or click **Make a new token**.
+
 ## Privacy
 
-The app has no network code. It does not use an account, a cloud service, analytics or automatic updates. The only connections are to the printer, over Bluetooth or a serial port.
+The app does not connect to the internet. It does not use an account, a cloud service, analytics or automatic updates. The printer connects over Bluetooth or a serial port. If you turn on AI assistant access, the app also accepts local connections from this computer.
 
 Labels, history and settings are stored in the app data folder. To open this folder, go to **Settings** and click **Open data folder**.
 
@@ -186,6 +244,8 @@ Refer to [docs/development.md](docs/development.md) for the project layout, the 
 ## Legal
 
 OwnYourNiimbot is an independent project. NIIMBOT did not make, approve or support it. NIIMBOT is a trademark of its owner. The name is used only to identify compatible printers.
+
+The included fonts and libraries keep their own licences. **Settings**, **About**, **Open-source licences** shows the notices, which are also in [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).
 
 The protocol was studied to make the printers work with more computers. This repository contains no code, images, fonts, templates or translations from the official app. The model table contains hardware facts only: model names, model IDs, resolution, print widths, density ranges and label types. The roll list contains sizes and retail barcodes from public product listings.
 

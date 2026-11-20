@@ -18,6 +18,7 @@
 | `npm run dist` | Builds the installers for the current system to `release/`. |
 | `npm run install:local` | Windows only. Builds the x64 installer, installs it for the current user and makes sure that the installed app starts. Close the app first, or add `-- --force` to close it. |
 | `npm run check:secrets` | Checks the tracked files for keys, tokens and app packages. |
+| `npm run licences` | Writes `THIRD_PARTY_LICENSES.txt` from the bundled packages and fonts. The build runs this too. |
 
 ## Project layout
 
@@ -26,7 +27,10 @@
 | `src/main/` | Electron main process and preload script. Device pickers, permissions and file storage. |
 | `src/printer/` | Printer protocol, Bluetooth and serial transports, image encoding and the model table. This folder has no dependency on the interface. |
 | `src/renderer/` | React interface. |
-| `src/renderer/editor/` | Label editor based on Fabric.js, barcode and table objects, image processing and print rendering. |
+| `src/renderer/editor/` | Label editor based on Fabric.js, barcode and table objects, image processing, label file checks and print rendering. |
+| `src/renderer/templates/` | Template library: layout helpers, ornaments and the designs. |
+| `src/main/mcp/` | Local MCP server: request checks, tool schemas and the stdio bridge. |
+| `src/renderer/mcp/` | MCP tool handlers that run in the app window. |
 | `tests/` | Vitest unit tests. |
 | `tools/` | One-time tools, for example the printer list import. |
 | `scripts/` | Build scripts. |
@@ -63,18 +67,29 @@ The hook runs the secret check on the staged files. Enable it once for each clon
 git config core.hooksPath .githooks
 ```
 
+## Test the MCP server
+
+To test with data that is apart from your own app data, start a development build with `OYN_USER_DATA` set to an empty folder. The installed app ignores this variable.
+
+1. Create `mcp.json` in the folder: `{"enabled": true, "token": "<at least 32 characters>", "port": 47899, "confirmPrint": true}`.
+2. Run `npm run build`, then start the app with `OYN_USER_DATA=<folder> npx electron .`.
+3. Connect an MCP client to `http://127.0.0.1:47899/mcp` with the header `Authorization: Bearer <token>`.
+
+To test the stdio bridge, run `ELECTRON_RUN_AS_NODE=1 npx electron dist/main/mcp-bridge.js --config <folder>/mcp.json` and send JSON-RPC messages on stdin.
+
 ## Release procedure
 
-1. Change `version` in `package.json`.
-2. Commit the change.
-3. Create a tag with the same version and push it:
+1. Do an independent security review of the code. Fix the findings, or record why a finding is not an issue.
+2. Change `version` in `package.json`.
+3. Commit the change.
+4. Create a tag with the same version and push it:
 
    ```bash
    git tag v1.0.1
    git push origin main --tags
    ```
 
-4. The `Release` workflow builds the installers on Windows, macOS and Linux. Then it creates a GitHub release with the installers and a `SHA256SUMS.txt` file.
+5. The `Release` workflow builds the installers on Windows, macOS and Linux. Then it creates a GitHub release with the installers and a `SHA256SUMS.txt` file.
 
 The installers are not code signed. To sign them, add the certificates as repository secrets and set the electron-builder signing variables in `.github/workflows/release.yml`.
 
