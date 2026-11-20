@@ -26,7 +26,8 @@ const ENGLISH = en as Catalog;
 /** Fills in "{name}" values. A value that is missing stays as "{name}". */
 export function fill(text: string, vars?: Vars): string {
   if (!vars) return text;
-  return text.replace(/\{(\w+)\}/g, (all, name: string) => (name in vars ? String(vars[name]) : all));
+  // Own properties only, so that a name such as "constructor" is never taken from the prototype.
+  return text.replace(/\{(\w+)\}/g, (all, name: string) => (Object.hasOwn(vars, name) ? String(vars[name]) : all));
 }
 
 export interface Translator {

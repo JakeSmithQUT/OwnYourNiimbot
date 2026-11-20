@@ -62,7 +62,8 @@ export function tr(key: MessageKey, parts: Record<string, (chunk: string) => Rea
   let i = 0;
   for (const m of text.matchAll(re)) {
     if (m.index! > last) out.push(text.slice(last, m.index));
-    const render = parts[m[1]];
+    // Own properties only, so that a tag such as <constructor> never finds a function on the prototype.
+    const render = Object.hasOwn(parts, m[1]) ? parts[m[1]] : undefined;
     out.push(<Fragment key={i++}>{render ? render(m[2]) : m[2]}</Fragment>);
     last = m.index! + m[0].length;
   }

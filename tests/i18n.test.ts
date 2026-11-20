@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { en } from '../src/i18n/en';
 import { LANGUAGES, checkLanguage, shortCode } from '../src/i18n/languages';
-import { createTranslator, placeholders, tags, type Catalog } from '../src/i18n/translate';
+import { createTranslator, fill, placeholders, tags, type Catalog } from '../src/i18n/translate';
 
 const ENGLISH = en as Record<string, string>;
 const keys = Object.keys(ENGLISH);
@@ -23,6 +23,11 @@ describe('translation system', () => {
     expect(tn('x', 1)).toBe('1 etykieta');
     expect(tn('x', 3)).toBe('3 etykiety');
     expect(tn('x', 5)).toBe('5 etykiet');
+  });
+
+  it('fills in only the values that it gets', () => {
+    expect(fill('{constructor} and {toString}', {})).toBe('{constructor} and {toString}');
+    expect(fill('{name} {missing}', { name: 'A' })).toBe('A {missing}');
   });
 
   it('falls back to English for a missing text', () => {
