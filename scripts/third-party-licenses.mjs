@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 const ROOTS = [
   'react', 'react-dom', 'fabric', 'bwip-js', 'lucide-react', 'papaparse', 'read-excel-file',
-  '@modelcontextprotocol/sdk', 'zod',
+  '@modelcontextprotocol/sdk', 'zod', 'electron-updater',
   ...readdirSync('node_modules/@fontsource').map((f) => `@fontsource/${f}`),
 ];
 

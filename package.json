@@ -61,6 +61,7 @@
     "bwip-js": "^4.11.4",
     "electron": "^45.4.1",
     "electron-builder": "^26.18.0",
+    "electron-updater": "6.8.12",
     "esbuild": "^0.28.2",
     "fabric": "^7.4.0",
     "lucide-react": "^1.76.0",
