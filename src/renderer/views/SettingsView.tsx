@@ -49,6 +49,8 @@ const quote = (s: string) => `"${s}"`;
 /** Settings for the local MCP server that lets AI assistants make and print labels. */
 function AssistantSettings() {
   const [cfg, setCfg] = useState<McpPublicConfig>();
+  // Changes when the user makes a new token, so that a token on the screen is hidden again.
+  const [tokenVersion, setTokenVersion] = useState(0);
   useEffect(() => {
     void api.mcp.getConfig().then(setCfg);
   }, []);
@@ -61,8 +63,9 @@ function AssistantSettings() {
     }
   };
   // The bridge reads the token from the settings file, so these setups do not contain it.
-  const claudeCodeBridge = `claude mcp add ownyourniimbot -e ELECTRON_RUN_AS_NODE=1 -- ${quote(cfg.command)} ${quote(cfg.bridge)} --config ${quote(cfg.configFile)}`;
-  const claudeCodeHttp = async () => `claude mcp add --transport http ownyourniimbot ${cfg.url} --header "Authorization: Bearer ${await api.mcp.getToken()}"`;
+  const claudeCodeBridge = `claude mcp add --scope user ownyourniimbot -e ELECTRON_RUN_AS_NODE=1 -- ${quote(cfg.command)} ${quote(cfg.bridge)} --config ${quote(cfg.configFile)}`;
+  const claudeCodeHttp = async () =>
+    `claude mcp add --scope user --transport http ownyourniimbot ${cfg.url} --header "Authorization: Bearer ${await api.mcp.getToken()}"`;
   const desktopJson = JSON.stringify(
     { mcpServers: { ownyourniimbot: { command: cfg.command, args: [cfg.bridge, '--config', cfg.configFile], env: { ELECTRON_RUN_AS_NODE: '1' } } } },
     null,
@@ -88,13 +91,14 @@ function AssistantSettings() {
             <span className={`pill ${cfg.running ? 'ok' : 'warn'}`}>{cfg.running ? `Running on port ${cfg.port}` : 'Not running'}</span>
           </p>
           <CopyBox label="Address" value={cfg.url} />
-          <CopyBox label="Token" value={() => api.mcp.getToken()} secret hint="Other MCP clients send this token in the Authorization header." />
+          <CopyBox key={`token-${tokenVersion}`} label="Token" value={() => api.mcp.getToken()} secret hint="Other MCP clients send this token in the Authorization header." />
           <div className="btn-row" style={{ marginBottom: 12 }}>
             <button
               className="btn small"
               onClick={() =>
                 void api.mcp.newToken().then((c) => {
                   setCfg(c);
+                  setTokenVersion((v) => v + 1);
                   toast('New token made. Update the token in your assistant.', 'info');
                 })
               }
@@ -110,7 +114,7 @@ function AssistantSettings() {
             </>
           ) : (
             <>
-              <CopyBox label="Claude Code command" value={claudeCodeHttp} secret />
+              <CopyBox key={`http-${tokenVersion}`} label="Claude Code command" value={claudeCodeHttp} secret />
               <p className="muted">This version of the app runs from a temporary folder, so Claude Desktop cannot start it. To use Claude Desktop, install the app with the installer.</p>
             </>
           )}

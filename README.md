@@ -202,9 +202,11 @@ The server is off by default. To turn it on:
 
 | Assistant | Setup |
 |---|---|
-| Claude Code | Run the **Claude Code command** from the settings. It adds the server with its address and token. |
-| Claude Desktop | Add the **Claude Desktop** JSON from the settings to `claude_desktop_config.json`, then restart Claude Desktop. The app's own executable acts as the connection, so you do not need Node.js. |
+| Claude Code | Run the **Claude Code command** from the settings. It adds the server for all your projects. |
+| Claude Desktop | Add the **Claude Desktop** JSON from the settings to `claude_desktop_config.json`, then restart Claude Desktop. |
 | Other MCP clients | Use the address `http://127.0.0.1:47821/mcp` with the header `Authorization: Bearer <token>`. |
+
+The Claude Code and Claude Desktop setups start the app's own executable as a small bridge program, so you do not need Node.js. The bridge reads the token from the app settings, so the setup does not contain the token. The portable Windows app and the Linux AppImage run from a temporary folder, so they cannot use the bridge. With these versions, Claude Code uses the address and the token.
 
 The assistant can use these tools:
 
