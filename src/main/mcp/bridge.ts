@@ -115,9 +115,17 @@ if (!configPath) {
   process.exit(2);
 }
 
+/** Largest message from the client. The app's HTTP endpoint has the same limit. */
+const MAX_LINE = 1024 * 1024;
+
 const rl = createInterface({ input: process.stdin });
 let queue = Promise.resolve();
 rl.on('line', (line) => {
+  if (line.length > MAX_LINE) {
+    // The message cannot be read safely, so its ID is not known.
+    write({ jsonrpc: '2.0', id: null, error: { code: -32600, message: 'The message is too large.' } });
+    return;
+  }
   if (line.trim()) queue = queue.then(() => handle(line));
 });
 rl.on('close', () => {
