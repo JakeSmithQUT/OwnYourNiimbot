@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
 import { api, newId } from '../api';
 import { appStore, confirmDiscard, newTemplate, openTemplate, toast } from '../state/app';
@@ -6,7 +6,6 @@ import type { LabelTemplate } from '../editor/template';
 import { LabelPicker } from '../components/LabelPicker';
 import { activeModel, usePrinter } from '../state/printer';
 import { rollEditorSize, rollStore } from '../state/roll';
-import { sampleTemplates } from '../editor/samples';
 import { Field, Modal, NumberInput } from '../components/ui';
 
 function formatDate(ms: number): string {
@@ -69,7 +68,6 @@ function NewLabelDialog(props: { onClose: () => void }) {
 export function TemplatesView() {
   const [items, setItems] = useState<LabelTemplate[]>([]);
   const [creating, setCreating] = useState(false);
-  const samples = useMemo(() => sampleTemplates(), []);
 
   const reload = async () => {
     const list = await api.store.list<LabelTemplate>('templates');
@@ -175,21 +173,14 @@ export function TemplatesView() {
         </div>
       )}
 
-      <h2 style={{ marginTop: 32 }}>Examples</h2>
-      <p className="lead">Open an example and change it. Fields in braces, such as {'{{Name}}'}, take values from a data file.</p>
-      <div className="template-grid">
-        {samples.map((t) => (
-          <div key={t.id} className="template-card" onClick={() => open({ ...t, id: '' })}>
-            <div className="thumb new-card">
-              <strong>
-                {t.widthMm} × {t.heightMm}
-              </strong>
-            </div>
-            <div className="meta">
-              <div className="name">{t.name}</div>
-            </div>
-          </div>
-        ))}
+      <div className="card" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <strong>Start from a template</strong>
+          <div className="muted">The template library has labels for servers, cables, storage, food, retail, shipping and more.</div>
+        </div>
+        <button className="btn primary" onClick={() => appStore.set({ view: 'library' })}>
+          Open the template library
+        </button>
       </div>
 
       {creating && <NewLabelDialog onClose={() => setCreating(false)} />}

@@ -82,6 +82,9 @@ export function substitute(text: string, ctx: RecordContext): string {
     if (lower === 'time') return formatDate(now, 'HH:mm');
     if (lower === 'datetime') return formatDate(now, 'DD/MM/YYYY HH:mm');
     if (lower === 'index') return String(ctx.index + 1);
+    // {{index:4}} gives the label number with leading zeros, for example 0007.
+    const padded = /^index:(\d{1,2})$/.exec(lower);
+    if (padded) return String(ctx.index + 1).padStart(Number(padded[1]), '0');
     if (lower.startsWith('date:')) return formatDate(now, name.slice(5));
     return ctx.row ? '' : whole;
   });

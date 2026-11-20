@@ -8,6 +8,7 @@ import {
   FolderOpen,
   History,
   Info,
+  LayoutTemplate,
   PenTool,
   Printer as PrinterIcon,
   Save,
@@ -21,6 +22,7 @@ import { editor } from './editor/EditorController';
 import { batteryPercent } from '../printer/client';
 import { DesignView } from './views/DesignView';
 import { TemplatesView } from './views/TemplatesView';
+import { LibraryView } from './views/LibraryView';
 import { DataView } from './views/DataView';
 import { PrinterView } from './views/PrinterView';
 import { HistoryView } from './views/HistoryView';
@@ -31,6 +33,7 @@ import { ConnectDialog } from './components/ConnectDialog';
 
 const NAV: { view: View; label: string; icon: typeof PenTool }[] = [
   { view: 'design', label: 'Design', icon: PenTool },
+  { view: 'library', label: 'Templates', icon: LayoutTemplate },
   { view: 'templates', label: 'Labels', icon: FolderOpen },
   { view: 'data', label: 'Data', icon: Database },
   { view: 'printer', label: 'Printer', icon: PrinterIcon },
@@ -139,6 +142,7 @@ export function App() {
 
         <section className="content">
           {state.view === 'design' && <DesignView />}
+          {state.view === 'library' && <LibraryView />}
           {state.view === 'templates' && <TemplatesView />}
           {state.view === 'data' && <DataView />}
           {state.view === 'printer' && <PrinterView />}

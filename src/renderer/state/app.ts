@@ -4,7 +4,7 @@ import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/templ
 import { editor } from '../editor/EditorController';
 import type { PrintVariant } from '../../printer/models';
 
-export type View = 'design' | 'templates' | 'data' | 'printer' | 'history' | 'settings';
+export type View = 'design' | 'library' | 'templates' | 'data' | 'printer' | 'history' | 'settings';
 
 export interface Settings {
   theme: 'system' | 'light' | 'dark';

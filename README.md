@@ -6,6 +6,7 @@ The app does not need an account or an internet connection. Labels, print histor
 
 ## Features
 
+- A template library with 65 designs in 396 sizes, which you can filter by the connected printer and the loaded roll.
 - Automatic label size. The app finds the size of the roll in the printer and gives a new label that size.
 - A list of the NIIMBOT rolls that fit the selected printer, with the loaded roll at the top.
 - Label editor with text, barcodes, QR codes, Data Matrix, PDF417, Aztec codes, images, rectangles, circles, lines, tables and symbols.
@@ -94,6 +95,46 @@ You do not need to pair the printer in the system Bluetooth settings.
 4. Click the port of the printer.
 
 Some older models, for example the B3S, also show as a Bluetooth serial port after you pair them in the system settings. Select that port with the same procedure.
+
+## Template library
+
+The **Templates** page has ready-made labels in ten groups:
+
+| Group | Examples |
+|---|---|
+| IT and servers | Server label (hostname, IP, BMC address, serial number, role, QR code), rack ear label, rack position, asset tags, laptop, drive, network device, Wi-Fi QR code, service record |
+| Network and cables | Cable flags for the 12.5 mm and 25 mm cable rolls, power cable flag, cable wrap, patch panel strip, switch port map |
+| Office | File folder tab, name badge, return address, address label, shelf label, lost property, desk number |
+| Home and kitchen | Pantry jar, spice jar lid, freezer meal, leftovers, storage box, moving box, children's name label, plant marker, charger tag |
+| Food and hospitality | Food prep and rotation, allergen notice, day of the week, product ingredients, table number |
+| Retail | Price tag with barcode, shelf price strip, sale sticker, thank you sticker, jewellery tag, clothing size, product SKU |
+| Shipping and storage | Shipping label, bin location, inventory item, fragile mark, box number |
+| Electrical and workshop | Circuit breaker, switchboard schedule, tool owner, inspection tag, warning sign |
+| Lab and health | Sample tube, specimen barcode, medication schedule, first aid kit |
+| School and events | Book plate, pencil name, lunchbox, event badge |
+
+Each design has a layout for each roll size that it suits. The size buttons on a card show these sizes. The list at the top of the page filters the sizes:
+
+| Filter | Sizes shown |
+|---|---|
+| Matches the loaded roll | The size of the roll in the connected printer |
+| NIIMBOT roll sizes | Sizes of the NIIMBOT rolls for the printer model |
+| Fits the print head | Sizes that are not wider than the print head |
+| All sizes | All sizes |
+
+The page uses the connected printer. If no printer is connected, it uses the model in **Settings**.
+
+Some templates count up for each label: the numbered asset tags, the moving box and the sample tube. Set the number of labels in the print dialog.
+
+### Server labels from a spreadsheet
+
+The **Server labels from a spreadsheet** template prints one label for each server in a file. Export the servers from your inventory system as a CSV or Excel file with the columns `Hostname`, `IP`, `BMC`, `Serial` and `Role`.
+
+1. On the **Templates** page, open **Server labels from a spreadsheet**. Example data for four servers loads with it.
+2. On the **Data** page, open your file.
+3. Click **Print** and set the range of rows.
+
+Do not put passwords or other credentials on a label. Use the management address and the asset number to find the details in your inventory system.
 
 ## Label size detection
 
