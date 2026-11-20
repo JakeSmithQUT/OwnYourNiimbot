@@ -7,7 +7,7 @@ import { buildPrintImage, monoToCanvas } from '../editor/render';
 import type { RecordContext } from '../editor/placeholders';
 import { LABEL_TYPE_NAMES } from '../../printer/protocol';
 import { MODELS, PRINT_VARIANTS, printheadDots, type PrintVariant } from '../../printer/models';
-import type { PrintPage, PrintProgress } from '../../printer/client';
+import { MAX_LABELS_PER_JOB, type PrintPage, type PrintProgress } from '../../printer/client';
 import { api, newId } from '../api';
 import { rollEditorSize, rollStore } from '../state/roll';
 
@@ -106,15 +106,19 @@ export function PrintDialog(props: { onClose: () => void }) {
 
   const doPrint = async () => {
     setError(undefined);
+    if (total > MAX_LABELS_PER_JOB) {
+      setError(`One print job can have up to ${MAX_LABELS_PER_JOB.toLocaleString('en-AU')} labels. Print fewer copies, or print the data in parts with From and To.`);
+      return;
+    }
     setBusy(true);
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     try {
-      const pages: PrintPage[] = [];
-      for (const rec of records) {
-        const { mono } = await buildPrintImage(template, model, rec, { threshold: settings.threshold, flip180: flip });
-        pages.push({ image: mono, copies });
-      }
+      // Each page is rendered just before the printer needs it.
+      const pages: PrintPage[] = records.map((rec) => ({
+        image: async () => (await buildPrintImage(template, model, rec, { threshold: settings.threshold, flip180: flip })).mono,
+        copies,
+      }));
       updateSettings({ densityByModel: { ...settings.densityByModel, [model.name]: density }, flip180: flip });
       await p.print(
         { pages, density, labelType, variant: effectiveVariant, headDots: printheadDots(model) },

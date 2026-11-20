@@ -61,9 +61,16 @@ export interface PaperInfo {
 }
 
 export interface PrintPage {
-  image: MonoImage;
+  /** The page image, or a function that renders it just before the page is sent. */
+  image: MonoImage | (() => Promise<MonoImage>);
   copies: number;
 }
+
+/** Most labels in one print job. The modern command set sends the total as a 16-bit value. */
+export const MAX_LABELS_PER_JOB = 10000;
+
+/** Largest roll size that the app accepts from the printer. The same limits apply to label files. */
+const MAX_ROLL_MM = { width: 300, length: 500 };
 
 export interface PrintJob {
   pages: PrintPage[];
@@ -115,6 +122,8 @@ export class NiimbotClient {
   paperInfoSupported?: boolean;
   printing = false;
   log: LogEntry[] = [];
+  /** Time for the connection to accept one packet. A printer that stops reading data must not block the app. */
+  writeTimeoutMs = 10000;
 
   private parser = new PacketParser();
   private waiters: Waiter[] = [];
@@ -238,7 +247,15 @@ export class NiimbotClient {
 
   private async write(bytes: Uint8Array): Promise<void> {
     if (!this.transport) throw new Error('No printer is connected');
-    await this.transport.write(bytes);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('The printer did not accept the data. Disconnect the printer and connect it again.')), this.writeTimeoutMs);
+    });
+    try {
+      await Promise.race([this.transport.write(bytes), timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /** Sends one packet and waits for one of the expected response commands. */
@@ -397,6 +414,11 @@ export class NiimbotClient {
     this.emit();
 
     const total = job.pages.reduce((n, p) => n + p.copies, 0);
+    if (total > MAX_LABELS_PER_JOB) {
+      this.printing = false;
+      this.emit();
+      throw new Error(`One print job can have up to ${MAX_LABELS_PER_JOB.toLocaleString('en-AU')} labels.`);
+    }
     const report = (page: number, printed: number, message: string) =>
       onProgress?.({ page, pageCount: job.pages.length, printed, total, message });
     const checkAbort = () => {
@@ -417,7 +439,11 @@ export class NiimbotClient {
       let done = 0;
       for (let i = 0; i < job.pages.length; i++) {
         checkAbort();
-        const { image, copies } = job.pages[i];
+        const page = job.pages[i];
+        const copies = page.copies;
+        // Render each page only when it is needed, so that a large job does not keep every image in memory.
+        const image = typeof page.image === 'function' ? await page.image() : page.image;
+        checkAbort();
         report(i + 1, done, `Sending label ${i + 1} of ${job.pages.length}`);
 
         if (job.variant === 'd110') {
@@ -612,7 +638,8 @@ export function parsePaperInfo(d: Uint8Array, modelId?: number): PaperInfo | und
     lengthMm -= gapMm;
     lengthDots -= gapDots;
   }
-  if (widthMm <= 0 || lengthMm <= 0) return undefined;
+  // A size outside the label limits is not a real roll. Do not use it.
+  if (widthMm <= 0 || lengthMm <= 0 || widthMm > MAX_ROLL_MM.width || lengthMm > MAX_ROLL_MM.length) return undefined;
   return { widthMm, lengthMm, gapMm, tailMm, labelType, widthDots, lengthDots };
 }
 

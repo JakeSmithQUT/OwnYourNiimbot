@@ -256,11 +256,10 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
     const t = await resolveLabel(String(args.label_id));
     const settings = appStore.get().settings;
     const copies = Number(args.copies ?? 1);
-    const pages: PrintPage[] = [];
-    for (const rec of recordsFor(t, args)) {
-      const { mono } = await buildPrintImage(t, model, rec, { threshold: settings.threshold, flip180: settings.flip180 });
-      pages.push({ image: mono, copies });
-    }
+    const pages: PrintPage[] = recordsFor(t, args).map((rec) => ({
+      image: async () => (await buildPrintImage(t, model, rec, { threshold: settings.threshold, flip180: settings.flip180 })).mono,
+      copies,
+    }));
     const density = Math.min(model.density.max, Math.max(model.density.min, Number(args.density ?? settings.densityByModel[model.name] ?? model.density.default)));
     const labelType = model.paperTypes.length && !model.paperTypes.includes(t.labelType) ? model.paperTypes[0] : t.labelType;
     await printer.print({ pages, density, labelType, variant: activeVariant(model), headDots: printheadDots(model) });

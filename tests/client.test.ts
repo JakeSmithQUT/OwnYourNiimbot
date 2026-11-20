@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NiimbotClient, parsePaperInfo } from '../src/printer/client';
+import { MAX_LABELS_PER_JOB, NiimbotClient, parsePaperInfo } from '../src/printer/client';
 import { rgbaToMono, getPixel, type MonoImage } from '../src/printer/encoder';
 import { encodePacket, PacketParser, readU16, Req } from '../src/printer/protocol';
 import type { Transport } from '../src/printer/transports';
@@ -184,6 +184,47 @@ describe('print job against a simulated printer', () => {
     await client.disconnect();
   });
 
+  it('renders pages only when the printer needs them', async () => {
+    const fake = new FakePrinter(4096);
+    const client = new NiimbotClient();
+    await client.connect(fake);
+    const order: string[] = [];
+    const page = (name: string) => async () => {
+      order.push(`render ${name} after ${fake.pages.length} pages`);
+      return testImage();
+    };
+    await client.print({ pages: [{ image: page('a'), copies: 1 }, { image: page('b'), copies: 2 }], density: 3, labelType: 1, variant: 'modern', headDots: 384 });
+    expect(order).toEqual(['render a after 0 pages', 'render b after 1 pages']);
+    expect(fake.printed).toBe(3);
+    await client.disconnect();
+  });
+
+  it('refuses a job with more labels than the limit', async () => {
+    const fake = new FakePrinter(4096);
+    const client = new NiimbotClient();
+    await client.connect(fake);
+    await expect(
+      client.print({ pages: [{ image: testImage(), copies: MAX_LABELS_PER_JOB + 1 }], density: 3, labelType: 1, variant: 'modern', headDots: 384 }),
+    ).rejects.toThrow(/up to/);
+    expect(client.printing).toBe(false);
+    expect(fake.commands.includes(Req.PrintStart)).toBe(false);
+    await client.disconnect();
+  });
+
+  it('does not wait for ever when the connection stops taking data', async () => {
+    const fake = new FakePrinter(4096);
+    const client = new NiimbotClient();
+    await client.connect(fake);
+    client.writeTimeoutMs = 100;
+    const original = fake.write.bind(fake);
+    fake.write = () => new Promise<void>(() => undefined);
+    await expect(client.heartbeat()).rejects.toThrow(/did not accept/);
+    // The next request goes out after the stuck one.
+    fake.write = original;
+    await expect(client.heartbeat()).resolves.toBeTruthy();
+    await client.disconnect();
+  });
+
   it('stops when the printer reports an error', async () => {
     const fake = new FakePrinter(4096);
     const client = new NiimbotClient();
@@ -221,6 +262,12 @@ describe('label size from the printer', () => {
   it('takes the gap off the height for the B21 Pro', () => {
     const info = parsePaperInfo(new Uint8Array(paperBytes(50, 33, 3)), 785);
     expect(info?.lengthMm).toBe(30);
+  });
+
+  it('ignores sizes that are larger than a label can be', () => {
+    expect(parsePaperInfo(new Uint8Array(paperBytes(6000, 30, 2)), 4096)).toBeUndefined();
+    expect(parsePaperInfo(new Uint8Array(paperBytes(50, 6000, 2)), 4096)).toBeUndefined();
+    expect(parsePaperInfo(new Uint8Array(paperBytes(300, 500, 2)), 4096)).toMatchObject({ widthMm: 300, lengthMm: 500 });
   });
 
   it('ignores short or empty responses', () => {

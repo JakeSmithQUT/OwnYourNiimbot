@@ -2,7 +2,7 @@ import { api, newId } from '../api';
 import { createStore } from './store';
 import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/template';
 import { editor } from '../editor/EditorController';
-import { validateTemplate } from '../editor/validate';
+import { LIMITS, validateTemplate } from '../editor/validate';
 import type { PrintVariant } from '../../printer/models';
 
 export type View = 'design' | 'library' | 'templates' | 'data' | 'printer' | 'history' | 'settings';
@@ -137,8 +137,10 @@ export function isTemplateBlank(): boolean {
 
 /** Changes the size (and optionally the label type) of the open label. */
 export function applyLabelSize(widthMm: number, heightMm: number, labelType?: number): void {
-  const w = Math.round(widthMm * 10) / 10;
-  const h = Math.round(heightMm * 10) / 10;
+  // The size can come from the printer or a saved roll, so keep it inside the same limits as label files.
+  const clamp = (v: number, max: number) => Math.min(max, Math.max(LIMITS.minMm, Number.isFinite(v) ? v : LIMITS.minMm));
+  const w = Math.round(clamp(widthMm, LIMITS.maxWidthMm) * 10) / 10;
+  const h = Math.round(clamp(heightMm, LIMITS.maxHeightMm) * 10) / 10;
   if (editor.canvas) editor.setLabelSize(w, h);
   const t = appStore.get().template;
   appStore.set({ template: { ...t, widthMm: w, heightMm: h, labelType: labelType ?? t.labelType } });
