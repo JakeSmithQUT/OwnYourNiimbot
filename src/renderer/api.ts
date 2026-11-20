@@ -60,6 +60,14 @@ function browserApi(): DesktopApi {
         return true;
       },
     },
+    mcp: {
+      onCall: noop,
+      reply: () => undefined,
+      ready: () => undefined,
+      getConfig: async () => ({ enabled: false, confirmPrint: true, token: '', running: false, url: '', command: '', bridge: '', configFile: '', packaged: false }),
+      setConfig: async () => ({ enabled: false, confirmPrint: true, token: '', running: false, url: '', command: '', bridge: '', configFile: '', packaged: false }),
+      newToken: async () => ({ enabled: false, confirmPrint: true, token: '', running: false, url: '', command: '', bridge: '', configFile: '', packaged: false }),
+    },
     app: {
       info: async () => ({ version: 'dev', platform: 'browser', arch: '', electron: '', chrome: '' }),
       openDataFolder: async () => undefined,

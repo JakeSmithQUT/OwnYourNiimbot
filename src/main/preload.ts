@@ -13,6 +13,19 @@ export interface SerialEntry {
   productId?: string;
 }
 
+export interface McpPublicConfig {
+  enabled: boolean;
+  confirmPrint: boolean;
+  token: string;
+  port?: number;
+  running: boolean;
+  url: string;
+  command: string;
+  bridge: string;
+  configFile: string;
+  packaged: boolean;
+}
+
 function listen<T>(channel: string, cb: (value: T) => void): () => void {
   const handler = (_event: IpcRendererEvent, value: T) => cb(value);
   ipcRenderer.on(channel, handler);
@@ -39,6 +52,15 @@ const api = {
       ipcRenderer.invoke('file:open', opts),
     save: (opts: { defaultName: string; filters?: { name: string; extensions: string[] }[]; data: string; encoding?: 'utf8' | 'base64' }): Promise<boolean> =>
       ipcRenderer.invoke('file:save', opts),
+  },
+  mcp: {
+    /** Tool calls from AI assistants, run by the app window. */
+    onCall: (cb: (call: { id: string; tool: string; args: unknown }) => void) => listen('mcp:call', cb),
+    reply: (id: string, payload: { ok: boolean; result?: unknown; error?: string }) => ipcRenderer.send('mcp:reply', { id, ...payload }),
+    ready: () => ipcRenderer.send('mcp:ready'),
+    getConfig: (): Promise<McpPublicConfig> => ipcRenderer.invoke('mcp:getConfig'),
+    setConfig: (patch: { enabled?: boolean; confirmPrint?: boolean }): Promise<McpPublicConfig> => ipcRenderer.invoke('mcp:setConfig', patch),
+    newToken: (): Promise<McpPublicConfig> => ipcRenderer.invoke('mcp:newToken'),
   },
   app: {
     info: (): Promise<{ version: string; platform: string; arch: string; electron: string; chrome: string }> => ipcRenderer.invoke('app:info'),

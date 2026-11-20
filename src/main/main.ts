@@ -3,6 +3,13 @@ import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/p
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { randomUUID } from 'node:crypto';
+import { configPath, loadConfig, newToken, saveConfig, type McpConfig } from './mcp/config';
+import { mcpStatus, startMcp, stopMcp } from './mcp/server';
+import type { ToolBridge, WindowResult } from './mcp/tools';
+
+// Development and tests only: keep test data apart from the real app data.
+if (!app.isPackaged && process.env.OYN_USER_DATA) app.setPath('userData', process.env.OYN_USER_DATA);
 
 // The dev server URL is used only in development. A packaged app always loads its own files.
 const DEV_URL = app.isPackaged ? undefined : process.env.VITE_DEV_SERVER_URL;
@@ -92,6 +99,10 @@ function createWindow(): void {
 
   const win = mainWindow;
   win.once('ready-to-show', () => win.show());
+  resetWindowReady();
+  win.webContents.on('did-start-navigation', (_e, _url, _inPlace, isMainFrame) => {
+    if (isMainFrame) resetWindowReady();
+  });
   win.on('closed', () => {
     mainWindow = null;
   });
@@ -324,6 +335,104 @@ function registerIpc(): void {
   });
 }
 
+// ---------- MCP (AI assistants) ----------
+
+let mcpConfig: McpConfig | undefined;
+const pending = new Map<string, { resolve: (r: WindowResult) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }>();
+let windowReady: Promise<void> = Promise.resolve();
+let markWindowReady: () => void = () => undefined;
+
+function resetWindowReady(): void {
+  windowReady = new Promise((resolve) => (markWindowReady = resolve));
+}
+resetWindowReady();
+
+const toolBridge: ToolBridge = {
+  async call(tool, args, timeoutMs = 60_000) {
+    if (!mainWindow) throw new Error('The OwnYourNiimbot window is closed. Open the app and try again.');
+    await Promise.race([windowReady, new Promise((_, reject) => setTimeout(() => reject(new Error('The app window is not ready.')), 20_000))]);
+    const id = randomUUID();
+    return new Promise<WindowResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        pending.delete(id);
+        reject(new Error('The app did not answer in time.'));
+      }, timeoutMs);
+      pending.set(id, { resolve, reject, timer });
+      mainWindow?.webContents.send('mcp:call', { id, tool, args });
+    });
+  },
+  async confirm(message, detail) {
+    if (!mainWindow) return false;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+    const r = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: ['Print', 'Cancel'], defaultId: 1, cancelId: 1, message, detail });
+    return r.response === 0;
+  },
+  confirmPrint: () => mcpConfig?.confirmPrint !== false,
+};
+
+async function applyMcpConfig(): Promise<void> {
+  const config = mcpConfig;
+  if (!config?.enabled) {
+    await stopMcp();
+    return;
+  }
+  const port = await startMcp(config, toolBridge, app.getVersion());
+  if (port !== config.port) {
+    // Keep the port that is in use, so that the stdio bridge finds the server.
+    config.port = port;
+    await saveConfig(config);
+  }
+}
+
+function mcpPublicConfig() {
+  const status = mcpStatus();
+  return {
+    enabled: mcpConfig?.enabled ?? false,
+    confirmPrint: mcpConfig?.confirmPrint ?? true,
+    token: mcpConfig?.token ?? '',
+    port: status.port ?? mcpConfig?.port,
+    running: status.running,
+    url: `http://127.0.0.1:${status.port ?? mcpConfig?.port}/mcp`,
+    command: process.execPath,
+    // The bridge runs outside the asar archive, so that Node mode can load it.
+    bridge: join(__dirname, 'mcp-bridge.js').replace(`app.asar${sep}`, `app.asar.unpacked${sep}`),
+    configFile: configPath(),
+    packaged: app.isPackaged,
+  };
+}
+
+function registerMcpIpc(): void {
+  ipcMain.on('mcp:ready', (event) => {
+    if (event.sender.id === mainWindow?.webContents.id) markWindowReady();
+  });
+  ipcMain.on('mcp:reply', (event, reply: { id?: unknown; ok?: unknown; result?: WindowResult; error?: unknown }) => {
+    if (event.sender.id !== mainWindow?.webContents.id || typeof reply?.id !== 'string') return;
+    const p = pending.get(reply.id);
+    if (!p) return;
+    pending.delete(reply.id);
+    clearTimeout(p.timer);
+    if (reply.ok === true) p.resolve(reply.result ?? {});
+    else p.reject(new Error(typeof reply.error === 'string' ? reply.error : 'The app could not do this.'));
+  });
+  ipcMain.handle('mcp:getConfig', () => mcpPublicConfig());
+  ipcMain.handle('mcp:setConfig', async (_event, patch: { enabled?: unknown; confirmPrint?: unknown }) => {
+    if (!mcpConfig) mcpConfig = await loadConfig();
+    if (typeof patch?.enabled === 'boolean') mcpConfig.enabled = patch.enabled;
+    if (typeof patch?.confirmPrint === 'boolean') mcpConfig.confirmPrint = patch.confirmPrint;
+    await saveConfig(mcpConfig);
+    await applyMcpConfig();
+    return mcpPublicConfig();
+  });
+  ipcMain.handle('mcp:newToken', async () => {
+    if (!mcpConfig) mcpConfig = await loadConfig();
+    mcpConfig.token = newToken();
+    await saveConfig(mcpConfig);
+    await applyMcpConfig();
+    return mcpPublicConfig();
+  });
+}
+
 function buildMenu(): void {
   const isMac = process.platform === 'darwin';
   const template: MenuItemConstructorOptions[] = [
@@ -347,23 +456,28 @@ function buildMenu(): void {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-app.on('second-instance', () => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
-  }
-});
-
-app.whenReady().then(() => {
-  configureSession();
-  registerIpc();
-  buildMenu();
-  createWindow();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+{
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
   });
-});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+  app.whenReady().then(async () => {
+    configureSession();
+    registerIpc();
+    registerMcpIpc();
+    buildMenu();
+    createWindow();
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+    mcpConfig = await loadConfig();
+    await applyMcpConfig().catch((err) => console.error(`MCP server did not start: ${String(err)}`));
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
+}

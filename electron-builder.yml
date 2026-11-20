@@ -13,6 +13,8 @@ files:
   - "!**/*.map"
 
 asar: true
+asarUnpack:
+  - dist/main/mcp-bridge.js
 npmRebuild: false
 
 win:
