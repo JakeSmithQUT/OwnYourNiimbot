@@ -1,8 +1,16 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, type MenuItemConstructorOptions } from 'electron';
-import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { basename, join, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const DEV_URL = process.env.VITE_DEV_SERVER_URL;
+// The dev server URL is used only in development. A packaged app always loads its own files.
+const DEV_URL = app.isPackaged ? undefined : process.env.VITE_DEV_SERVER_URL;
+const APP_URL = pathToFileURL(join(__dirname, '../renderer/index.html')).href;
+/** Largest file that the open dialog reads. */
+const MAX_OPEN_BYTES = 50 * 1024 * 1024;
+/** Largest value that the store writes. */
+const MAX_STORE_BYTES = 25 * 1024 * 1024;
 const COLLECTIONS = new Set(['templates', 'history', 'settings', 'labels', 'rolls']);
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 const ALLOWED_PERMISSIONS = new Set(['local-fonts', 'clipboard-sanitized-write', 'clipboard-read', 'fullscreen', 'serial', 'bluetooth']);
@@ -31,6 +39,22 @@ function checkCollection(collection: unknown): string {
 function checkId(id: unknown): string {
   if (typeof id !== 'string' || !ID_PATTERN.test(id)) throw new Error('Invalid ID');
   return id;
+}
+
+/** True for the app's own page: the bundled index.html, or the dev server in development. */
+function isAppUrl(url: string): boolean {
+  if (DEV_URL) return url.startsWith(DEV_URL);
+  return url.split(/[?#]/)[0] === APP_URL;
+}
+
+function isAppOrigin(origin: string | undefined): boolean {
+  if (!origin) return false;
+  if (DEV_URL) return origin === new URL(DEV_URL).origin;
+  return origin === 'file://' || origin === 'file:///';
+}
+
+function isAppContents(wc: Electron.WebContents | null | undefined): boolean {
+  return Boolean(wc && mainWindow && wc.id === mainWindow.webContents.id);
 }
 
 function sendSerialPorts(): void {
@@ -62,6 +86,7 @@ function createWindow(): void {
       sandbox: true,
       nodeIntegration: false,
       spellcheck: false,
+      devTools: !app.isPackaged,
     },
   });
 
@@ -86,13 +111,14 @@ function createWindow(): void {
     if (url.startsWith('https://')) void shell.openExternal(url);
     return { action: 'deny' };
   });
-  win.webContents.on('will-navigate', (event, url) => {
-    const allowed = DEV_URL ? url.startsWith(DEV_URL) : url.startsWith('file://');
-    if (!allowed) {
-      event.preventDefault();
-      if (url.startsWith('https://')) void shell.openExternal(url);
-    }
-  });
+  // The window shows only the app page. Links to websites open in the browser.
+  const guardNavigation = (event: Electron.Event, url: string) => {
+    if (isAppUrl(url)) return;
+    event.preventDefault();
+    if (url.startsWith('https://')) void shell.openExternal(url);
+  };
+  win.webContents.on('will-navigate', guardNavigation);
+  win.webContents.on('will-redirect', guardNavigation);
 
   if (process.env.OYN_SMOKE_TEST) runSmokeTest(win, process.env.OYN_SMOKE_TEST);
 
@@ -104,8 +130,9 @@ function createWindow(): void {
 }
 
 /**
- * Start-up check for CI. Loads the app, saves a screenshot to the given path
- * and exits with code 1 if the page logs an error or does not render.
+ * Start-up check for CI and for scripts/install-local.mjs. Loads the app,
+ * saves a screenshot and exits with code 1 if the page logs an error or does
+ * not render. A packaged app writes the screenshot only to the temp folder.
  */
 function runSmokeTest(win: BrowserWindow, screenshotPath: string): void {
   const errors: string[] = [];
@@ -129,8 +156,11 @@ function runSmokeTest(win: BrowserWindow, screenshotPath: string): void {
       }
       // A screenshot is not possible on a display without a GPU. That is not an app fault.
       try {
+        const target = resolve(screenshotPath);
+        const inTemp = target.startsWith(resolve(tmpdir()) + sep) && target.toLowerCase().endsWith('.png');
+        if (app.isPackaged && !inTemp) throw new Error('the screenshot path is not a PNG file in the temp folder');
         const image = await win.webContents.capturePage();
-        await writeFile(screenshotPath, image.toPNG());
+        await writeFile(target, image.toPNG());
       } catch (err) {
         console.warn(`Screenshot not saved: ${String(err)}`);
       }
@@ -143,9 +173,14 @@ function runSmokeTest(win: BrowserWindow, screenshotPath: string): void {
 function configureSession(): void {
   const ses = session.defaultSession;
 
-  ses.setPermissionCheckHandler((_wc, permission) => ALLOWED_PERMISSIONS.has(permission));
-  ses.setPermissionRequestHandler((_wc, permission, callback) => callback(ALLOWED_PERMISSIONS.has(permission)));
-  ses.setDevicePermissionHandler((details) => details.deviceType === 'serial' || (details.deviceType as string) === 'bluetooth');
+  // Permissions go only to the app page in the main window.
+  ses.setPermissionCheckHandler((wc, permission, requestingOrigin) =>
+    ALLOWED_PERMISSIONS.has(permission) && (wc ? isAppContents(wc) : isAppOrigin(requestingOrigin)),
+  );
+  ses.setPermissionRequestHandler((wc, permission, callback) => callback(ALLOWED_PERMISSIONS.has(permission) && isAppContents(wc)));
+  ses.setDevicePermissionHandler(
+    (details) => (details.deviceType === 'serial' || (details.deviceType as string) === 'bluetooth') && isAppOrigin(details.origin),
+  );
 
   ses.on('select-serial-port', (event, portList, _wc, callback) => {
     event.preventDefault();
@@ -162,9 +197,23 @@ function configureSession(): void {
     sendSerialPorts();
   });
 
-  // NIIMBOT printers do not need a PIN. Accept a plain confirmation request.
+  // NIIMBOT printers do not pair. If a device asks to pair, the user decides.
   ses.setBluetoothPairingHandler((details, callback) => {
-    callback({ confirmed: details.pairingKind === 'confirm' });
+    if (!mainWindow || (details.pairingKind !== 'confirm' && details.pairingKind !== 'confirmPin')) {
+      callback({ confirmed: false });
+      return;
+    }
+    const pin = details.pairingKind === 'confirmPin' ? `\n\nPIN: ${details.pin ?? ''}` : '';
+    void dialog
+      .showMessageBox(mainWindow, {
+        type: 'question',
+        buttons: ['Pair', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        message: 'A Bluetooth device asks to pair with this computer.',
+        detail: `NIIMBOT printers do not need pairing. Pair only if you expect this request.${pin}`,
+      })
+      .then((r) => callback({ confirmed: r.response === 0 }));
   });
 }
 
@@ -210,8 +259,10 @@ function registerIpc(): void {
     const dir = libraryDir(checkCollection(collection));
     await mkdir(dir, { recursive: true });
     const file = join(dir, `${checkId(id)}.json`);
+    const json = JSON.stringify(value);
+    if (json === undefined || json.length > MAX_STORE_BYTES) throw new Error('The data is too large to save.');
     const tmp = `${file}.tmp`;
-    await writeFile(tmp, JSON.stringify(value), 'utf8');
+    await writeFile(tmp, json, 'utf8');
     await rename(tmp, file);
     return true;
   });
@@ -229,6 +280,8 @@ function registerIpc(): void {
     });
     if (result.canceled || !result.filePaths[0]) return null;
     const path = result.filePaths[0];
+    const { size } = await stat(path);
+    if (size > MAX_OPEN_BYTES) throw new Error(`The file is larger than ${MAX_OPEN_BYTES / 1024 / 1024} MB.`);
     const buffer = await readFile(path);
     return {
       name: basename(path),
@@ -245,6 +298,7 @@ function registerIpc(): void {
         filters: Array.isArray(opts?.filters) ? opts.filters : undefined,
       });
       if (result.canceled || !result.filePath) return false;
+      if (String(opts.data ?? '').length > MAX_OPEN_BYTES * 2) throw new Error('The data is too large to save.');
       const encoding = opts.encoding === 'base64' ? 'base64' : 'utf8';
       await writeFile(result.filePath, Buffer.from(String(opts.data ?? ''), encoding));
       return true;
@@ -279,9 +333,8 @@ function buildMenu(): void {
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
+        // Reload and developer tools are for development only.
+        ...(app.isPackaged ? [] : [{ role: 'reload' as const }, { role: 'toggleDevTools' as const }, { type: 'separator' as const }]),
         { role: 'resetZoom' },
         { role: 'zoomIn' },
         { role: 'zoomOut' },
