@@ -45,7 +45,15 @@ Download the installer for your computer from the [Releases](https://github.com/
 | macOS (Apple silicon or Intel) | `OwnYourNiimbot-<version>-macos-<arch>.dmg` |
 | Linux (x64 or Arm64) | `OwnYourNiimbot-<version>-linux-<arch>.AppImage` or `.deb` |
 
-The installers are not code signed. Each system shows a warning the first time that you open the app.
+The installers are not code signed. Each system shows a warning the first time that you open the app. Because of this, download the app only from the [Releases](https://github.com/JakeSmithQUT/OwnYourNiimbot/releases) page of this repository. Do not use copies from other websites.
+
+To make sure that a download is complete and not changed, compare its SHA-256 checksum with the value in `SHA256SUMS.txt` on the same release page:
+
+| System | Command |
+|---|---|
+| Windows (PowerShell) | `Get-FileHash <file> -Algorithm SHA256` |
+| macOS | `shasum -a 256 <file>` |
+| Linux | `sha256sum <file>` |
 
 ### Open the app on Windows
 
