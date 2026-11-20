@@ -15,6 +15,14 @@ files:
 asar: true
 asarUnpack:
   - dist/main/mcp-bridge.js
+
+# Electron fuses. The MCP bridge runs the app executable in Node mode, so runAsNode stays on.
+electronFuses:
+  runAsNode: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
 npmRebuild: false
 
 win:

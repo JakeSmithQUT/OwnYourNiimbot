@@ -1,6 +1,6 @@
 import { app } from 'electron';
 import { randomBytes } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export interface McpConfig {
@@ -38,10 +38,21 @@ export async function loadConfig(): Promise<McpConfig> {
     confirmPrint: raw.confirmPrint !== false,
   };
   if (config.token !== raw.token) await saveConfig(config);
+  else await restrictConfig();
   return config;
 }
 
 export async function saveConfig(config: McpConfig): Promise<void> {
-  // The file holds the token, so only the user can read it on macOS and Linux.
   await writeFile(configPath(), JSON.stringify(config, null, 2), { encoding: 'utf8', mode: 0o600 });
+  await restrictConfig();
+}
+
+/**
+ * The file holds the token, so only the user can read it on macOS and Linux.
+ * The write mode applies only to a new file, so set it again. On Windows the
+ * file is in the user profile, which other users cannot read.
+ */
+async function restrictConfig(): Promise<void> {
+  if (process.platform === 'win32') return;
+  await chmod(configPath(), 0o600).catch(() => undefined);
 }

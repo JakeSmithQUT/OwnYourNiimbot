@@ -6,6 +6,17 @@ import { registerTools, SERVER_INSTRUCTIONS, type ToolBridge } from './tools';
 import type { McpConfig } from './config';
 
 const MAX_BODY = 1024 * 1024;
+/** Requests that the server works on at the same time. A print can take minutes. */
+const MAX_ACTIVE = 8;
+
+class HttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 let http: Server | undefined;
 let activePort: number | undefined;
@@ -14,8 +25,11 @@ export function mcpStatus(): { running: boolean; port?: number } {
   return { running: Boolean(http), port: activePort };
 }
 
-function send(res: ServerResponse, status: number, message: string): void {
-  res.writeHead(status, { 'content-type': 'application/json' });
+function send(res: ServerResponse, status: number, message: string, close = false): void {
+  if (res.headersSent || res.writableEnded || res.destroyed) return;
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (close) headers.connection = 'close';
+  res.writeHead(status, headers);
   res.end(JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message }, id: null }));
 }
 
@@ -23,23 +37,34 @@ function readBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks: Buffer[] = [];
-    req.on('data', (c: Buffer) => {
+    let done = false;
+    const onData = (c: Buffer) => {
       size += c.length;
+      if (done) {
+        // Read and drop the rest, so that the client can read the reply. Close a connection that sends much more.
+        if (size > MAX_BODY * 8) req.socket.destroy();
+        return;
+      }
       if (size > MAX_BODY) {
-        reject(new Error('Request is too large.'));
-        req.destroy();
+        done = true;
+        chunks.length = 0;
+        reject(new HttpError(413, 'The request is too large.'));
         return;
       }
       chunks.push(c);
-    });
+    };
+    req.on('data', onData);
     req.on('end', () => {
+      if (done) return;
       try {
         resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
       } catch {
-        reject(new Error('The request is not valid JSON.'));
+        reject(new HttpError(400, 'The request is not valid JSON.'));
       }
     });
-    req.on('error', reject);
+    req.on('error', (err) => {
+      if (!done) reject(err);
+    });
   });
 }
 
@@ -63,18 +88,29 @@ function listen(server: Server, port: number): Promise<void> {
 export async function startMcp(config: McpConfig, bridge: ToolBridge, version: string): Promise<number> {
   await stopMcp();
   let port = config.port;
+  let active = 0;
   const server = createServer((req, res) => {
+    // A closed connection can raise errors on these streams. They must not stop the app.
+    req.on('error', () => undefined);
+    res.on('error', () => undefined);
     const check = checkRequest({ method: req.method, url: req.url, headers: req.headers, remoteAddress: req.socket.remoteAddress }, port, config.token);
     if (!check.ok) {
       send(res, check.status, check.message);
       return;
     }
+    if (active >= MAX_ACTIVE) {
+      send(res, 503, 'The app is busy with other requests. Try again soon.', true);
+      return;
+    }
+    active++;
+    res.on('close', () => active--);
     void (async () => {
       let body: unknown;
       try {
         body = await readBody(req);
       } catch (err) {
-        send(res, 400, (err as Error).message);
+        const status = err instanceof HttpError ? err.status : 400;
+        send(res, status, (err as Error).message, status === 413);
         return;
       }
       // Stateless: a new server and transport for each request.
@@ -89,11 +125,15 @@ export async function startMcp(config: McpConfig, bridge: ToolBridge, version: s
         await mcp.connect(transport);
         await transport.handleRequest(req, res, body);
       } catch (err) {
-        if (!res.headersSent) send(res, 500, (err as Error).message);
+        send(res, 500, (err as Error).message);
       }
-    })();
+    })().catch(() => undefined);
   });
-  server.requestTimeout = 15 * 60 * 1000;
+  // These limits apply to receiving the request. The reply to a print can take longer.
+  server.requestTimeout = 30 * 1000;
+  server.headersTimeout = 10 * 1000;
+  server.keepAliveTimeout = 5 * 1000;
+  server.on('clientError', (_err, socket) => socket.destroy());
 
   for (let attempt = 0; attempt < 10; attempt++) {
     try {

@@ -16,7 +16,6 @@ export interface SerialEntry {
 export interface McpPublicConfig {
   enabled: boolean;
   confirmPrint: boolean;
-  token: string;
   port?: number;
   running: boolean;
   url: string;
@@ -24,6 +23,8 @@ export interface McpPublicConfig {
   bridge: string;
   configFile: string;
   packaged: boolean;
+  /** False for the portable Windows app and the AppImage, which run from a temporary folder. */
+  bridgeAvailable: boolean;
 }
 
 function listen<T>(channel: string, cb: (value: T) => void): () => void {
@@ -59,8 +60,12 @@ const api = {
     reply: (id: string, payload: { ok: boolean; result?: unknown; error?: string }) => ipcRenderer.send('mcp:reply', { id, ...payload }),
     ready: () => ipcRenderer.send('mcp:ready'),
     getConfig: (): Promise<McpPublicConfig> => ipcRenderer.invoke('mcp:getConfig'),
+    getToken: (): Promise<string> => ipcRenderer.invoke('mcp:getToken'),
     setConfig: (patch: { enabled?: boolean; confirmPrint?: boolean }): Promise<McpPublicConfig> => ipcRenderer.invoke('mcp:setConfig', patch),
     newToken: (): Promise<McpPublicConfig> => ipcRenderer.invoke('mcp:newToken'),
+  },
+  clipboard: {
+    readText: (): Promise<string> => ipcRenderer.invoke('clipboard:readText'),
   },
   app: {
     info: (): Promise<{ version: string; platform: string; arch: string; electron: string; chrome: string }> => ipcRenderer.invoke('app:info'),

@@ -10,6 +10,8 @@ declare global {
  * Stand-in for the desktop API when the interface runs in a plain browser,
  * for example during development with `vite`. Data goes to localStorage.
  */
+const NO_MCP = { enabled: false, confirmPrint: true, running: false, url: '', command: '', bridge: '', configFile: '', packaged: false, bridgeAvailable: false };
+
 function browserApi(): DesktopApi {
   const key = (c: string, id: string) => `oyn:${c}:${id}`;
   const noop = () => () => undefined;
@@ -64,9 +66,13 @@ function browserApi(): DesktopApi {
       onCall: noop,
       reply: () => undefined,
       ready: () => undefined,
-      getConfig: async () => ({ enabled: false, confirmPrint: true, token: '', running: false, url: '', command: '', bridge: '', configFile: '', packaged: false }),
-      setConfig: async () => ({ enabled: false, confirmPrint: true, token: '', running: false, url: '', command: '', bridge: '', configFile: '', packaged: false }),
-      newToken: async () => ({ enabled: false, confirmPrint: true, token: '', running: false, url: '', command: '', bridge: '', configFile: '', packaged: false }),
+      getConfig: async () => NO_MCP,
+      getToken: async () => '',
+      setConfig: async () => NO_MCP,
+      newToken: async () => NO_MCP,
+    },
+    clipboard: {
+      readText: () => navigator.clipboard.readText(),
     },
     app: {
       info: async () => ({ version: 'dev', platform: 'browser', arch: '', electron: '', chrome: '' }),

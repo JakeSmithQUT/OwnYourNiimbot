@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, type MenuItemConstructorOptions } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, session, shell, type MenuItemConstructorOptions } from 'electron';
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, sep } from 'node:path';
@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { configPath, loadConfig, newToken, saveConfig, type McpConfig } from './mcp/config';
 import { mcpStatus, startMcp, stopMcp } from './mcp/server';
 import type { ToolBridge, WindowResult } from './mcp/tools';
+import { isAllowedExternal } from './links';
 
 // Development and tests only: keep test data apart from the real app data.
 if (!app.isPackaged && process.env.OYN_USER_DATA) app.setPath('userData', process.env.OYN_USER_DATA);
@@ -20,7 +21,8 @@ const MAX_OPEN_BYTES = 50 * 1024 * 1024;
 const MAX_STORE_BYTES = 25 * 1024 * 1024;
 const COLLECTIONS = new Set(['templates', 'history', 'settings', 'labels', 'rolls']);
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
-const ALLOWED_PERMISSIONS = new Set(['local-fonts', 'clipboard-sanitized-write', 'clipboard-read', 'fullscreen', 'serial', 'bluetooth']);
+// The page can write to the clipboard. It reads the clipboard only through the clipboard:readText call.
+const ALLOWED_PERMISSIONS = new Set(['local-fonts', 'clipboard-sanitized-write', 'fullscreen', 'serial', 'bluetooth']);
 
 // Web Bluetooth is behind this switch in Chromium on Linux.
 if (process.platform === 'linux') app.commandLine.appendSwitch('enable-experimental-web-platform-features');
@@ -62,6 +64,21 @@ function isAppOrigin(origin: string | undefined): boolean {
 
 function isAppContents(wc: Electron.WebContents | null | undefined): boolean {
   return Boolean(wc && mainWindow && wc.id === mainWindow.webContents.id);
+}
+
+/** Registers an IPC call that only the app window can make. */
+function handle<A extends unknown[]>(channel: string, fn: (event: Electron.IpcMainInvokeEvent, ...args: A) => unknown): void {
+  ipcMain.handle(channel, (event, ...args) => {
+    if (!isAppContents(event.sender)) throw new Error('This call is not allowed.');
+    return fn(event, ...(args as A));
+  });
+}
+
+/** Registers an IPC message that only the app window can send. */
+function on<A extends unknown[]>(channel: string, fn: (event: Electron.IpcMainEvent, ...args: A) => void): void {
+  ipcMain.on(channel, (event, ...args) => {
+    if (isAppContents(event.sender)) fn(event, ...(args as A));
+  });
 }
 
 function sendSerialPorts(): void {
@@ -119,14 +136,14 @@ function createWindow(): void {
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://')) void shell.openExternal(url);
+    if (isAllowedExternal(url)) void shell.openExternal(url);
     return { action: 'deny' };
   });
-  // The window shows only the app page. Links to websites open in the browser.
+  // The window shows only the app page. Links to the project website open in the browser.
   const guardNavigation = (event: Electron.Event, url: string) => {
     if (isAppUrl(url)) return;
     event.preventDefault();
-    if (url.startsWith('https://')) void shell.openExternal(url);
+    if (isAllowedExternal(url)) void shell.openExternal(url);
   };
   win.webContents.on('will-navigate', guardNavigation);
   win.webContents.on('will-redirect', guardNavigation);
@@ -229,19 +246,19 @@ function configureSession(): void {
 }
 
 function registerIpc(): void {
-  ipcMain.on('bluetooth:select', (_event, deviceId: unknown) => {
+  on('bluetooth:select', (_event, deviceId: unknown) => {
     const cb = bluetoothCallback;
     bluetoothCallback = null;
     cb?.(typeof deviceId === 'string' ? deviceId : '');
   });
 
-  ipcMain.on('serial:select', (_event, portId: unknown) => {
+  on('serial:select', (_event, portId: unknown) => {
     const cb = serialCallback;
     serialCallback = null;
     cb?.(typeof portId === 'string' ? portId : '');
   });
 
-  ipcMain.handle('store:list', async (_event, collection: unknown) => {
+  handle('store:list', async (_event, collection: unknown) => {
     const dir = libraryDir(checkCollection(collection));
     await mkdir(dir, { recursive: true });
     const files = (await readdir(dir)).filter((f) => f.endsWith('.json'));
@@ -257,7 +274,7 @@ function registerIpc(): void {
     return items.filter((i) => i !== null);
   });
 
-  ipcMain.handle('store:get', async (_event, collection: unknown, id: unknown) => {
+  handle('store:get', async (_event, collection: unknown, id: unknown) => {
     const file = libraryDir(checkCollection(collection), `${checkId(id)}.json`);
     try {
       return JSON.parse(await readFile(file, 'utf8'));
@@ -266,7 +283,7 @@ function registerIpc(): void {
     }
   });
 
-  ipcMain.handle('store:put', async (_event, collection: unknown, id: unknown, value: unknown) => {
+  handle('store:put', async (_event, collection: unknown, id: unknown, value: unknown) => {
     const dir = libraryDir(checkCollection(collection));
     await mkdir(dir, { recursive: true });
     const file = join(dir, `${checkId(id)}.json`);
@@ -278,12 +295,12 @@ function registerIpc(): void {
     return true;
   });
 
-  ipcMain.handle('store:delete', async (_event, collection: unknown, id: unknown) => {
+  handle('store:delete', async (_event, collection: unknown, id: unknown) => {
     await rm(libraryDir(checkCollection(collection), `${checkId(id)}.json`), { force: true });
     return true;
   });
 
-  ipcMain.handle('file:open', async (_event, opts: { filters?: Electron.FileFilter[]; binary?: boolean }) => {
+  handle('file:open', async (_event, opts: { filters?: Electron.FileFilter[]; binary?: boolean }) => {
     if (!mainWindow) return null;
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openFile'],
@@ -300,23 +317,26 @@ function registerIpc(): void {
     };
   });
 
-  ipcMain.handle(
+  handle(
     'file:save',
     async (_event, opts: { defaultName: string; filters?: Electron.FileFilter[]; data: string; encoding?: 'utf8' | 'base64' }) => {
       if (!mainWindow) return false;
+      const data = String(opts?.data ?? '');
+      const encoding = opts?.encoding === 'base64' ? 'base64' : 'utf8';
+      // Check the size of the file, not of the encoded text.
+      const bytes = encoding === 'base64' ? Math.floor((data.length * 3) / 4) : Buffer.byteLength(data, 'utf8');
+      if (bytes > MAX_OPEN_BYTES) throw new Error('The data is too large to save.');
       const result = await dialog.showSaveDialog(mainWindow, {
         defaultPath: typeof opts?.defaultName === 'string' ? opts.defaultName : 'label.json',
         filters: Array.isArray(opts?.filters) ? opts.filters : undefined,
       });
       if (result.canceled || !result.filePath) return false;
-      if (String(opts.data ?? '').length > MAX_OPEN_BYTES * 2) throw new Error('The data is too large to save.');
-      const encoding = opts.encoding === 'base64' ? 'base64' : 'utf8';
-      await writeFile(result.filePath, Buffer.from(String(opts.data ?? ''), encoding));
+      await writeFile(result.filePath, Buffer.from(data, encoding));
       return true;
     },
   );
 
-  ipcMain.handle('app:info', () => ({
+  handle('app:info', () => ({
     version: app.getVersion(),
     platform: process.platform,
     arch: process.arch,
@@ -324,15 +344,18 @@ function registerIpc(): void {
     chrome: process.versions.chrome,
   }));
 
-  ipcMain.handle('app:openDataFolder', async () => {
+  handle('app:openDataFolder', async () => {
     const dir = libraryDir();
     await mkdir(dir, { recursive: true });
     await shell.openPath(dir);
   });
 
-  ipcMain.handle('app:openExternal', async (_event, url: unknown) => {
-    if (typeof url === 'string' && url.startsWith('https://')) await shell.openExternal(url);
+  handle('app:openExternal', async (_event, url: unknown) => {
+    if (typeof url === 'string' && isAllowedExternal(url)) await shell.openExternal(url);
   });
+
+  // The Paste table button reads the clipboard here, when the user clicks it.
+  handle('clipboard:readText', async () => String(await clipboard.readText()).slice(0, 10 * 1024 * 1024));
 }
 
 // ---------- MCP (AI assistants) ----------
@@ -385,12 +408,15 @@ async function applyMcpConfig(): Promise<void> {
   }
 }
 
+/**
+ * The settings that the window shows. The token is not included. The window
+ * asks for it with mcp:getToken only when the user shows or copies it.
+ */
 function mcpPublicConfig() {
   const status = mcpStatus();
   return {
     enabled: mcpConfig?.enabled ?? false,
     confirmPrint: mcpConfig?.confirmPrint ?? true,
-    token: mcpConfig?.token ?? '',
     port: status.port ?? mcpConfig?.port,
     running: status.running,
     url: `http://127.0.0.1:${status.port ?? mcpConfig?.port}/mcp`,
@@ -399,15 +425,15 @@ function mcpPublicConfig() {
     bridge: join(__dirname, 'mcp-bridge.js').replace(`app.asar${sep}`, `app.asar.unpacked${sep}`),
     configFile: configPath(),
     packaged: app.isPackaged,
+    // The portable Windows app and the AppImage run from a temporary folder, so a saved bridge path stops working.
+    bridgeAvailable: !(process.env.PORTABLE_EXECUTABLE_FILE || process.env.APPIMAGE),
   };
 }
 
 function registerMcpIpc(): void {
-  ipcMain.on('mcp:ready', (event) => {
-    if (event.sender.id === mainWindow?.webContents.id) markWindowReady();
-  });
-  ipcMain.on('mcp:reply', (event, reply: { id?: unknown; ok?: unknown; result?: WindowResult; error?: unknown }) => {
-    if (event.sender.id !== mainWindow?.webContents.id || typeof reply?.id !== 'string') return;
+  on('mcp:ready', () => markWindowReady());
+  on('mcp:reply', (_event, reply: { id?: unknown; ok?: unknown; result?: WindowResult; error?: unknown }) => {
+    if (typeof reply?.id !== 'string') return;
     const p = pending.get(reply.id);
     if (!p) return;
     pending.delete(reply.id);
@@ -415,8 +441,12 @@ function registerMcpIpc(): void {
     if (reply.ok === true) p.resolve(reply.result ?? {});
     else p.reject(new Error(typeof reply.error === 'string' ? reply.error : 'The app could not do this.'));
   });
-  ipcMain.handle('mcp:getConfig', () => mcpPublicConfig());
-  ipcMain.handle('mcp:setConfig', async (_event, patch: { enabled?: unknown; confirmPrint?: unknown }) => {
+  handle('mcp:getConfig', () => mcpPublicConfig());
+  handle('mcp:getToken', async () => {
+    if (!mcpConfig) mcpConfig = await loadConfig();
+    return mcpConfig.token;
+  });
+  handle('mcp:setConfig', async (_event, patch: { enabled?: unknown; confirmPrint?: unknown }) => {
     if (!mcpConfig) mcpConfig = await loadConfig();
     if (typeof patch?.enabled === 'boolean') mcpConfig.enabled = patch.enabled;
     if (typeof patch?.confirmPrint === 'boolean') mcpConfig.confirmPrint = patch.confirmPrint;
@@ -424,7 +454,7 @@ function registerMcpIpc(): void {
     await applyMcpConfig();
     return mcpPublicConfig();
   });
-  ipcMain.handle('mcp:newToken', async () => {
+  handle('mcp:newToken', async () => {
     if (!mcpConfig) mcpConfig = await loadConfig();
     mcpConfig.token = newToken();
     await saveConfig(mcpConfig);

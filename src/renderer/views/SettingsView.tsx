@@ -8,31 +8,43 @@ import { appStore, updateSettings, type Settings } from '../state/app';
 import { MODELS, PRINT_VARIANTS, type PrintVariant } from '../../printer/models';
 import { Check, Field, Modal, Segmented } from '../components/ui';
 
-function CopyBox(props: { label: string; value: string; secret?: boolean }) {
-  const [shown, setShown] = useState(!props.secret);
+/**
+ * A value with a copy button. A secret value is hidden, and the app reads it
+ * from the main process only when the user shows or copies it.
+ */
+function CopyBox(props: { label: string; value: string | (() => Promise<string>); secret?: boolean; hint?: string }) {
+  const [shown, setShown] = useState<string | undefined>(props.secret ? undefined : (props.value as string));
+  const read = async () => (typeof props.value === 'string' ? props.value : props.value());
+  useEffect(() => {
+    if (!props.secret) setShown(props.value as string);
+  }, [props.value, props.secret]);
   return (
     <div className="field">
       <label>{props.label}</label>
       <div className="copy-box">
-        <code>{shown ? props.value : '•'.repeat(24)}</code>
+        <code>{shown ?? '•'.repeat(24)}</code>
         {props.secret && (
-          <button className="btn small ghost" onClick={() => setShown(!shown)}>
-            {shown ? 'Hide' : 'Show'}
+          <button className="btn small ghost" onClick={() => void (shown === undefined ? read().then(setShown) : setShown(undefined))}>
+            {shown === undefined ? 'Show' : 'Hide'}
           </button>
         )}
         <button
           className="btn small"
-          onClick={() => {
-            void navigator.clipboard.writeText(props.value);
-            toast('Copied', 'success');
-          }}
+          onClick={() =>
+            void read()
+              .then((v) => navigator.clipboard.writeText(v))
+              .then(() => toast('Copied', 'success'))
+          }
         >
           <Copy size={13} /> Copy
         </button>
       </div>
+      {props.hint && <small className="muted">{props.hint}</small>}
     </div>
   );
 }
+
+const quote = (s: string) => `"${s}"`;
 
 /** Settings for the local MCP server that lets AI assistants make and print labels. */
 function AssistantSettings() {
@@ -48,7 +60,9 @@ function AssistantSettings() {
       toast((err as Error).message, 'error');
     }
   };
-  const claudeCode = `claude mcp add --transport http ownyourniimbot ${cfg.url} --header "Authorization: Bearer ${cfg.token}"`;
+  // The bridge reads the token from the settings file, so these setups do not contain it.
+  const claudeCodeBridge = `claude mcp add ownyourniimbot -e ELECTRON_RUN_AS_NODE=1 -- ${quote(cfg.command)} ${quote(cfg.bridge)} --config ${quote(cfg.configFile)}`;
+  const claudeCodeHttp = async () => `claude mcp add --transport http ownyourniimbot ${cfg.url} --header "Authorization: Bearer ${await api.mcp.getToken()}"`;
   const desktopJson = JSON.stringify(
     { mcpServers: { ownyourniimbot: { command: cfg.command, args: [cfg.bridge, '--config', cfg.configFile], env: { ELECTRON_RUN_AS_NODE: '1' } } } },
     null,
@@ -60,7 +74,7 @@ function AssistantSettings() {
         <Bot size={16} /> AI assistants (MCP)
       </h3>
       <p className="muted" style={{ marginTop: 0 }}>
-        Lets an AI assistant on this computer, for example Claude, make, preview and print labels through the Model Context Protocol. The connection is local only and needs the token below.
+        Lets an AI assistant on this computer, for example Claude, make, preview and print labels through the Model Context Protocol. The connection is local only and needs a token.
       </p>
       <Check checked={cfg.enabled} onChange={(enabled) => void set({ enabled })}>
         Allow AI assistants to use OwnYourNiimbot
@@ -74,7 +88,7 @@ function AssistantSettings() {
             <span className={`pill ${cfg.running ? 'ok' : 'warn'}`}>{cfg.running ? `Running on port ${cfg.port}` : 'Not running'}</span>
           </p>
           <CopyBox label="Address" value={cfg.url} />
-          <CopyBox label="Token" value={cfg.token} secret />
+          <CopyBox label="Token" value={() => api.mcp.getToken()} secret hint="Other MCP clients send this token in the Authorization header." />
           <div className="btn-row" style={{ marginBottom: 12 }}>
             <button
               className="btn small"
@@ -88,9 +102,18 @@ function AssistantSettings() {
               <RefreshCw size={13} /> Make a new token
             </button>
           </div>
-          <CopyBox label="Claude Code command" value={claudeCode} secret />
-          <CopyBox label="Claude Desktop (claude_desktop_config.json)" value={desktopJson} />
-          {!cfg.packaged && <p className="muted">The Claude Desktop setting works with the installed app. In development, use the address and token.</p>}
+          {cfg.bridgeAvailable ? (
+            <>
+              <CopyBox label="Claude Code command" value={claudeCodeBridge} />
+              <CopyBox label="Claude Desktop (claude_desktop_config.json)" value={desktopJson} />
+              {!cfg.packaged && <p className="muted">In development, run npm run build first, so that the bridge file exists.</p>}
+            </>
+          ) : (
+            <>
+              <CopyBox label="Claude Code command" value={claudeCodeHttp} secret />
+              <p className="muted">This version of the app runs from a temporary folder, so Claude Desktop cannot start it. To use Claude Desktop, install the app with the installer.</p>
+            </>
+          )}
         </>
       )}
     </div>
