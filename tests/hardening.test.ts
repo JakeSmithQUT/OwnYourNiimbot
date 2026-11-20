@@ -113,6 +113,13 @@ describe('MCP server', () => {
     expect(json.result?.serverInfo?.name).toBe('ownyourniimbot');
   });
 
+  it('closes a connection that sends far more than the limit, and keeps running', async () => {
+    const huge = await post('x'.repeat(9 * 1024 * 1024)).catch(() => undefined);
+    expect(huge === undefined || huge.status >= 400).toBe(true);
+    const r = await post('{not json');
+    expect(r.status).toBe(400);
+  });
+
   it('answers 400 to a request that is not JSON', async () => {
     const r = await post('{not json');
     expect(r.status).toBe(400);

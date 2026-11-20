@@ -37,33 +37,39 @@ function readBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks: Buffer[] = [];
-    let done = false;
+    let tooLarge = false;
     const onData = (c: Buffer) => {
       size += c.length;
-      if (done) {
-        // Read and drop the rest, so that the client can read the reply. Close a connection that sends much more.
-        if (size > MAX_BODY * 8) req.socket.destroy();
+      if (size > MAX_BODY * 8) {
+        // Much more than the limit: close the connection without a reply.
+        req.socket.destroy();
         return;
       }
       if (size > MAX_BODY) {
-        done = true;
+        // Read and drop the rest, then reply at the end of the request. A reply while the
+        // client is still sending can reset the connection before the client reads it.
+        tooLarge = true;
         chunks.length = 0;
-        reject(new HttpError(413, 'The request is too large.'));
         return;
       }
       chunks.push(c);
     };
     req.on('data', onData);
     req.on('end', () => {
-      if (done) return;
+      if (tooLarge) {
+        reject(new HttpError(413, 'The request is too large.'));
+        return;
+      }
       try {
         resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
       } catch {
         reject(new HttpError(400, 'The request is not valid JSON.'));
       }
     });
-    req.on('error', (err) => {
-      if (!done) reject(err);
+    req.on('error', reject);
+    // A destroyed connection never sends 'end'. Settle the promise so that the request slot is freed.
+    req.on('close', () => {
+      if (!req.complete) reject(new HttpError(400, 'The connection closed.'));
     });
   });
 }
