@@ -8,12 +8,13 @@ The app does not need an account or an internet connection. Labels, print histor
 
 ## Features
 
-- A template library with 105 designs in 632 sizes, which you can filter by the connected printer and the loaded roll.
+- A template library with 529 designs in 3,704 sizes, which you can filter by the connected printer and the loaded roll.
 - 19 fonts that ship with the app, so labels look the same on every computer and print offline.
 - An optional local MCP server, so that an AI assistant such as Claude can make, preview and print labels.
 - Automatic label size. The app finds the size of the roll in the printer and gives a new label that size.
 - A list of the NIIMBOT rolls that fit the selected printer, with the loaded roll at the top.
 - Label editor with text, barcodes, QR codes, Data Matrix, PDF417, Aztec codes, images, rectangles, circles, lines, tables and symbols.
+- A library of 445 symbols in 15 groups, with a search.
 - Replace an element with a different type. Right-click the element, then select **Replace with**. For example, change a QR code to an image. The new element keeps the position, size and rotation, and the text or code value where possible.
 - Date fields with an optional day offset, for best-before and expiry dates.
 - Serial number fields with a prefix, a suffix, a start value, a step and a fixed number of digits.
@@ -111,22 +112,27 @@ Some older models, for example the B3S, also show as a Bluetooth serial port aft
 
 ## Template library
 
-The **Templates** page has ready-made labels in twelve groups:
+The **Templates** page has ready-made labels in 17 groups:
 
 | Group | Examples |
 |---|---|
-| IT and servers | Server label (hostname, IP, BMC address, serial number, role, QR code), rack ear label, rack position, asset tags, laptop, drive, network device, Wi-Fi QR code, service record |
-| Network and cables | Cable flags for the 12.5 mm and 25 mm cable rolls, power cable flag, cable wrap, patch panel strip, switch port map |
-| Office | File folder tab, name badge, return address, address label, shelf label, lost property, desk number |
-| Home and kitchen | Pantry jar, spice jar lid, freezer meal, leftovers, storage box, moving box, children's name label, plant marker, charger tag |
-| Food and hospitality | Food prep and rotation, allergen notice, day of the week, product ingredients, table number |
-| Retail | Price tag with barcode, shelf price strip, sale sticker, thank you sticker, jewellery tag, clothing size, product SKU, modern product label |
-| Small business | Coffee bag, bakery box, craft beer, wine bottle, "new" star burst, boutique price tag, review QR code, follow us, packed with care, market stall price card |
+| IT and servers | Server label (hostname, IP, BMC address, serial number, role, QR code), rack ear label, asset tags, laptop, drive, network device, Wi-Fi QR code, service record, UPS battery record, loan device, power feed, static IP address, IT support QR code, KVM ports |
+| Network and cables | Cable flags for the 12.5 mm and 25 mm cable rolls, cable wrap, patch panel strip, switch port map, fibre link, numbered cable markers, data outlet, VLAN list |
+| Office | File folder tab, name badge, return address, shelf label, desk number, meeting room, archive box, key tag, visitor badge, approval mark, binder spine, phone extensions, planner flag, status stamp |
+| Home and kitchen | Pantry jar, spice jar lid, freezer meal, storage box, moving box, bin collection day, light switch names, paint tin, filter change, emergency numbers, valve signs, meal prep, chore strip, chalkboard and deco pantry labels |
+| Food and hospitality | Food prep and rotation, allergen notice, prepared and use-by dates, defrosted, fridge temperature check, allergen boxes, dietary sticker, cup order, beer tap, reserved table, QR menu |
+| Retail | Price tag with barcode, shelf price strip, sale sticker, clothing size, clearance price, multi-buy offer, shelf label with unit price, lay-by, return authorisation, garment care, coupon, percent off |
+| Small business | Coffee bag, bakery box, craft beer, wine bottle, honey jar, tea blend, hot sauce, olive oil, kombucha, lip balm, bath bomb, candle safety label, vegan seal, limited edition number, loyalty card |
 | Gifts and crafts | Script gift tag, gift ticket, handmade seal, script thank you, wedding favour, party bag, ex libris bookplate, candle, soap, vintage jam jar, handwritten plant tag |
-| Shipping and storage | Shipping label, bin location, inventory item, fragile mark, box number |
-| Electrical and workshop | Circuit breaker, switchboard schedule, tool owner, inspection tag, warning sign |
-| Lab and health | Sample tube, specimen barcode, medication schedule, first aid kit |
-| School and events | Book plate, pencil name, lunchbox, event badge |
+| Shipping and storage | Shipping label, bin location, inventory item, pallet label, this way up, heavy item, keep frozen, do not stack, box contents list, aisle, bay and level, batch and expiry, quality check passed, quarantine |
+| Electrical and workshop | Circuit breaker, switchboard schedule, inspection tag, appliance test record, lock-out tag, out of service, phase markers, screws and fasteners, component bin, calibration record, maximum load |
+| Lab and health | Sample tube, specimen barcode, medication schedule, reagent bottle, microscope slide, Petri dish, freezer box grid, pill organiser days, allergy alert, emergency contact |
+| School and events | Book plate, pencil name, lunchbox, event badge, exercise book, locker number, timetable, library spine label, cloakroom ticket, race number, raffle ticket, bake sale price |
+| Garden and pets | Saved seeds, seed tray, plant care card, garden row marker, plant price tag, beehive record, pet ID tag, pet food tub, pet medicine, aquarium water change, vaccination due |
+| Hobbies and collections | 3D printer filament, film roll, record sleeve, yarn band, home brew batch, memory card, board game box, collection specimen, artwork card, mixtape spine, time capsule |
+| Travel and vehicles | Luggage tag, next vehicle service, tyre pressures, parking permit, fuel type, trailer details, helmet ID, camping box, oil change sticker, suitcase sticker |
+| Safety and signs | 54 signs: no smoking, fire extinguisher, first aid, exit, wet floor, hearing and eye protection, no entry, keep clear, fire door, hot surface, drinking water, push and pull, out of order, wet paint |
+| Celebrations and seasons | Christmas gift tag, advent numbers, New Year, Valentine's Day, Easter, Halloween, Mother's Day, Father's Day, Eid, Diwali, Hanukkah, Lunar New Year, birthday, new baby, save the date, wedding table number, graduation, gift voucher |
 
 Each design has a layout for each roll size that it suits. The size buttons on a card show these sizes. The list at the top of the page filters the sizes:
 
@@ -139,9 +145,13 @@ Each design has a layout for each roll size that it suits. The size buttons on a
 
 The page uses the connected printer. If no printer is connected, it uses the model in **Settings**.
 
-Some templates count up for each label: the numbered asset tags, the moving box, the gift ticket and the sample tube. Set the number of labels in the print dialog.
+Some templates count up for each label, for example the numbered asset tags, the cable markers, the cloakroom ticket, the raffle ticket and the advent numbers. Set the number of labels in the print dialog.
 
-The **Decorative** filter shows the designs that use the included fonts and ornaments: frames, scalloped seals, star bursts, ribbons, ticket shapes, dividers and hazard stripes. Each card lists the fonts that it uses.
+Some templates put a date on the label and calculate a second date from it, for example a use-by date three days later or a test date 12 months later. Select the date on the label to change the number of days.
+
+The **Decorative** filter shows the designs that use the included fonts and ornaments: frames, stamp edges, scalloped seals, star bursts, leaf wreaths, ticket and tag shapes, bunting, dividers, hazard stripes and small pictures such as a pine tree, a pumpkin and a paw print. Each card lists the fonts that it uses.
+
+The signs and the test records are layouts only. Make sure that a safety sign or a test tag obeys the rules that apply to you before you use it.
 
 ### Fonts
 
@@ -157,6 +167,32 @@ The app includes these fonts. All are under the SIL Open Font Licence 1.1 or the
 | Monospace | Space Mono, JetBrains Mono |
 
 The font list in the design view shows these fonts first, then the fonts on your computer.
+
+### Symbols
+
+The **Symbols** panel in the design view has 445 symbols in 15 groups:
+
+| Group | Examples |
+|---|---|
+| Warnings and safety | Warning, high voltage, flammable, toxic, biohazard, no smoking, first aid, fire extinguisher |
+| Packaging and shipping | Fragile, keep dry, this side up, do not stack, centre of gravity, keep cold, forklift |
+| Arrows and marks | Arrows, chevrons, check, cross, plus, shapes, link |
+| Home | Key, lock, lamp, door, fridge, washing machine, bed, sofa |
+| Laundry care | Machine wash, do not bleach, tumble dry, line dry, dry flat, iron |
+| Food and drink | Fruit, vegetables, meat, fish, bread, cake, coffee, milk, vegan, no gluten |
+| Shops and money | Cart, bag, card, coins, receipt, discount, gem, trophy |
+| Office and school | Phone, mail, people, calendar, folder, clipboard, pen, book, building |
+| Technology | Laptop, server, router, cable, drive, battery, monitor, printer, USB, Bluetooth |
+| Electrical and tools | Wrench, hammer, drill, ruler, gear, earth, alternating current, direct current, fuse |
+| Health and science | Medicine, syringe, stethoscope, microscope, flask, test tube |
+| Nature and weather | Sun, moon, leaf, flower, trees, mountain, rain, snow |
+| Animals | Paw, cat, dog, rabbit, bird, turtle, bone |
+| Travel and vehicles | Car, bike, bus, train, plane, ship, tent, compass, map |
+| Celebration and fun | Star, heart, party, balloon, music, film, dice, faces |
+
+Click **All** to show the groups. Type in the search field to find a symbol by its name or its group, for example `tree` or `laundry`. Click a symbol to put it on the label.
+
+To change an element to a symbol, right-click the element, select **Replace with**, then select **Symbol**. The symbol list in this menu has the same search.
 
 ### Server labels from a spreadsheet
 

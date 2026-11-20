@@ -42,6 +42,34 @@ The editor stores positions and sizes in units of 0.1 mm. A 50 × 30 mm label is
 
 Barcodes are drawn with a whole number of dots for each module, so that the printed code scans reliably. Images are converted to black and white when you insert or resize them, at the resolution of the selected printer.
 
+## Add a template
+
+The template library is in `src/renderer/templates/`.
+
+| File | Contents |
+|---|---|
+| `layout.ts` | Parts of a label: text, codes, shapes, tables, icons and ornaments. Sizes are in millimetres. |
+| `ornaments.ts`, `motifs.ts` | Vector ornaments: frames, bands, background shapes and small pictures. |
+| `compose.ts` | Builds a label from a description: rows from top to bottom, with an optional frame, background shape, bands and side panel. |
+| `presets.ts` | Descriptions that many templates share: a symbol with lines of text, a heading with captions and values, a code with details, and signs. |
+| `catalogue.ts`, `creative.ts` | Templates with their own layout code. |
+| `practical.ts`, `makers.ts`, `occasions.ts` | Templates that use `compose.ts`. |
+
+To add a template, add a `design(...)` entry to `practical.ts` (plain text), `makers.ts` or `occasions.ts` (fonts and ornaments). An entry has these parts:
+
+1. An ID. Do not change the ID of a template after a release, because the assistant tools use it.
+2. A name, a group and a description. The search on the **Templates** page uses all three.
+3. The label sizes, as width and height on the screen.
+4. The description of the layout. Give `narrow`, `short`, `small`, `tall` or `round` descriptions if the label needs fewer rows at those sizes.
+
+A template that sets a font shows in the **Decorative** filter.
+
+Text gets the largest font size that fits its row. Text rows with the same weight and font get the same size. If the sample text is long, the font is small on the smallest sizes. Remove those sizes from the list, or give a shorter description for them.
+
+After a change, start `npm run dev`, open the **Templates** page and look at each size of the new template. Make sure that no text is smaller than 5 points and that no text wraps to a second line.
+
+To add a symbol, add an entry to a group in `src/renderer/editor/icons.tsx`. Symbol names are lower case and must not change after a release, because saved labels and the assistant tools use them.
+
 ## Update the printer model table
 
 The model table `src/printer/models.json` comes from the printer list in the official Android app.
