@@ -36,6 +36,10 @@
 | `scripts/` | Build scripts. |
 | `docs/` | Documentation. |
 
+## Print area
+
+`src/printer/printArea.ts` gives the part of a label that the print head can reach, in label coordinates. It follows the print pipeline: the image is turned by the print direction of the model (and 180° more with **Turn the print 180°**), then `fitToPrinthead` crops it to the print head width with the alignment of the model. A test checks the area against the real pipeline for each alignment and direction. The design view, the print preview, the label panel warning and the MCP tools all use this function.
+
 ## Label coordinates
 
 The editor stores positions and sizes in units of 0.1 mm. A 50 × 30 mm label is 500 × 300 units. At print time, the label is rendered at the resolution of the printer and converted to 1 bit with a threshold.

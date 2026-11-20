@@ -228,6 +228,14 @@ The **NIIMBOT roll** list in the design view shows the rolls that fit the printe
 5. Set the number of copies, the density and the label type.
 6. Click **Print**.
 
+### Print area
+
+On some printers, the print head is narrower than the label. For example, the H1S prints 12 mm across, so on a 15 mm roll 1.5 mm on each side does not print. The design view shades the parts of the label that do not print, and the print preview shows the same area.
+
+If an element goes outside the print area, the label panel shows a warning. Click **Fit into the print area** to make all elements smaller by the same amount and move them inside the area. To undo it, press Ctrl+Z. To show or hide the shading, click **Show the print area** in the toolbar.
+
+### Print from a spreadsheet
+
 To print one label for each row of a spreadsheet:
 
 1. On the **Data** page, open an .xlsx, .csv or .tsv file. The first row must contain the column names.
@@ -252,6 +260,8 @@ The server is off by default. To turn it on:
 | Other MCP clients | Use the address `http://127.0.0.1:47821/mcp` with the header `Authorization: Bearer <token>`. |
 
 The Claude Code and Claude Desktop setups start the app's own executable as a small bridge program, so you do not need Node.js. The bridge reads the token from the app settings, so the setup does not contain the token. The portable Windows app and the Linux AppImage run from a temporary folder, so they cannot use the bridge. With these versions, Claude Code uses the address and the token.
+
+The assistant gets the print area of each label (`print_area_mm`). The automatic layout for lines of text and a code stays inside it, results list elements that go outside it, and preview images show the parts that do not print in grey.
 
 The assistant can use these tools:
 
