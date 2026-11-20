@@ -3,7 +3,7 @@ import { NiimbotClient, parsePaperInfo } from '../src/printer/client';
 import { rgbaToMono, getPixel, type MonoImage } from '../src/printer/encoder';
 import { encodePacket, PacketParser, readU16, Req } from '../src/printer/protocol';
 import type { Transport } from '../src/printer/transports';
-import type { PrintVariant } from '../src/printer/models';
+import { defaultVariant, findModelByName, type PrintVariant } from '../src/printer/models';
 
 /** Simulated printer that answers requests the way the hardware does and rebuilds the printed image. */
 class FakePrinter implements Transport {
@@ -23,8 +23,9 @@ class FakePrinter implements Transport {
   /** Paper info to return for 0x59, or undefined to answer "not supported". */
   paperInfo?: number[];
   /**
-   * Behaves like the H1S: after Page end it prints one more label at each
-   * status poll until Print end, and it always reports a feed progress of 0.
+   * Behaves like the H1S with the D110 command set: after Page end it prints
+   * one more label at each status poll until Print end, and it always reports
+   * a feed progress of 0.
    */
   repeatsUntilEnd = false;
   private running = false;
@@ -166,7 +167,12 @@ describe('print job against a simulated printer', () => {
     });
   }
 
-  it('ends the job at the label count on a printer that repeats the page (H1S)', async () => {
+  it('uses the modern command set for the H1S', () => {
+    expect(defaultVariant(findModelByName('H1S'))).toBe('modern');
+    expect(defaultVariant(findModelByName('D110'))).toBe('d110');
+  });
+
+  it('ends the job at the label count on a printer that repeats the page', async () => {
     const fake = new FakePrinter(4352);
     fake.repeatsUntilEnd = true;
     const client = new NiimbotClient();

@@ -34,7 +34,7 @@ export type PrintVariant = 'legacy' | 'd110' | 'modern';
 
 export const PRINT_VARIANTS: { value: PrintVariant; label: string; hint: string }[] = [
   { value: 'legacy', label: 'Legacy (D11, B21, B3S)', hint: 'Older D11, B21 and B3S firmware' },
-  { value: 'd110', label: 'D110 family', hint: 'D110, B21S, B18, H1S and similar' },
+  { value: 'd110', label: 'D110 family', hint: 'D110, B21S, B18 and similar' },
   { value: 'modern', label: 'Modern (B1 and newer)', hint: 'B1, B2, B31, B32, K3, M2, M3, P1 and newer models' },
 ];
 
@@ -46,9 +46,11 @@ const LEGACY = new Set([
   'B3S', 'JCB3S', 'A8', 'S6',
   'D101', 'Betty', 'H1', 'B16',
 ]);
+// The H1S (model ID 4352) uses the modern sequence. With the D110 sequence it
+// ignores the copy count, and the first job after a connection does not print.
 const D110 = new Set([
   'D110', 'Hi-D110', 'B21S', 'B21S-C2B', 'D11 H', 'D11 Pro',
-  'B18', 'B18S', 'N1', 'H1S', 'B203', 'A20', 'A203',
+  'B18', 'B18S', 'N1', 'B203', 'A20', 'A203',
 ]);
 
 /** Newer models with low model IDs that still use the modern sequence. */

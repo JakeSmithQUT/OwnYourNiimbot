@@ -57,7 +57,7 @@ These 69 models use the NIIMBOT command set. The last column shows the command s
 | ET10 | 5376 | 203 | 200 mm | 3–3 (3) | continuous | Modern (B1 and newer) |
 | Fust | 513 | 203 | 12 mm | 1–5 (3) | gap, transparent | Legacy (D11, B21, B3S) |
 | H1 | 3840 | 203 | 12 mm | 1–3 (2) | gap, transparent | Legacy (D11, B21, B3S) |
-| H1S | 4352 | 203 | 12 mm | 1–3 (2) | gap, continuous, transparent | D110 family |
+| H1S | 4352 | 203 | 12 mm | 1–3 (2) | gap, continuous, transparent | Modern (B1 and newer) |
 | Hi-D110 | 2305 | 203 | 15 mm | 1–3 (3) | gap, transparent | D110 family |
 | Hi-NB-D11 | 512 | 203 | 15 mm | 1–3 (2) | gap, transparent | Legacy (D11, B21, B3S) |
 | JCB3S | 256 | 203 | 72 mm | 1–5 (2) | gap, black mark, continuous, transparent | Legacy (D11, B21, B3S) |
