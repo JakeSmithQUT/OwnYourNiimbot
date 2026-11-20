@@ -32,7 +32,7 @@ describe('editor data in label files', () => {
   });
 
   it('refuses an element that is very large after scaling', () => {
-    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
     expect(() => validateTemplate(label([{ type: 'Image', src: png, width: 100, height: 100, scaleX: 1000, scaleY: 1 }]))).toThrow(/too large/);
     expect(() => validateTemplate(label([{ type: 'Image', src: png, width: 100, height: 100, scaleX: 5, scaleY: 5 }]))).not.toThrow();
   });

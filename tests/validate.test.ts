@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LabelFileError, LIMITS, validateTemplate } from '../src/renderer/editor/validate';
 import { parseRfid } from '../src/printer/client';
 
-const PNG = 'data:image/png;base64,iVBORw0KGgo=';
+const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
 function label(objects: unknown[], extra: Record<string, unknown> = {}) {
   return { name: 'Test', widthMm: 50, heightMm: 30, labelType: 1, canvas: { version: '7', objects }, ...extra };

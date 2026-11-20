@@ -4,6 +4,7 @@
 // copy with only the parts that the editor uses.
 
 import type { LabelTemplate } from './template';
+import { imageSize } from './imageSize';
 
 export const LIMITS = {
   minMm: 5,
@@ -15,6 +16,12 @@ export const LIMITS = {
   maxImageChars: 15 * 1024 * 1024,
   maxTableRows: 30,
   maxTableCols: 12,
+  /** Pixels of one print image. A 300 x 500 mm label at 300 dpi is about 21 million. */
+  maxImagePixels: 40_000_000,
+  /** Pixels of all print images in a label together. */
+  maxLabelPixels: 100_000_000,
+  /** Pixels of the original image that the app keeps to resize an image again. */
+  maxOriginalPixels: 100_000_000,
 };
 
 const TYPES = new Set([
@@ -64,7 +71,7 @@ function cleanEditorData(v: unknown): Record<string, unknown> | undefined {
     };
   }
   if (d.original !== undefined) {
-    checkImageSrc(d.original, 'An image');
+    checkImageSrc(d.original, 'An image', LIMITS.maxOriginalPixels);
     out.original = d.original;
   }
   if (d.settings && typeof d.settings === 'object' && !Array.isArray(d.settings)) {
@@ -89,14 +96,24 @@ function finite(v: unknown, name: string, min: number, max: number): number {
   return v;
 }
 
-function checkImageSrc(src: unknown, where: string): void {
+/**
+ * Checks an embedded image and returns its number of pixels. The size comes
+ * from the image header, because a small file can describe a very large image.
+ */
+function checkImageSrc(src: unknown, where: string, maxPixels: number): number {
   if (typeof src !== 'string' || !/^data:image\/(png|jpeg|gif|bmp|webp|svg\+xml);base64,/i.test(src)) {
     fail(`${where} must be an embedded image. Links to files or websites are not accepted.`);
   }
   if (src.length > LIMITS.maxImageChars) fail(`${where} is too large.`);
+  if (/^data:image\/svg\+xml/i.test(src)) return 0;
+  const size = imageSize(src);
+  if (!size || !size.width || !size.height) fail(`${where} is not a valid image.`);
+  const pixels = size.width * size.height;
+  if (pixels > maxPixels) fail(`${where} is too large (${size.width} x ${size.height} pixels).`);
+  return pixels;
 }
 
-function checkObject(o: unknown, depth: number, count: { n: number }): void {
+function checkObject(o: unknown, depth: number, count: { n: number; pixels: number }): void {
   if (!o || typeof o !== 'object' || Array.isArray(o)) fail('A label element is not valid.');
   const obj = o as Record<string, unknown>;
   if (++count.n > LIMITS.maxObjects) fail(`The label has more than ${LIMITS.maxObjects} elements.`);
@@ -128,7 +145,10 @@ function checkObject(o: unknown, depth: number, count: { n: number }): void {
     if (extra) obj.oyn = extra;
     else delete obj.oyn;
   }
-  if (type === 'image') checkImageSrc(obj.src, 'An image');
+  if (type === 'image') {
+    count.pixels += checkImageSrc(obj.src, 'An image', LIMITS.maxImagePixels);
+    if (count.pixels > LIMITS.maxLabelPixels) fail('The images in the label are too large together.');
+  }
   if (type === 'labelbarcode') {
     if (typeof obj.value !== 'string' || obj.value.length > 4000) fail('A barcode value is too long.');
     if (typeof obj.format !== 'string' || !/^[a-z0-9-]{2,30}$/i.test(obj.format)) fail('A barcode type is not valid.');
@@ -161,7 +181,7 @@ export function validateTemplate(input: unknown): LabelTemplate {
   const heightMm = finite(t.heightMm, 'The label height', LIMITS.minMm, LIMITS.maxHeightMm);
   const canvas = t.canvas as Record<string, unknown> | undefined;
   if (!canvas || typeof canvas !== 'object' || !Array.isArray(canvas.objects)) fail('This file is not a label file.');
-  const count = { n: 0 };
+  const count = { n: 0, pixels: 0 };
   for (const o of canvas.objects) checkObject(o, 0, count);
 
   const labelType = typeof t.labelType === 'number' && Number.isInteger(t.labelType) && t.labelType >= 0 && t.labelType <= 255 ? t.labelType : 1;
