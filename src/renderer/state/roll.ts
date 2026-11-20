@@ -37,14 +37,21 @@ interface RollState {
   suggestion?: LoadedRoll;
 }
 
-export const rollStore = createStore<RollState>({ remembered: {} });
+/** A lookup object without a prototype, so a barcode such as "__proto__" is an ordinary key. */
+function rollMap(from?: Record<string, RememberedRoll>): Record<string, RememberedRoll> {
+  return Object.assign(Object.create(null) as Record<string, RememberedRoll>, from);
+}
+
+export const rollStore = createStore<RollState>({ remembered: rollMap() });
 
 const storeId = (barcode: string) => barcode.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 100);
 
 export async function loadRememberedRolls(): Promise<void> {
   const list = await api.store.list<RememberedRoll>('rolls');
-  const remembered: Record<string, RememberedRoll> = {};
-  for (const r of list) if (r?.barcode) remembered[r.barcode] = r;
+  const remembered = rollMap();
+  for (const r of list) {
+    if (r && typeof r.barcode === 'string' && typeof r.widthMm === 'number' && typeof r.lengthMm === 'number') remembered[r.barcode] = r;
+  }
   rollStore.set({ remembered });
   update();
 }
@@ -53,13 +60,15 @@ export async function loadRememberedRolls(): Promise<void> {
 export async function rememberRoll(barcode: string, widthMm: number, lengthMm: number, labelType?: number): Promise<void> {
   const entry: RememberedRoll = { barcode, widthMm, lengthMm, labelType, updatedAt: Date.now() };
   await api.store.put('rolls', storeId(barcode), entry);
-  rollStore.set({ remembered: { ...rollStore.get().remembered, [barcode]: entry } });
+  const remembered = rollMap(rollStore.get().remembered);
+  remembered[barcode] = entry;
+  rollStore.set({ remembered });
   update();
 }
 
 export async function forgetRoll(barcode: string): Promise<void> {
   await api.store.delete('rolls', storeId(barcode));
-  const remembered = { ...rollStore.get().remembered };
+  const remembered = rollMap(rollStore.get().remembered);
   delete remembered[barcode];
   rollStore.set({ remembered });
   update();

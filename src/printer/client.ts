@@ -564,16 +564,21 @@ export function parseHeartbeat(d: Uint8Array): PrinterStatus {
   };
 }
 
+/** Printable ASCII only, at most 64 characters. Tag data comes from the label roll. */
+function tagText(bytes: Uint8Array): string {
+  return Array.from(bytes, (b) => (b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : '')).join('').slice(0, 64);
+}
+
 export function parseRfid(d: Uint8Array): RfidInfo {
   if (d.length === 0 || d[0] === 0) return { present: false };
   try {
     const uuid = toHex(d.slice(0, 8)).replace(/ /g, '');
     let i = 8;
     const barcodeLen = d[i++];
-    const barcode = new TextDecoder().decode(d.slice(i, i + barcodeLen));
+    const barcode = tagText(d.slice(i, i + barcodeLen));
     i += barcodeLen;
     const serialLen = d[i++];
-    const serial = new TextDecoder().decode(d.slice(i, i + serialLen));
+    const serial = tagText(d.slice(i, i + serialLen));
     i += serialLen;
     const totalLabels = readU16(d, i);
     const usedLabels = readU16(d, i + 2);
