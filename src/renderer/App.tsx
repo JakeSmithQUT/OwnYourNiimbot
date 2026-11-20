@@ -31,6 +31,7 @@ import { PrintDialog } from './components/PrintDialog';
 import { startRollTracking } from './state/roll';
 import { startMcpHandlers } from './mcp/handlers';
 import { ConnectDialog } from './components/ConnectDialog';
+import { startUpdateTracking, UpdateBanner } from './components/Updates';
 
 const NAV: { view: View; label: string; icon: typeof PenTool }[] = [
   { view: 'design', label: 'Design', icon: PenTool },
@@ -49,6 +50,7 @@ export function App() {
     void loadSettings();
     startRollTracking();
     startMcpHandlers();
+    startUpdateTracking();
     return editor.onContentChange(() => markDirty());
   }, []);
 
@@ -141,6 +143,8 @@ export function App() {
             <PrinterIcon size={16} /> Print
           </button>
         </header>
+
+        <UpdateBanner />
 
         <section className="content">
           {state.view === 'design' && <DesignView />}

@@ -13,6 +13,19 @@ export interface SerialEntry {
   productId?: string;
 }
 
+export interface UpdateStatus {
+  state: 'idle' | 'checking' | 'none' | 'available' | 'downloading' | 'ready' | 'error';
+  /** install: the app downloads and installs updates. notify: it shows a link to the release. none: development build. */
+  mode: 'install' | 'notify' | 'none';
+  checkOnLaunch: boolean;
+  current: string;
+  version?: string;
+  percent?: number;
+  url?: string;
+  message?: string;
+  checkedAt?: number;
+}
+
 export interface McpPublicConfig {
   enabled: boolean;
   confirmPrint: boolean;
@@ -66,6 +79,14 @@ const api = {
   },
   clipboard: {
     readText: (): Promise<string> => ipcRenderer.invoke('clipboard:readText'),
+  },
+  updates: {
+    getStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:getStatus'),
+    check: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:check'),
+    setCheckOnLaunch: (value: boolean): Promise<UpdateStatus> => ipcRenderer.invoke('updates:setCheckOnLaunch', value),
+    install: (): Promise<void> => ipcRenderer.invoke('updates:install'),
+    openRelease: (): Promise<void> => ipcRenderer.invoke('updates:openRelease'),
+    onStatus: (cb: (status: UpdateStatus) => void) => listen('updates:status', cb),
   },
   app: {
     info: (): Promise<{ version: string; platform: string; arch: string; electron: string; chrome: string }> => ipcRenderer.invoke('app:info'),

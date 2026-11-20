@@ -8,6 +8,7 @@ import { configPath, loadConfig, newToken, saveConfig, type McpConfig } from './
 import { mcpStatus, startMcp, stopMcp } from './mcp/server';
 import type { ToolBridge, WindowResult } from './mcp/tools';
 import { isAllowedExternal } from './links';
+import { checkForUpdates, installUpdate, setCheckOnLaunch, startUpdates, updateStatus } from './updates';
 
 // Development and tests only: keep test data apart from the real app data.
 if (!app.isPackaged && process.env.OYN_USER_DATA) app.setPath('userData', process.env.OYN_USER_DATA);
@@ -463,6 +464,22 @@ function registerMcpIpc(): void {
   });
 }
 
+// ---------- updates ----------
+
+function registerUpdateIpc(): void {
+  handle('updates:getStatus', () => updateStatus());
+  handle('updates:check', async () => {
+    await checkForUpdates();
+    return updateStatus();
+  });
+  handle('updates:setCheckOnLaunch', (_event, value: unknown) => setCheckOnLaunch(value === true));
+  handle('updates:install', () => installUpdate());
+  handle('updates:openRelease', async () => {
+    const url = updateStatus().url;
+    if (url && isAllowedExternal(url)) await shell.openExternal(url);
+  });
+}
+
 function buildMenu(): void {
   const isMac = process.platform === 'darwin';
   const template: MenuItemConstructorOptions[] = [
@@ -498,8 +515,12 @@ function buildMenu(): void {
     configureSession();
     registerIpc();
     registerMcpIpc();
+    registerUpdateIpc();
     buildMenu();
     createWindow();
+    void startUpdates((status) => mainWindow?.webContents.send('updates:status', status)).catch((err) =>
+      console.error(`The update check did not start: ${String(err)}`),
+    );
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

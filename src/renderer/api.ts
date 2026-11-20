@@ -10,6 +10,7 @@ declare global {
  * Stand-in for the desktop API when the interface runs in a plain browser,
  * for example during development with `vite`. Data goes to localStorage.
  */
+const NO_UPDATES = { state: 'idle' as const, mode: 'none' as const, checkOnLaunch: true, current: 'dev' };
 const NO_MCP = { enabled: false, confirmPrint: true, running: false, url: '', command: '', bridge: '', configFile: '', packaged: false, bridgeAvailable: false };
 
 function browserApi(): DesktopApi {
@@ -73,6 +74,14 @@ function browserApi(): DesktopApi {
     },
     clipboard: {
       readText: () => navigator.clipboard.readText(),
+    },
+    updates: {
+      getStatus: async () => NO_UPDATES,
+      check: async () => NO_UPDATES,
+      setCheckOnLaunch: async () => NO_UPDATES,
+      install: async () => undefined,
+      openRelease: async () => undefined,
+      onStatus: () => () => undefined,
     },
     app: {
       info: async () => ({ version: 'dev', platform: 'browser', arch: '', electron: '', chrome: '' }),

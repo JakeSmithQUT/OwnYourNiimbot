@@ -84,4 +84,10 @@ deb:
     - libxtst6
     - libnss3
 
-publish: null
+# The update check in the app reads latest*.yml from the GitHub release.
+# The builds use --publish never. The release workflow uploads the files.
+publish:
+  provider: github
+  owner: JakeSmithQUT
+  repo: OwnYourNiimbot
+  releaseType: release

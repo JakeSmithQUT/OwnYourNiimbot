@@ -7,6 +7,7 @@ import { api } from '../api';
 import { appStore, updateSettings, type Settings } from '../state/app';
 import { MODELS, PRINT_VARIANTS, type PrintVariant } from '../../printer/models';
 import { Check, Field, Modal, Segmented } from '../components/ui';
+import { UpdateSettings } from '../components/Updates';
 
 /**
  * A value with a copy button. A secret value is hidden, and the app reads it
@@ -184,10 +185,13 @@ export function SettingsView() {
 
       <AssistantSettings />
 
+      <UpdateSettings />
+
       <div className="card" style={{ marginBottom: 16 }}>
         <h3>Data</h3>
         <p className="muted" style={{ marginTop: 0 }}>
-          Labels, history and settings are stored in the app data folder on this computer. The app does not send data to any server.
+          Labels, history and settings are stored in the app data folder on this computer. The app does not send labels or other data to any server. The update check
+          only asks GitHub for the latest version.
         </p>
         <button className="btn" onClick={() => void api.app.openDataFolder()}>
           <FolderOpen size={15} /> Open data folder

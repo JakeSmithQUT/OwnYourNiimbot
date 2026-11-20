@@ -45,6 +45,8 @@ jobs:
             release/*.zip
             release/*.AppImage
             release/*.deb
+            release/latest*.yml
+            release/*.blockmap
 
   publish:
     needs: build
