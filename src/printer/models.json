@@ -1,0 +1,2955 @@
+[
+  {
+    "name": "A1 Pro",
+    "ids": [
+      7424
+    ],
+    "series": "B18 & N1",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 270,
+    "align": "center",
+    "printWidthMm": {
+      "min": 3,
+      "max": 25
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 120
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 25,
+      "height": 38
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "A8",
+    "ids": [
+      256
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "A8 P",
+    "ids": [
+      273
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "A20",
+    "ids": [
+      2817
+    ],
+    "series": "B203",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 50
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "A63",
+    "ids": [
+      2054
+    ],
+    "series": "B32",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 240
+    },
+    "density": {
+      "min": 1,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "A203",
+    "ids": [
+      2818
+    ],
+    "series": "B203",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 50
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B1",
+    "ids": [
+      4096
+    ],
+    "series": "B1",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B1 Pro",
+    "ids": [
+      4097
+    ],
+    "series": "B1",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B1 SE",
+    "ids": [
+      4098
+    ],
+    "series": "B1",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 54,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B2",
+    "ids": [
+      6913
+    ],
+    "series": "B2",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B2 Pro",
+    "ids": [
+      6912
+    ],
+    "series": "B2",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 200,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B3",
+    "ids": [
+      52993
+    ],
+    "series": "B3",
+    "protocol": "zicox",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 75
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B3S",
+    "ids": [
+      256,
+      260,
+      262
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B3S A",
+    "ids": [
+      275
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B3S P",
+    "ids": [
+      272
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B4",
+    "ids": [
+      6656
+    ],
+    "series": "B4",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 104
+    },
+    "maxLabelMm": {
+      "width": 108,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B4 Pro",
+    "ids": [
+      6657
+    ],
+    "series": "B4",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 104
+    },
+    "maxLabelMm": {
+      "width": 108,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": true,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B11",
+    "ids": [
+      51457
+    ],
+    "series": "B11",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 10,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B16",
+    "ids": [
+      1792
+    ],
+    "series": "B16",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 270,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B18",
+    "ids": [
+      3584
+    ],
+    "series": "B18 & N1",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 120
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      3,
+      5,
+      10,
+      11
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B18S",
+    "ids": [
+      3585
+    ],
+    "series": "B18 & N1",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 120
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      3,
+      5,
+      10,
+      11
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B21",
+    "ids": [
+      768
+    ],
+    "series": "B21",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B21 Pro",
+    "ids": [
+      785
+    ],
+    "series": "B21",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 50
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B21-C2B",
+    "ids": [
+      771,
+      775
+    ],
+    "series": "B21",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 10,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B21-L2B",
+    "ids": [
+      769
+    ],
+    "series": "B21",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B21S",
+    "ids": [
+      777
+    ],
+    "series": "B21",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 10,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B21S-C2B",
+    "ids": [
+      776
+    ],
+    "series": "B21",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B31",
+    "ids": [
+      5632
+    ],
+    "series": "B31",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 75
+    },
+    "maxLabelMm": {
+      "width": 77,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B32",
+    "ids": [
+      2049
+    ],
+    "series": "B32",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 240
+    },
+    "density": {
+      "min": 1,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "B32R",
+    "ids": [
+      2050
+    ],
+    "series": "B32",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 240
+    },
+    "density": {
+      "min": 1,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B50",
+    "ids": [
+      51713
+    ],
+    "series": "B50",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 20,
+      "max": 50
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B50W",
+    "ids": [
+      51714
+    ],
+    "series": "B50",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "B203",
+    "ids": [
+      2816
+    ],
+    "series": "B203",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 50
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "Betty",
+    "ids": [
+      2561
+    ],
+    "series": "D101",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 24
+    },
+    "maxLabelMm": {
+      "width": 25,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 25
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "C1",
+    "ids": [
+      5120
+    ],
+    "series": "C1",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 15
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 50
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      3
+    ],
+    "defaultLabelMm": {
+      "width": 12,
+      "height": 40
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "D11",
+    "ids": [
+      512
+    ],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "D11 H",
+    "ids": [
+      528
+    ],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "D11 Pro",
+    "ids": [
+      531
+    ],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "D11S",
+    "ids": [
+      514
+    ],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 75
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "D41",
+    "ids": [],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 75
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "D61",
+    "ids": [],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 75
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "D101",
+    "ids": [
+      2560
+    ],
+    "series": "D101",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 24
+    },
+    "maxLabelMm": {
+      "width": 25,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 25
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "D110",
+    "ids": [
+      2304,
+      2305
+    ],
+    "series": "D110",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "D110 M",
+    "ids": [
+      2320
+    ],
+    "series": "D110",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "Dxx",
+    "ids": [],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "EP1C",
+    "ids": [
+      5121
+    ],
+    "series": "C1",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 15
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 50
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      3
+    ],
+    "defaultLabelMm": {
+      "width": 12,
+      "height": 40
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "EP2M H",
+    "ids": [
+      4610
+    ],
+    "series": "M2",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 200,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5,
+      10
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "EP3M",
+    "ids": [
+      6402
+    ],
+    "series": "M3",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 78,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5,
+      10
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "ET10",
+    "ids": [
+      5376
+    ],
+    "series": "ET10",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 10,
+      "max": 200
+    },
+    "maxLabelMm": {
+      "width": 200,
+      "length": 200
+    },
+    "density": {
+      "min": 3,
+      "max": 3,
+      "default": 3
+    },
+    "paperTypes": [
+      3
+    ],
+    "defaultLabelMm": {
+      "width": 200,
+      "height": 200
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "Fust",
+    "ids": [
+      513
+    ],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "H1",
+    "ids": [
+      3840
+    ],
+    "series": "H1",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 8,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "H1S",
+    "ids": [
+      4352
+    ],
+    "series": "H1S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 8,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 15
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "Hi-D110",
+    "ids": [
+      2305
+    ],
+    "series": "D110",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 15
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "Hi-NB-D11",
+    "ids": [
+      512
+    ],
+    "series": "D11",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 15
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 100
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 12,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "JC-M90",
+    "ids": [
+      51461
+    ],
+    "series": "B11",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "JCB3S",
+    "ids": [
+      256
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "K2",
+    "ids": [
+      6144
+    ],
+    "series": "K2",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 56
+    },
+    "maxLabelMm": {
+      "width": 60,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "K3",
+    "ids": [
+      4864
+    ],
+    "series": "K3",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 80
+    },
+    "maxLabelMm": {
+      "width": 82,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "K3 ITD",
+    "ids": [
+      4868
+    ],
+    "series": "K3",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 80
+    },
+    "maxLabelMm": {
+      "width": 82,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "K3 W",
+    "ids": [
+      4865
+    ],
+    "series": "K3",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 80
+    },
+    "maxLabelMm": {
+      "width": 82,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": true,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "K4",
+    "ids": [
+      7168
+    ],
+    "series": "K3",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 104
+    },
+    "maxLabelMm": {
+      "width": 82,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 15,
+      "default": 7
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": "automatic",
+    "calibration": true
+  },
+  {
+    "name": "M2 H",
+    "ids": [
+      4608
+    ],
+    "series": "M2",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 240
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5,
+      10
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "M3",
+    "ids": [
+      6400
+    ],
+    "series": "M3",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 78,
+      "length": 350
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5,
+      10
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "MP3K",
+    "ids": [
+      4866
+    ],
+    "series": "K3",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 80
+    },
+    "maxLabelMm": {
+      "width": 82,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "MP3K W",
+    "ids": [
+      4867
+    ],
+    "series": "K3",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 80
+    },
+    "maxLabelMm": {
+      "width": 82,
+      "length": 300
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": true,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "N1",
+    "ids": [
+      3586
+    ],
+    "series": "B18 & N1",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 12,
+      "max": 12
+    },
+    "maxLabelMm": {
+      "width": 15,
+      "length": 120
+    },
+    "density": {
+      "min": 1,
+      "max": 3,
+      "default": 2
+    },
+    "paperTypes": [
+      1,
+      3,
+      5,
+      10,
+      11
+    ],
+    "defaultLabelMm": {
+      "width": 30,
+      "height": 12
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "P1",
+    "ids": [
+      1024
+    ],
+    "series": "P1S",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 59
+    },
+    "maxLabelMm": {
+      "width": 80,
+      "length": 150
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      6
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "P1S",
+    "ids": [
+      1025
+    ],
+    "series": "P1S",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 56
+    },
+    "maxLabelMm": {
+      "width": 87,
+      "length": 150
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      6
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "P18",
+    "ids": [
+      1026
+    ],
+    "series": "P1S",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 90,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 56
+    },
+    "maxLabelMm": {
+      "width": 87,
+      "length": 150
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      6
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "S1",
+    "ids": [
+      51458
+    ],
+    "series": "B11",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "S3",
+    "ids": [
+      51460
+    ],
+    "series": "B11",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "S6",
+    "ids": [
+      257,
+      258,
+      259,
+      261
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "left",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "S6 P",
+    "ids": [
+      274
+    ],
+    "series": "B3S",
+    "protocol": "niimbot",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 75
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 200
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "T2S",
+    "ids": [
+      53250
+    ],
+    "series": "T2",
+    "protocol": "snbc",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 104
+    },
+    "maxLabelMm": {
+      "width": 107,
+      "length": 280
+    },
+    "density": {
+      "min": 1,
+      "max": 20,
+      "default": 15
+    },
+    "paperTypes": [
+      1,
+      2
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "T6",
+    "ids": [
+      51715
+    ],
+    "series": "B50",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "T7",
+    "ids": [
+      51717
+    ],
+    "series": "B50",
+    "protocol": "daozhen",
+    "dpi": 203,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "T8",
+    "ids": [
+      51718
+    ],
+    "series": "T8",
+    "protocol": "daozhen",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "right",
+    "printWidthMm": {
+      "min": 20,
+      "max": 48
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 200
+    },
+    "density": {
+      "min": 6,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": false
+  },
+  {
+    "name": "T8S",
+    "ids": [
+      2053
+    ],
+    "series": "B32",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 120
+    },
+    "density": {
+      "min": 1,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": false,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "TP2M H",
+    "ids": [
+      4609
+    ],
+    "series": "M2",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 50
+    },
+    "maxLabelMm": {
+      "width": 50,
+      "length": 240
+    },
+    "density": {
+      "min": 1,
+      "max": 5,
+      "default": 3
+    },
+    "paperTypes": [
+      1,
+      2,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  },
+  {
+    "name": "Z401",
+    "ids": [
+      2051
+    ],
+    "series": "B32",
+    "protocol": "niimbot",
+    "dpi": 300,
+    "printDirection": 0,
+    "align": "center",
+    "printWidthMm": {
+      "min": 20,
+      "max": 72
+    },
+    "maxLabelMm": {
+      "width": 75,
+      "length": 240
+    },
+    "density": {
+      "min": 1,
+      "max": 15,
+      "default": 10
+    },
+    "paperTypes": [
+      1,
+      5
+    ],
+    "defaultLabelMm": {
+      "width": 50,
+      "height": 30
+    },
+    "rfid": true,
+    "wifi": false,
+    "cutter": null,
+    "calibration": true
+  }
+]
