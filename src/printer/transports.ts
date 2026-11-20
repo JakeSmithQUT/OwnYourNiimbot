@@ -1,6 +1,8 @@
 /// <reference types="web-bluetooth" />
 /// <reference types="w3c-web-serial" />
 
+import { t } from '../renderer/i18n';
+
 export type TransportKind = 'bluetooth' | 'serial';
 
 export interface Transport {
@@ -32,12 +34,12 @@ export class BluetoothTransport implements Transport {
   }
 
   get name(): string {
-    return this.device.name ?? 'Bluetooth printer';
+    return this.device.name ?? t('device.bluetoothPrinter');
   }
 
   /** Opens the system device picker. In the desktop app the picker is drawn by the app itself. */
   static async request(): Promise<BluetoothTransport> {
-    if (!navigator.bluetooth) throw new Error('Bluetooth is not available on this computer.');
+    if (!navigator.bluetooth) throw new Error(t('errors.bluetooth.notAvailable'));
     const device = await navigator.bluetooth.requestDevice({
       acceptAllDevices: true,
       optionalServices: [NIIMBOT_SERVICE],
@@ -46,7 +48,7 @@ export class BluetoothTransport implements Transport {
   }
 
   static async open(device: BluetoothDevice): Promise<BluetoothTransport> {
-    if (!device.gatt) throw new Error('This device does not support Bluetooth LE.');
+    if (!device.gatt) throw new Error(t('errors.bluetooth.noLe'));
     const server = await device.gatt.connect();
     let characteristic: BluetoothRemoteGATTCharacteristic | undefined;
     try {
@@ -59,11 +61,11 @@ export class BluetoothTransport implements Transport {
       }
     } catch (err) {
       server.disconnect();
-      throw new Error(`The printer service was not found. Make sure that this is a NIIMBOT printer. (${(err as Error).message})`);
+      throw new Error(t('errors.bluetooth.noService', { error: (err as Error).message }));
     }
     if (!characteristic) {
       server.disconnect();
-      throw new Error('The printer data channel was not found.');
+      throw new Error(t('errors.bluetooth.noChannel'));
     }
     await characteristic.startNotifications();
     return new BluetoothTransport(device, characteristic);
@@ -108,15 +110,15 @@ export class SerialTransport implements Transport {
   }
 
   static async request(baudRate = 115200): Promise<SerialTransport> {
-    if (!navigator.serial) throw new Error('Serial ports are not available on this computer.');
+    if (!navigator.serial) throw new Error(t('errors.serial.notAvailable'));
     const port = await navigator.serial.requestPort();
     await port.open({ baudRate });
     const info = port.getInfo();
     const name = info.usbVendorId !== undefined
       ? `USB ${info.usbVendorId.toString(16).padStart(4, '0')}:${(info.usbProductId ?? 0).toString(16).padStart(4, '0')}`
       : info.bluetoothServiceClassId
-        ? 'Bluetooth serial port'
-        : 'Serial port';
+        ? t('device.bluetoothSerialPort')
+        : t('device.serialPort');
     return new SerialTransport(port, name);
   }
 
@@ -146,7 +148,7 @@ export class SerialTransport implements Transport {
   }
 
   async write(data: Uint8Array): Promise<void> {
-    if (!this.port.writable) throw new Error('The serial port is not open.');
+    if (!this.port.writable) throw new Error(t('errors.serial.notOpen'));
     const writer = this.port.writable.getWriter();
     try {
       await writer.write(data);

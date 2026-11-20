@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { tm, tmn } from '../i18n';
 
 /** Result that the app window returns for a tool call. */
 export interface WindowResult {
@@ -264,8 +265,8 @@ export function registerTools(server: McpServer, bridge: ToolBridge): void {
         const summary = (await bridge.call('print_summary', args)).data as { labels: number; name: string; size: string; model: string };
         if (bridge.confirmPrint()) {
           const ok = await bridge.confirm(
-            'An AI assistant asks to print labels.',
-            `${summary.labels} label${summary.labels === 1 ? '' : 's'} of "${dialogName(summary.name)}" (${summary.size}) on the ${summary.model}.`,
+            tm('main.printApproval.message'),
+            tmn('main.printApproval.detail', summary.labels, { name: dialogName(summary.name), size: summary.size, model: summary.model }),
           );
           if (!ok) throw new Error('The user did not allow this print.');
         }

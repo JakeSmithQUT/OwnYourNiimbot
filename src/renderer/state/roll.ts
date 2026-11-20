@@ -3,6 +3,7 @@ import { createStore } from './store';
 import { printer, activeModel } from './printer';
 import { appStore, applyLabelSize, isTemplateBlank, toast } from './app';
 import { editorSize, findLabelByBarcode, labelName } from '../../printer/labels';
+import { t } from '../i18n';
 
 /** Where the size of the loaded roll comes from. */
 export type RollSource = 'printer' | 'remembered' | 'catalogue' | 'unknown';
@@ -117,7 +118,7 @@ export function rollEditorSize(r: LoadedRoll): { widthMm: number; heightMm: numb
 }
 
 export function rollLabel(r: LoadedRoll): string {
-  if (!r.widthMm || !r.lengthMm) return 'Unknown size';
+  if (!r.widthMm || !r.lengthMm) return t('state.roll.unknownSize');
   return labelName({ widthMm: r.widthMm, lengthMm: r.lengthMm, tailMm: r.tailMm, shape: r.tailMm ? 'cable' : undefined });
 }
 
@@ -146,7 +147,7 @@ function onRollDetected(r: LoadedRoll): void {
   if (same) return;
   if (settings.autoLabelSize && isTemplateBlank()) {
     applyRollSize(r);
-    toast(`Label size set to ${size.widthMm} × ${size.heightMm} mm from the loaded roll`, 'success');
+    toast(t('state.roll.sizeSet', { width: size.widthMm, height: size.heightMm }), 'success');
   } else {
     rollStore.set({ suggestion: r });
   }

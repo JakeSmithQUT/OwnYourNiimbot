@@ -19,6 +19,7 @@ import { DEFAULT_IMAGE_SETTINGS, processImage, type ImageSettings } from './imag
 import { formatDate, formatSerial, type SerialSettings } from './placeholders';
 import { mmToUnits, ptToUnits, UNITS_PER_MM } from './units';
 import { outsideArea, type PrintArea } from '../../printer/printArea';
+import { t } from '../i18n';
 
 export const SERIAL_PROPS = ['oyn'];
 FabricObject.customProperties = ['oyn'];
@@ -370,7 +371,7 @@ export class EditorController {
     return Math.max(ptToUnits(6), Math.min(ptToUnits(14), mmToUnits(this.heightMm) * 0.22));
   }
 
-  addText(text = 'Text', data: OynData = { kind: 'text' }): Textbox {
+  addText(text = t('editor.defaultText'), data: OynData = { kind: 'text' }): Textbox {
     const box = this.newText(text, data);
     this.place(box);
     return box;
@@ -488,7 +489,7 @@ export class EditorController {
       height: h * 0.7,
       fontSize: this.defaultFontSize() * 0.8,
     });
-    table.cells = Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => (c === 0 ? `Item ${r + 1}` : '')));
+    table.cells = Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => (c === 0 ? t('editor.tableItem', { number: r + 1 }) : '')));
     return table;
   }
 
@@ -582,7 +583,7 @@ export class EditorController {
     let obj: FabricObject | undefined;
     switch (kind) {
       case 'text':
-        obj = this.newText(words ?? (old instanceof Textbox ? old.text : undefined) ?? 'Text', { kind: 'text' });
+        obj = this.newText(words ?? (old instanceof Textbox ? old.text : undefined) ?? t('editor.defaultText'), { kind: 'text' });
         break;
       case 'date':
         obj = this.newText(formatDate(new Date(), 'DD/MM/YYYY'), { kind: 'datetime', format: 'DD/MM/YYYY', offsetDays: 0 });

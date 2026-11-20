@@ -6,6 +6,7 @@ import { appStore, confirmDiscard, openTemplate, toast } from '../state/app';
 import { activeModel, usePrinter } from '../state/printer';
 import { rollEditorSize, rollStore } from '../state/roll';
 import type { PrinterModel } from '../../printer/models';
+import { t, tn } from '../i18n';
 
 type Compat = 'loaded' | 'rolls' | 'fits' | 'all';
 
@@ -66,8 +67,8 @@ function DesignCard(props: {
         <div className="name" title={props.design.name}>
           {props.design.name}
           {props.design.sampleData && (
-            <span className="pill" title="Uses data fields. Example data loads with it." style={{ marginLeft: 6 }}>
-              <Database size={11} /> data
+            <span className="pill" title={t('templates.dataTitle')} style={{ marginLeft: 6 }}>
+              <Database size={11} /> {t('templates.data')}
             </span>
           )}
         </div>
@@ -78,7 +79,15 @@ function DesignCard(props: {
             <button
               key={sizeText(size)}
               className={`chip${near(size[0], chosen[0]) && near(size[1], chosen[1]) ? ' on' : ''}${loaded ? ' loaded' : ''}${fit === 'no' ? ' dim' : ''}`}
-              title={loaded ? 'Matches the roll in the printer' : fit === 'roll' ? `A NIIMBOT roll for the ${props.model.name}` : fit === 'fits' ? `Fits the ${props.model.name} print head` : `Too wide for the ${props.model.name}`}
+              title={
+                loaded
+                  ? t('templates.size.loaded')
+                  : fit === 'roll'
+                    ? t('templates.size.roll', { model: props.model.name })
+                    : fit === 'fits'
+                      ? t('templates.fits', { model: props.model.name })
+                      : t('templates.size.tooWide', { model: props.model.name })
+              }
               onMouseEnter={() => setChosen(size)}
               onClick={() => props.onOpen(props.design, size)}
             >
@@ -137,41 +146,35 @@ export function LibraryView() {
 
   const open = async (design: TemplateDesign, [w, h]: Size) => {
     if (!confirmDiscard()) return;
-    const t = await buildTemplate(design, w, h);
-    const opened = await openTemplate({ ...t, id: '', createdAt: Date.now(), updatedAt: Date.now() });
+    const built = await buildTemplate(design, w, h);
+    const opened = await openTemplate({ ...built, id: '', createdAt: Date.now(), updatedAt: Date.now() });
     if (opened && design.sampleData) {
       const have = new Set((dataset?.columns ?? []).map((c) => c.toLowerCase()));
       if (!design.sampleData.columns.every((c) => have.has(c.toLowerCase()))) {
         appStore.set({ dataset: design.sampleData });
-        toast('Example data is loaded. Replace it with your own file on the Data page.', 'info');
+        toast(t('templates.exampleData'), 'info');
       }
     }
   };
 
   return (
     <div className="page library">
-      <h2>Template library</h2>
-      <p className="lead">
-        {DESIGNS.length} designs in {templateCount} sizes. Open a template, then change the text on the label.
-      </p>
+      <h2>{t('templates.title')}</h2>
+      <p className="lead">{tn('templates.lead', DESIGNS.length, { sizes: templateCount })}</p>
 
       <div className="library-filters">
         <div className="search">
           <Search size={15} />
-          <input type="search" placeholder="Search templates, for example server, freezer or price" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input type="search" placeholder={t('templates.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
         <select value={compat} onChange={(e) => setCompat(e.target.value as Compat)} style={{ width: 'auto' }}>
-          {rollSize && (
-            <option value="loaded">
-              Matches the loaded roll ({rollSize.widthMm} × {rollSize.heightMm} mm)
-            </option>
-          )}
-          <option value="rolls">NIIMBOT roll sizes for the {model.name}</option>
-          <option value="fits">Fits the {model.name} print head</option>
-          <option value="all">All sizes</option>
+          {rollSize && <option value="loaded">{t('templates.compat.loaded', { width: rollSize.widthMm, height: rollSize.heightMm })}</option>}
+          <option value="rolls">{t('templates.compat.rolls', { model: model.name })}</option>
+          <option value="fits">{t('templates.fits', { model: model.name })}</option>
+          <option value="all">{t('templates.compat.all')}</option>
         </select>
         <select value={sizeFilter} onChange={(e) => setSizeFilter(e.target.value)} style={{ width: 'auto' }}>
-          <option value="any">Any size</option>
+          <option value="any">{t('templates.anySize')}</option>
           {allSizes.map((s) => (
             <option key={s} value={s}>
               {s} mm
@@ -181,12 +184,12 @@ export function LibraryView() {
       </div>
 
       <div className="category-chips">
-        <button className={`chip${decorative ? ' on' : ''}`} title="Designs with the included fonts and ornaments" onClick={() => setDecorative(!decorative)}>
-          <Sparkles size={11} /> Decorative
+        <button className={`chip${decorative ? ' on' : ''}`} title={t('templates.decorativeTitle')} onClick={() => setDecorative(!decorative)}>
+          <Sparkles size={11} /> {t('templates.decorative')}
         </button>
         <span className="chip-sep" />
         <button className={`chip${category === 'all' ? ' on' : ''}`} onClick={() => setCategory('all')}>
-          All
+          {t('templates.allCategories')}
         </button>
         {CATEGORIES.map((c) => (
           <button key={c} className={`chip${category === c ? ' on' : ''}${counts.get(c) ? '' : ' dim'}`} onClick={() => setCategory(c)}>
@@ -197,17 +200,17 @@ export function LibraryView() {
 
       {!p.connected && (
         <p className="muted" style={{ marginTop: 0 }}>
-          Sizes are checked against the {model.name}, the model in Settings. Connect a printer to check against your printer and its loaded roll.
+          {t('templates.notConnected', { model: model.name })}
         </p>
       )}
 
       {visible.length === 0 ? (
         <div className="card empty">
-          No templates match these filters.
+          {t('templates.empty')}
           {compat !== 'all' && (
             <div style={{ marginTop: 10 }}>
               <button className="btn" onClick={() => setCompat('all')}>
-                Show all sizes
+                {t('templates.showAllSizes')}
               </button>
             </div>
           )}

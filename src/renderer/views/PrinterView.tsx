@@ -3,13 +3,14 @@ import { Battery, Bluetooth, Crosshair, Info, Power, RefreshCw, ScrollText, Tag,
 import { usePrinter, printer } from '../state/printer';
 import { appStore, toast } from '../state/app';
 import { batteryPercent } from '../../printer/client';
-import { AUTO_SHUTDOWN_OPTIONS, LABEL_TYPE_NAMES } from '../../printer/protocol';
+import { AUTO_SHUTDOWN_OPTIONS, labelTypeName } from '../../printer/protocol';
 import { defaultVariant, MODELS, PRINT_VARIANTS } from '../../printer/models';
 import { forgetRoll, rollLabel, rollStore } from '../state/roll';
 import { SOURCE_TEXT } from '../components/LabelPicker';
+import { t, tn } from '../i18n';
 
 function yesNo(v: boolean | undefined, yes: string, no: string) {
-  if (v === undefined) return <span className="muted">Unknown</span>;
+  if (v === undefined) return <span className="muted">{t('printer.unknown')}</span>;
   return <span className={`pill ${v ? 'ok' : 'warn'}`}>{v ? yes : no}</span>;
 }
 
@@ -36,31 +37,29 @@ export function PrinterView() {
   if (!p.connected) {
     return (
       <div className="page">
-        <h2>Printer</h2>
-        <p className="lead">Connect a printer over Bluetooth or a USB cable. No account and no internet connection are necessary.</p>
+        <h2>{t('printer.title')}</h2>
+        <p className="lead">{t('printer.lead')}</p>
         <div className="card" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <Unplug size={28} className="muted" />
           <div style={{ flex: 1 }}>
-            <strong>No printer is connected</strong>
-            <div className="muted">Turn on the printer. If a phone app is connected to it, close that app first.</div>
+            <strong>{t('printer.none')}</strong>
+            <div className="muted">{t('printer.noneHint')}</div>
           </div>
           <button className="btn primary" onClick={() => appStore.set({ connectOpen: true })}>
-            Connect
+            {t('printer.connect')}
           </button>
         </div>
-        <h2 style={{ marginTop: 28 }}>Supported models</h2>
-        <p className="lead">
-          {MODELS.filter((m) => m.protocol === 'niimbot').length} models use the NIIMBOT command set. Models marked as other use a different command set and do not work with this app.
-        </p>
+        <h2 style={{ marginTop: 28 }}>{t('printer.models.title')}</h2>
+        <p className="lead">{tn('printer.models.lead', MODELS.filter((m) => m.protocol === 'niimbot').length)}</p>
         <div className="table-wrap" style={{ maxHeight: 420 }}>
           <table className="data">
             <thead>
               <tr>
-                <th>Model</th>
-                <th>Resolution</th>
-                <th>Print width</th>
-                <th>Density</th>
-                <th>Command set</th>
+                <th>{t('printer.model')}</th>
+                <th>{t('printer.resolution')}</th>
+                <th>{t('printer.printWidth')}</th>
+                <th>{t('printer.density')}</th>
+                <th>{t('printer.commandSet')}</th>
               </tr>
             </thead>
             <tbody>
@@ -72,7 +71,7 @@ export function PrinterView() {
                   <td>
                     {m.density.min}–{m.density.max}
                   </td>
-                  <td>{m.protocol === 'niimbot' ? PRINT_VARIANTS.find((v) => v.value === defaultVariant(m))?.label : 'Other'}</td>
+                  <td>{m.protocol === 'niimbot' ? ((v) => (v ? t(v.labelKey) : ''))(PRINT_VARIANTS.find((v) => v.value === defaultVariant(m))) : t('printer.models.other')}</td>
                 </tr>
               ))}
             </tbody>
@@ -91,65 +90,65 @@ export function PrinterView() {
     <div className="page">
       <div className="btn-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <h2>{info.model?.name ?? 'Unknown model'}</h2>
+          <h2>{info.model?.name ?? t('printer.unknownModel')}</h2>
           <p className="lead" style={{ margin: 0 }}>
-            Connected to {p.transport?.name} over {p.transport?.kind === 'bluetooth' ? 'Bluetooth' : 'USB or serial'}
+            {t(p.transport?.kind === 'bluetooth' ? 'printer.connectedBluetooth' : 'printer.connectedSerial', { name: p.transport?.name ?? '' })}
           </p>
         </div>
         <div className="btn-row">
-          <button className="btn" onClick={() => void run('Printer details updated', async () => {
+          <button className="btn" onClick={() => void run(t('printer.refreshed'), async () => {
             await printer.refreshInfo();
             await printer.readRfid().catch(() => undefined);
           })}>
-            <RefreshCw size={15} /> Refresh
+            <RefreshCw size={15} /> {t('printer.refresh')}
           </button>
           <button className="btn danger" onClick={() => void printer.disconnect()}>
-            <Unplug size={15} /> Disconnect
+            <Unplug size={15} /> {t('printer.disconnect')}
           </button>
         </div>
       </div>
 
       {info.model && info.model.protocol !== 'niimbot' && (
-        <div className="notice warn">This model uses a different command set. Printing is not supported.</div>
+        <div className="notice warn">{t('printer.unsupported')}</div>
       )}
       {!info.model && (
         <div className="notice warn">
-          The printer reported model ID {info.modelId ?? 'unknown'}, which is not in the model list. Select the nearest model in Settings and try each command set in the print options.
+          {info.modelId !== undefined ? t('printer.unknownId', { id: info.modelId }) : t('printer.unknownIdMissing')}
         </div>
       )}
 
       <div className="grid-cards">
         <div className="card">
           <h3>
-            <Info size={16} /> Device
+            <Info size={16} /> {t('printer.device')}
           </h3>
           <dl className="kv">
-            <dt>Model</dt>
+            <dt>{t('printer.model')}</dt>
             <dd>{info.model?.name ?? '–'}</dd>
-            <dt>Model ID</dt>
+            <dt>{t('printer.modelId')}</dt>
             <dd>{info.modelId ?? '–'}</dd>
-            <dt>Firmware</dt>
+            <dt>{t('printer.firmware')}</dt>
             <dd>{info.firmware ?? '–'}</dd>
-            <dt>Hardware</dt>
+            <dt>{t('printer.hardware')}</dt>
             <dd>{info.hardware ?? '–'}</dd>
-            <dt>Serial number</dt>
+            <dt>{t('printer.serialNumber')}</dt>
             <dd>{info.serialNumber ?? '–'}</dd>
             {info.bluetoothAddress && (
               <>
-                <dt>Bluetooth address</dt>
+                <dt>{t('printer.bluetoothAddress')}</dt>
                 <dd>{info.bluetoothAddress}</dd>
               </>
             )}
-            <dt>Connection</dt>
+            <dt>{t('printer.connection')}</dt>
             <dd style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {p.transport?.kind === 'bluetooth' ? <Bluetooth size={14} /> : <Usb size={14} />}
-              {p.transport?.kind === 'bluetooth' ? 'Bluetooth LE' : 'Serial'}
+              {p.transport?.kind === 'bluetooth' ? 'Bluetooth LE' : t('printer.serial')}
             </dd>
             {info.model && (
               <>
-                <dt>Resolution</dt>
+                <dt>{t('printer.resolution')}</dt>
                 <dd>{info.model.dpi} dpi</dd>
-                <dt>Print width</dt>
+                <dt>{t('printer.printWidth')}</dt>
                 <dd>{info.model.printWidthMm.max} mm</dd>
               </>
             )}
@@ -158,84 +157,84 @@ export function PrinterView() {
 
         <div className="card">
           <h3>
-            <Battery size={16} /> Status
+            <Battery size={16} /> {t('printer.status')}
           </h3>
           <dl className="kv">
-            <dt>Battery</dt>
+            <dt>{t('printer.battery')}</dt>
             <dd>{battery !== undefined ? `${battery}%` : '–'}</dd>
-            <dt>Cover</dt>
-            <dd>{yesNo(p.status.lidClosed, 'Closed', 'Open')}</dd>
-            <dt>Labels</dt>
-            <dd>{yesNo(p.status.paperLoaded, 'Loaded', 'Not loaded')}</dd>
-            <dt>Label tag</dt>
-            <dd>{yesNo(p.status.rfidRead, 'Read', 'Not read')}</dd>
-            <dt>Updated</dt>
+            <dt>{t('printer.cover')}</dt>
+            <dd>{yesNo(p.status.lidClosed, t('printer.coverClosed'), t('printer.coverOpen'))}</dd>
+            <dt>{t('printer.labels')}</dt>
+            <dd>{yesNo(p.status.paperLoaded, t('printer.labelsLoaded'), t('printer.labelsNotLoaded'))}</dd>
+            <dt>{t('printer.labelTag')}</dt>
+            <dd>{yesNo(p.status.rfidRead, t('printer.tagRead'), t('printer.tagNotRead'))}</dd>
+            <dt>{t('printer.updated')}</dt>
             <dd>{p.status.updatedAt ? new Date(p.status.updatedAt).toLocaleTimeString() : '–'}</dd>
           </dl>
         </div>
 
         <div className="card">
           <h3>
-            <Tag size={16} /> Label roll
+            <Tag size={16} /> {t('printer.roll.title')}
           </h3>
           {roll && (
             <dl className="kv" style={{ marginBottom: 10 }}>
-              <dt>Label size</dt>
+              <dt>{t('printer.roll.size')}</dt>
               <dd>
-                {roll.widthMm && roll.lengthMm ? <strong>{rollLabel(roll)}</strong> : 'Unknown'}
-                {roll.widthMm && roll.lengthMm ? <span className="muted"> (width × length)</span> : null}
-                <div className="muted">{SOURCE_TEXT[roll.source]}{roll.gapMm ? `, gap ${roll.gapMm} mm` : ''}</div>
+                {roll.widthMm && roll.lengthMm ? <strong>{rollLabel(roll)}</strong> : t('printer.unknown')}
+                {roll.widthMm && roll.lengthMm ? <span className="muted"> {t('printer.roll.widthLength')}</span> : null}
+                <div className="muted">{roll.gapMm ? t('printer.roll.sourceGap', { source: SOURCE_TEXT[roll.source], gap: roll.gapMm }) : SOURCE_TEXT[roll.source]}</div>
               </dd>
             </dl>
           )}
           {!rfid ? (
-            <p className="muted">The printer did not report label roll data.</p>
+            <p className="muted">{t('printer.roll.noData')}</p>
           ) : !rfid.present ? (
-            <p className="muted">No label tag was found. Genuine rolls have an RFID tag that holds the roll details.</p>
+            <p className="muted">{t('printer.roll.noTag')}</p>
           ) : (
             <dl className="kv">
-              <dt>Barcode</dt>
+              <dt>{t('printer.roll.barcode')}</dt>
               <dd>{rfid.barcode || '–'}</dd>
-              <dt>Roll serial</dt>
+              <dt>{t('printer.roll.serial')}</dt>
               <dd>{rfid.serial || '–'}</dd>
-              <dt>Labels on roll</dt>
+              <dt>{t('printer.roll.total')}</dt>
               <dd>{rfid.totalLabels ?? '–'}</dd>
-              <dt>Used</dt>
+              <dt>{t('printer.roll.used')}</dt>
               <dd>{rfid.usedLabels ?? '–'}</dd>
-              <dt>Remaining</dt>
+              <dt>{t('printer.roll.remaining')}</dt>
               <dd>{remaining !== undefined ? <strong>{remaining}</strong> : '–'}</dd>
-              <dt>Label type</dt>
-              <dd>{rfid.type !== undefined ? (LABEL_TYPE_NAMES[rfid.type] ?? rfid.type) : '–'}</dd>
+              <dt>{t('printer.roll.type')}</dt>
+              <dd>{rfid.type !== undefined ? (labelTypeName(rfid.type) ?? rfid.type) : '–'}</dd>
             </dl>
           )}
           <div className="btn-row" style={{ marginTop: 12 }}>
-            <button className="btn small" onClick={() => void run('Label roll read again', () => printer.refreshRoll())}>
-              Detect the roll again
+            <button className="btn small" onClick={() => void run(t('printer.roll.detected'), () => printer.refreshRoll())}>
+              {t('printer.roll.detect')}
             </button>
             {roll?.source === 'remembered' && roll.barcode && (
               <button className="btn small ghost" onClick={() => void forgetRoll(roll.barcode!)}>
-                Forget the saved size
+                {t('printer.roll.forget')}
               </button>
             )}
           </div>
           {p.paperInfoSupported === false && (
             <p className="muted" style={{ marginBottom: 0 }}>
-              This printer firmware does not report the label size. Select the size once in the design view and save it for the roll.
+              {t('printer.roll.noSizeReport')}
             </p>
           )}
         </div>
 
         <div className="card">
           <h3>
-            <Power size={16} /> Settings
+            <Power size={16} /> {t('printer.settings')}
           </h3>
           <div className="field">
-            <label>Turn off when idle after</label>
+            <label>{t('printer.autoOff')}</label>
             <select
               value={info.autoShutdown ?? ''}
-              onChange={(e) => void run('Auto power off changed', () => printer.setAutoShutdown(Number(e.target.value)))}
+              onChange={(e) => void run(t('printer.autoOffChanged'), () => printer.setAutoShutdown(Number(e.target.value)))}
             >
-              {info.autoShutdown === undefined && <option value="">Unknown</option>}
+              {info.autoShutdown === undefined && <option value="">{t('printer.unknown')}</option>}
               {AUTO_SHUTDOWN_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -245,40 +244,40 @@ export function PrinterView() {
           </div>
           <div className="field">
             <label>
-              <Volume2 size={12} /> Sounds
+              <Volume2 size={12} /> {t('printer.sounds')}
             </label>
             <div className="btn-row">
-              <button className="btn small" onClick={() => void run('Connection sound on', () => printer.setSound(1, true))}>
-                Connect sound on
+              <button className="btn small" onClick={() => void run(t('printer.sound.connectOnDone'), () => printer.setSound(1, true))}>
+                {t('printer.sound.connectOn')}
               </button>
-              <button className="btn small" onClick={() => void run('Connection sound off', () => printer.setSound(1, false))}>
-                Off
+              <button className="btn small" onClick={() => void run(t('printer.sound.connectOffDone'), () => printer.setSound(1, false))}>
+                {t('printer.sound.off')}
               </button>
-              <button className="btn small" onClick={() => void run('Power sound on', () => printer.setSound(2, true))}>
-                Power sound on
+              <button className="btn small" onClick={() => void run(t('printer.sound.powerOnDone'), () => printer.setSound(2, true))}>
+                {t('printer.sound.powerOn')}
               </button>
-              <button className="btn small" onClick={() => void run('Power sound off', () => printer.setSound(2, false))}>
-                Off
+              <button className="btn small" onClick={() => void run(t('printer.sound.powerOffDone'), () => printer.setSound(2, false))}>
+                {t('printer.sound.off')}
               </button>
             </div>
           </div>
           <div className="field">
             <label>
-              <Crosshair size={12} /> Label position calibration
+              <Crosshair size={12} /> {t('printer.calibration')}
             </label>
             <div className="btn-row">
               <select value={calType} onChange={(e) => setCalType(Number(e.target.value))} style={{ width: 'auto', flex: 1 }}>
-                {(info.model?.paperTypes.length ? info.model.paperTypes : [1, 2, 3]).map((t) => (
-                  <option key={t} value={t}>
-                    {LABEL_TYPE_NAMES[t] ?? t}
+                {(info.model?.paperTypes.length ? info.model.paperTypes : [1, 2, 3]).map((type) => (
+                  <option key={type} value={type}>
+                    {labelTypeName(type) ?? type}
                   </option>
                 ))}
               </select>
-              <button className="btn" onClick={() => void run('Calibration complete', () => printer.calibrate(calType))}>
-                Calibrate
+              <button className="btn" onClick={() => void run(t('printer.calibrated'), () => printer.calibrate(calType))}>
+                {t('printer.calibrate')}
               </button>
             </div>
-            <small className="muted">The printer feeds a few labels to find the gap or mark.</small>
+            <small className="muted">{t('printer.calibrationHint')}</small>
           </div>
         </div>
       </div>
@@ -286,18 +285,18 @@ export function PrinterView() {
       <div className="card" style={{ marginTop: 16 }}>
         <h3 style={{ justifyContent: 'space-between' }}>
           <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <ScrollText size={16} /> Communication log
+            <ScrollText size={16} /> {t('printer.log.title')}
           </span>
           <span className="btn-row">
             <button className="btn small" onClick={() => setShowLog(!showLog)}>
-              {showLog ? 'Hide' : 'Show'}
+              {showLog ? t('common.hide') : t('common.show')}
             </button>
             {showLog && (
               <button
                 className="btn small"
                 onClick={() => void navigator.clipboard.writeText(p.log.map((l) => `${new Date(l.time).toISOString()} ${l.dir} ${l.text}`).join('\n'))}
               >
-                Copy
+                {t('common.copy')}
               </button>
             )}
           </span>
@@ -312,7 +311,7 @@ export function PrinterView() {
           </div>
         ) : (
           <p className="muted" style={{ margin: 0 }}>
-            The log shows the packets sent to and from the printer. Attach it to a bug report if a model does not print correctly.
+            {t('printer.log.hint')}
           </p>
         )}
       </div>

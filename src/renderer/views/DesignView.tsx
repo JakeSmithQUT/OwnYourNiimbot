@@ -48,6 +48,8 @@ import { SOURCE_TEXT } from '../components/LabelPicker';
 import { ElementMenu } from '../components/ElementMenu';
 import { PrintAreaOverlay } from '../components/PrintAreaOverlay';
 import { printArea } from '../../printer/printArea';
+import { t, tn, tr } from '../i18n';
+import type { MessageKey } from '../../i18n/translate';
 
 export function useEditor(): number {
   return useVersion((fn) => editor.subscribe(fn), () => editor.version);
@@ -74,47 +76,47 @@ function Sidebar() {
       toast((err as Error).message, 'error');
     }
   };
-  const tools: { label: string; icon: typeof Type; run: () => unknown }[] = [
-    { label: 'Text', icon: Type, run: () => editor.addText() },
-    { label: 'Barcode', icon: Barcode, run: () => editor.addBarcode('code128') },
-    { label: 'QR code', icon: QrCode, run: () => editor.addBarcode('qrcode') },
-    { label: 'Image', icon: ImageIcon, run: insertImage },
-    { label: 'Date', icon: Calendar, run: () => editor.addDateTime() },
-    { label: 'Serial', icon: Hash, run: () => editor.addSerial() },
-    { label: 'Table', icon: Table, run: () => editor.addTable() },
-    { label: 'Rectangle', icon: Square, run: () => editor.addRect() },
-    { label: 'Rounded', icon: SquareDashed, run: () => editor.addRect(true) },
-    { label: 'Circle', icon: Circle, run: () => editor.addEllipse() },
-    { label: 'Line', icon: Minus, run: () => editor.addLine() },
-    { label: 'Vertical', icon: Slash, run: () => editor.addLine(true) },
+  const tools: { label: MessageKey; icon: typeof Type; run: () => unknown }[] = [
+    { label: 'design.insert.text', icon: Type, run: () => editor.addText() },
+    { label: 'design.insert.barcode', icon: Barcode, run: () => editor.addBarcode('code128') },
+    { label: 'design.insert.qrCode', icon: QrCode, run: () => editor.addBarcode('qrcode') },
+    { label: 'design.insert.image', icon: ImageIcon, run: insertImage },
+    { label: 'design.insert.date', icon: Calendar, run: () => editor.addDateTime() },
+    { label: 'design.insert.serial', icon: Hash, run: () => editor.addSerial() },
+    { label: 'design.insert.table', icon: Table, run: () => editor.addTable() },
+    { label: 'design.insert.rectangle', icon: Square, run: () => editor.addRect() },
+    { label: 'design.insert.rounded', icon: SquareDashed, run: () => editor.addRect(true) },
+    { label: 'design.insert.circle', icon: Circle, run: () => editor.addEllipse() },
+    { label: 'design.insert.line', icon: Minus, run: () => editor.addLine() },
+    { label: 'design.insert.vertical', icon: Slash, run: () => editor.addLine(true) },
   ];
   return (
     <aside className="sidebar">
-      <div className="section-title">Insert</div>
+      <div className="section-title">{t('design.insert')}</div>
       <div className="tools">
-        {tools.map((t) => (
-          <button key={t.label} className="tool" onClick={() => void t.run()}>
-            <t.icon size={20} />
-            {t.label}
+        {tools.map((tool) => (
+          <button key={tool.label} className="tool" onClick={() => void tool.run()}>
+            <tool.icon size={20} />
+            {t(tool.label)}
           </button>
         ))}
       </div>
       <div className="section-title">
-        Symbols
+        {t('design.symbols')}
         <button className="btn ghost small" onClick={() => setShowIcons(!showIcons)}>
-          {showIcons ? 'Less' : 'All'}
+          {showIcons ? t('design.symbols.less') : t('design.symbols.all')}
         </button>
       </div>
       <input
         type="search"
         className="icon-search"
-        placeholder={`Search ${ICONS.length} symbols`}
-        aria-label="Search symbols"
+        placeholder={tn('design.symbols.search', ICONS.length)}
+        aria-label={t('design.symbols.searchLabel')}
         value={iconQuery}
         onChange={(e) => setIconQuery(e.target.value)}
       />
       {iconQuery.trim() ? (
-        found.length ? symbolGrid(found) : <div className="muted icon-none">No symbol has this name.</div>
+        found.length ? symbolGrid(found) : <div className="muted icon-none">{t('design.symbols.none')}</div>
       ) : showIcons ? (
         ICON_GROUPS.map((g) => (
           <div key={g}>
@@ -136,70 +138,70 @@ function Toolbar() {
   const { settings } = appStore.use();
   return (
     <div className="toolbar">
-      <button className="btn ghost icon" title="Undo (Ctrl+Z)" disabled={!editor.canUndo} onClick={() => void editor.undo()}>
+      <button className="btn ghost icon" title={t('design.toolbar.undo')} disabled={!editor.canUndo} onClick={() => void editor.undo()}>
         <Undo2 size={17} />
       </button>
-      <button className="btn ghost icon" title="Redo (Ctrl+Y)" disabled={!editor.canRedo} onClick={() => void editor.redo()}>
+      <button className="btn ghost icon" title={t('design.toolbar.redo')} disabled={!editor.canRedo} onClick={() => void editor.redo()}>
         <Redo2 size={17} />
       </button>
       <div className="sep" />
-      <button className="btn ghost icon" title="Zoom out" onClick={() => editor.setZoom(editor.zoom / 1.2)}>
+      <button className="btn ghost icon" title={t('design.toolbar.zoomOut')} onClick={() => editor.setZoom(editor.zoom / 1.2)}>
         <ZoomOut size={17} />
       </button>
-      <span className="zoom-label" title="100% is the real size on a 96 dpi screen">{Math.round(((editor.zoom * 10) / (96 / 25.4)) * 100)}%</span>
-      <button className="btn ghost icon" title="Zoom in" onClick={() => editor.setZoom(editor.zoom * 1.2)}>
+      <span className="zoom-label" title={t('design.toolbar.zoomHint')}>{Math.round(((editor.zoom * 10) / (96 / 25.4)) * 100)}%</span>
+      <button className="btn ghost icon" title={t('design.toolbar.zoomIn')} onClick={() => editor.setZoom(editor.zoom * 1.2)}>
         <ZoomIn size={17} />
       </button>
-      <button className="btn ghost icon" title="Fit to window" onClick={() => window.dispatchEvent(new Event('oyn-fit'))}>
+      <button className="btn ghost icon" title={t('design.toolbar.fit')} onClick={() => window.dispatchEvent(new Event('oyn-fit'))}>
         <Maximize size={16} />
       </button>
-      <button className={`btn ghost icon${settings.snap ? ' active' : ''}`} title="Snap to grid" onClick={() => updateSettings({ snap: !settings.snap })}>
+      <button className={`btn ghost icon${settings.snap ? ' active' : ''}`} title={t('design.toolbar.snap')} onClick={() => updateSettings({ snap: !settings.snap })}>
         <Grid3x3 size={16} />
       </button>
       <button
         className={`btn ghost icon${settings.printArea ? ' active' : ''}`}
-        title="Show the print area"
+        title={t('design.toolbar.printArea')}
         aria-pressed={settings.printArea}
         onClick={() => updateSettings({ printArea: !settings.printArea })}
       >
         <Crop size={16} />
       </button>
       <div className="sep" />
-      <button className="btn ghost icon" title="Align left" disabled={!active} onClick={() => editor.align('left')}>
+      <button className="btn ghost icon" title={t('design.toolbar.alignLeft')} disabled={!active} onClick={() => editor.align('left')}>
         <AlignStartVertical size={17} />
       </button>
-      <button className="btn ghost icon" title="Centre horizontally" disabled={!active} onClick={() => editor.align('hcenter')}>
+      <button className="btn ghost icon" title={t('design.toolbar.centreHorizontally')} disabled={!active} onClick={() => editor.align('hcenter')}>
         <AlignCenterVertical size={17} />
       </button>
-      <button className="btn ghost icon" title="Align right" disabled={!active} onClick={() => editor.align('right')}>
+      <button className="btn ghost icon" title={t('design.toolbar.alignRight')} disabled={!active} onClick={() => editor.align('right')}>
         <AlignEndVertical size={17} />
       </button>
-      <button className="btn ghost icon" title="Align top" disabled={!active} onClick={() => editor.align('top')}>
+      <button className="btn ghost icon" title={t('design.toolbar.alignTop')} disabled={!active} onClick={() => editor.align('top')}>
         <AlignStartHorizontal size={17} />
       </button>
-      <button className="btn ghost icon" title="Centre vertically" disabled={!active} onClick={() => editor.align('vcenter')}>
+      <button className="btn ghost icon" title={t('design.toolbar.centreVertically')} disabled={!active} onClick={() => editor.align('vcenter')}>
         <AlignCenterHorizontal size={17} />
       </button>
-      <button className="btn ghost icon" title="Align bottom" disabled={!active} onClick={() => editor.align('bottom')}>
+      <button className="btn ghost icon" title={t('design.toolbar.alignBottom')} disabled={!active} onClick={() => editor.align('bottom')}>
         <AlignEndHorizontal size={17} />
       </button>
       <div className="sep" />
-      <button className="btn ghost icon" title="Bring to front" disabled={!active} onClick={() => editor.layer('front')}>
+      <button className="btn ghost icon" title={t('design.toolbar.toFront')} disabled={!active} onClick={() => editor.layer('front')}>
         <ArrowUpToLine size={17} />
       </button>
-      <button className="btn ghost icon" title="Send to back" disabled={!active} onClick={() => editor.layer('back')}>
+      <button className="btn ghost icon" title={t('design.toolbar.toBack')} disabled={!active} onClick={() => editor.layer('back')}>
         <ArrowDownToLine size={17} />
       </button>
-      <button className="btn ghost icon" title="Rotate 90°" disabled={!active || locked} onClick={() => editor.rotate(90)}>
+      <button className="btn ghost icon" title={t('design.toolbar.rotate')} disabled={!active || locked} onClick={() => editor.rotate(90)}>
         <RotateCw size={17} />
       </button>
-      <button className="btn ghost icon" title="Duplicate (Ctrl+D)" disabled={!active} onClick={() => void editor.duplicate()}>
+      <button className="btn ghost icon" title={t('design.toolbar.duplicate')} disabled={!active} onClick={() => void editor.duplicate()}>
         <Copy size={16} />
       </button>
-      <button className="btn ghost icon" title={locked ? 'Unlock' : 'Lock'} disabled={!active} onClick={() => editor.toggleLock()}>
+      <button className="btn ghost icon" title={locked ? t('design.toolbar.unlock') : t('design.toolbar.lock')} disabled={!active} onClick={() => editor.toggleLock()}>
         {locked ? <Lock size={16} /> : <Unlock size={16} />}
       </button>
-      <button className="btn ghost icon danger" title="Delete (Del)" disabled={!active || locked} onClick={() => editor.deleteSelection()}>
+      <button className="btn ghost icon danger" title={t('design.toolbar.delete')} disabled={!active || locked} onClick={() => editor.deleteSelection()}>
         <Trash2 size={16} />
       </button>
     </div>
@@ -216,13 +218,19 @@ function RollSuggestion() {
     <div className="roll-banner">
       <Tag size={16} />
       <span>
-        The printer has {size.widthMm} × {size.heightMm} mm labels loaded ({SOURCE_TEXT[suggestion.source]}). This label is {editor.widthMm} × {editor.heightMm} mm.
+        {t('design.roll.loaded', {
+          width: size.widthMm,
+          height: size.heightMm,
+          source: SOURCE_TEXT[suggestion.source],
+          labelWidth: editor.widthMm,
+          labelHeight: editor.heightMm,
+        })}
       </span>
       <button className="btn small primary" onClick={() => applyRollSize(suggestion)}>
-        Use {size.widthMm} × {size.heightMm} mm
+        {t('design.roll.use', { width: size.widthMm, height: size.heightMm })}
       </button>
       <button className="btn small ghost" onClick={() => rollStore.set({ suggestion: undefined })}>
-        Keep this size
+        {t('design.roll.keep')}
       </button>
     </div>
   );
@@ -312,17 +320,13 @@ function Stage() {
             </span>
             <canvas ref={canvasRef} />
             {settings.printArea && <PrintAreaOverlay widthMm={editor.widthMm} heightMm={editor.heightMm} area={area} />}
-            <span className="feed-hint">{rotated ? 'Printed sideways on this model' : ''}</span>
+            <span className="feed-hint">{rotated ? t('design.sideways') : ''}</span>
           </div>
         </div>
       </div>
       <div className="stage-status">
-        <span>
-          {model.name} · {model.dpi} dpi · print head {model.printWidthMm.max ?? '?'} mm
-        </span>
-        <span>
-          Right-click for more actions · <kbd>Ctrl</kbd> + scroll to zoom · <kbd>Shift</kbd> + arrows to move 5 mm
-        </span>
+        <span>{t('design.status.model', { model: model.name, dpi: model.dpi, width: model.printWidthMm.max ?? '?' })}</span>
+        <span>{tr('design.status.help', { kbd: (s) => <kbd>{s}</kbd> })}</span>
       </div>
       <ElementMenu />
     </div>

@@ -14,6 +14,7 @@ import {
   type Packet,
 } from './protocol';
 import type { Transport } from './transports';
+import { t } from '../renderer/i18n';
 
 export interface PrinterInfo {
   modelId?: number;
@@ -96,7 +97,7 @@ export interface LogEntry {
 
 export class PrintError extends Error {
   constructor(readonly code: number) {
-    super(PRINT_ERRORS[code] ?? `Printer error ${code}`);
+    super(code in PRINT_ERRORS ? t(PRINT_ERRORS[code]) : t('errors.printer.code', { code }));
     this.name = 'PrintError';
   }
 }
@@ -178,15 +179,15 @@ export class NiimbotClient {
   async disconnect(): Promise<void> {
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     this.heartbeatTimer = undefined;
-    const t = this.transport;
+    const transport = this.transport;
     this.transport = undefined;
-    if (t) {
-      t.onClose = undefined;
-      t.onData = undefined;
-      await t.close().catch(() => undefined);
+    if (transport) {
+      transport.onClose = undefined;
+      transport.onData = undefined;
+      await transport.close().catch(() => undefined);
       this.addLog('info', 'Disconnected');
     }
-    this.rejectAll(new Error('Disconnected'));
+    this.rejectAll(new Error(t('errors.printer.disconnected')));
     this.resetState();
     this.emit();
   }
@@ -196,7 +197,7 @@ export class NiimbotClient {
     this.heartbeatTimer = undefined;
     this.transport = undefined;
     this.addLog('error', 'The printer connection closed');
-    this.rejectAll(new Error('The printer connection closed'));
+    this.rejectAll(new Error(t('errors.printer.connectionClosed')));
     this.resetState();
     this.emit();
   }
@@ -232,7 +233,7 @@ export class NiimbotClient {
         const w = this.waiters.shift();
         if (w) {
           clearTimeout(w.timer);
-          w.reject(new Error('The printer does not support this command'));
+          w.reject(new Error(t('errors.printer.notSupported')));
         }
         continue;
       }
@@ -246,10 +247,10 @@ export class NiimbotClient {
   }
 
   private async write(bytes: Uint8Array): Promise<void> {
-    if (!this.transport) throw new Error('No printer is connected');
+    if (!this.transport) throw new Error(t('errors.printer.notConnected'));
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error('The printer did not accept the data. Disconnect the printer and connect it again.')), this.writeTimeoutMs);
+      timer = setTimeout(() => reject(new Error(t('errors.printer.writeTimeout'))), this.writeTimeoutMs);
     });
     try {
       await Promise.race([this.transport.write(bytes), timeout]);
@@ -261,14 +262,14 @@ export class NiimbotClient {
   /** Sends one packet and waits for one of the expected response commands. */
   request(command: number, data: number[], expect: number[], timeoutMs = 2000, prefix = false): Promise<Packet> {
     const run = async () => {
-      if (!this.transport) throw new Error('No printer is connected');
+      if (!this.transport) throw new Error(t('errors.printer.notConnected'));
       const bytes = encodePacket(command, data, prefix);
       let waiter: Waiter | undefined;
       const response = new Promise<Packet>((resolve, reject) => {
         const timer = setTimeout(() => {
           const i = this.waiters.findIndex((w) => w.timer === timer);
           if (i >= 0) this.waiters.splice(i, 1);
-          reject(new Error(`No response to command 0x${command.toString(16)}`));
+          reject(new Error(t('errors.printer.noResponse', { command: `0x${command.toString(16)}` })));
         }, timeoutMs);
         waiter = { expect, resolve, reject, timer };
         this.waiters.push(waiter);
@@ -407,8 +408,8 @@ export class NiimbotClient {
   }
 
   async print(job: PrintJob, onProgress?: (p: PrintProgress) => void, signal?: AbortSignal): Promise<void> {
-    if (!this.transport) throw new Error('No printer is connected');
-    if (this.printing) throw new Error('A print job is already in progress');
+    if (!this.transport) throw new Error(t('errors.printer.notConnected'));
+    if (this.printing) throw new Error(t('errors.printer.jobInProgress'));
     this.printing = true;
     this.lastPrintError = undefined;
     this.emit();
@@ -417,7 +418,7 @@ export class NiimbotClient {
     if (total > MAX_LABELS_PER_JOB) {
       this.printing = false;
       this.emit();
-      throw new Error(`One print job can have up to ${MAX_LABELS_PER_JOB.toLocaleString('en-AU')} labels.`);
+      throw new Error(t('errors.printer.tooManyLabels', { max: MAX_LABELS_PER_JOB.toLocaleString('en-AU') }));
     }
     const report = (page: number, printed: number, message: string) =>
       onProgress?.({ page, pageCount: job.pages.length, printed, total, message });
@@ -427,7 +428,7 @@ export class NiimbotClient {
     };
 
     try {
-      report(0, 0, 'Preparing the printer');
+      report(0, 0, t('device.progress.preparing'));
       await this.request(Req.SetDensity, [job.density], [Res.SetDensity]);
       await this.request(Req.SetLabelType, [job.labelType], [Res.SetLabelType]);
       if (job.variant === 'modern') {
@@ -444,7 +445,7 @@ export class NiimbotClient {
         // Render each page only when it is needed, so that a large job does not keep every image in memory.
         const image = typeof page.image === 'function' ? await page.image() : page.image;
         checkAbort();
-        report(i + 1, done, `Sending label ${i + 1} of ${job.pages.length}`);
+        report(i + 1, done, t('device.progress.sending', { page: i + 1, total: job.pages.length }));
 
         if (job.variant === 'd110') {
           await this.request(Req.PrintClear, [1], [Res.PrintClear]).catch(() => undefined);
@@ -467,19 +468,19 @@ export class NiimbotClient {
           pageEnded = r.data[0] === 1;
           if (!pageEnded) await sleep(50);
         }
-        if (!pageEnded) throw new Error('The printer did not accept the label data');
+        if (!pageEnded) throw new Error(t('errors.printer.pageNotAccepted'));
 
         done += copies;
-        await this.waitForPrinted(done, copies, (printed) => report(i + 1, printed, `Printing label ${i + 1} of ${job.pages.length}`), signal);
+        await this.waitForPrinted(done, copies, (printed) => report(i + 1, printed, t('device.progress.printing', { page: i + 1, total: job.pages.length })), signal);
       }
 
-      report(job.pages.length, total, 'Finishing');
+      report(job.pages.length, total, t('device.progress.finishing'));
       for (let attempt = 0; attempt < 30; attempt++) {
         const r = await this.request(Req.PrintEnd, [1], [Res.PrintEnd]);
         if (r.data[0] === 1) break;
         await sleep(100);
       }
-      report(job.pages.length, total, 'Done');
+      report(job.pages.length, total, t('device.progress.done'));
     } catch (err) {
       this.addLog('error', (err as Error).message);
       if (this.transport) {

@@ -32,19 +32,24 @@ import { startRollTracking } from './state/roll';
 import { startMcpHandlers } from './mcp/handlers';
 import { ConnectDialog } from './components/ConnectDialog';
 import { startUpdateTracking, UpdateBanner, UpdatePill } from './components/Updates';
+import { LanguageMenu } from './components/LanguageMenu';
+import { t, useLanguage } from './i18n';
+import type { MessageKey } from '../i18n/translate';
 
-const NAV: { view: View; label: string; icon: typeof PenTool }[] = [
-  { view: 'design', label: 'Design', icon: PenTool },
-  { view: 'library', label: 'Templates', icon: LayoutTemplate },
-  { view: 'templates', label: 'Labels', icon: FolderOpen },
-  { view: 'data', label: 'Data', icon: Database },
-  { view: 'printer', label: 'Printer', icon: PrinterIcon },
-  { view: 'history', label: 'History', icon: History },
+const NAV: { view: View; label: MessageKey; icon: typeof PenTool }[] = [
+  { view: 'design', label: 'app.nav.design', icon: PenTool },
+  { view: 'library', label: 'app.nav.templates', icon: LayoutTemplate },
+  { view: 'templates', label: 'app.nav.labels', icon: FolderOpen },
+  { view: 'data', label: 'app.nav.data', icon: Database },
+  { view: 'printer', label: 'app.nav.printer', icon: PrinterIcon },
+  { view: 'history', label: 'app.nav.history', icon: History },
 ];
 
 export function App() {
   const state = appStore.use();
   const p = usePrinter();
+  // A new language mounts the content again, so that every text changes.
+  const language = useLanguage();
 
   useEffect(() => {
     void loadSettings();
@@ -85,7 +90,7 @@ export function App() {
   const modelName = p.info.model?.name;
 
   return (
-    <div className="app">
+    <div className="app" key={language}>
       <nav className="rail">
         <div className="logo" title="OwnYourNiimbot">
           <Tag size={22} />
@@ -93,13 +98,14 @@ export function App() {
         {NAV.map((n) => (
           <button key={n.view} className={state.view === n.view ? 'active' : ''} onClick={() => appStore.set({ view: n.view })}>
             <n.icon size={20} />
-            {n.label}
+            {t(n.label)}
           </button>
         ))}
         <div className="spacer" />
+        <LanguageMenu />
         <button className={state.view === 'settings' ? 'active' : ''} onClick={() => appStore.set({ view: 'settings' })}>
           <SettingsIcon size={20} />
-          Settings
+          {t('app.nav.settings')}
         </button>
       </nav>
 
@@ -111,16 +117,16 @@ export function App() {
               value={state.template.name}
               onChange={(e) => appStore.set({ template: { ...state.template, name: e.target.value }, dirty: true })}
               onKeyDown={(e) => e.stopPropagation()}
-              aria-label="Label name"
+              aria-label={t('app.labelName')}
             />
           ) : (
-            <h1>{state.view === 'templates' ? 'Labels' : NAV.find((n) => n.view === state.view)?.label ?? 'Settings'}</h1>
+            <h1>{t(NAV.find((n) => n.view === state.view)?.label ?? 'app.nav.settings')}</h1>
           )}
-          {state.view === 'design' && state.dirty && <span className="muted">Not saved</span>}
+          {state.view === 'design' && state.dirty && <span className="muted">{t('app.notSaved')}</span>}
           <div className="grow" />
           {state.view === 'design' && (
-            <button className="btn" onClick={() => void saveTemplate()} title="Save (Ctrl+S)">
-              <Save size={16} /> Save
+            <button className="btn" onClick={() => void saveTemplate()} title={t('app.saveTitle')}>
+              <Save size={16} /> {t('common.save')}
             </button>
           )}
           <UpdatePill />
@@ -129,7 +135,7 @@ export function App() {
             {p.connected ? (
               <>
                 {p.transport?.kind === 'bluetooth' ? <Bluetooth size={14} /> : <Usb size={14} />}
-                <span>{modelName ?? p.transport?.name ?? 'Printer'}</span>
+                <span>{modelName ?? p.transport?.name ?? t('app.printer')}</span>
                 {battery !== undefined && (
                   <span className="muted" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                     <BatteryMedium size={14} /> {battery}%
@@ -137,11 +143,11 @@ export function App() {
                 )}
               </>
             ) : (
-              <span>Connect printer</span>
+              <span>{t('app.connectPrinter')}</span>
             )}
           </button>
-          <button className="btn primary" onClick={() => appStore.set({ printOpen: true })} title="Print (Ctrl+P)">
-            <PrinterIcon size={16} /> Print
+          <button className="btn primary" onClick={() => appStore.set({ printOpen: true })} title={t('app.printTitle')}>
+            <PrinterIcon size={16} /> {t('app.print')}
           </button>
         </header>
 

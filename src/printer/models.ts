@@ -1,4 +1,5 @@
 import modelData from './models.json';
+import type { MessageKey } from '../i18n/translate';
 
 export type PrinterProtocol = 'niimbot' | 'zicox' | 'daozhen' | 'snbc' | 'unknown';
 
@@ -43,10 +44,27 @@ export interface PrinterModel {
  */
 export type PrintVariant = 'legacy' | 'd110' | 'modern';
 
-export const PRINT_VARIANTS: { value: PrintVariant; label: string; hint: string }[] = [
-  { value: 'legacy', label: 'Legacy (D11, B21, B3S)', hint: 'Older D11, B21 and B3S firmware' },
-  { value: 'd110', label: 'D110 family', hint: 'D110, B21S, B18 and similar' },
-  { value: 'modern', label: 'Modern (B1 and newer)', hint: 'B1, B2, B31, B32, K3, M2, M3, P1 and newer models' },
+/**
+ * `label` and `hint` are English, for scripts/printer-table.mjs. The windows
+ * show t(labelKey) and t(hintKey). This file does not import the text lookup,
+ * so that the script can load it in Node.
+ */
+export const PRINT_VARIANTS: { value: PrintVariant; label: string; hint: string; labelKey: MessageKey; hintKey: MessageKey }[] = [
+  {
+    value: 'legacy',
+    label: 'Legacy (D11, B21, B3S)',
+    hint: 'Older D11, B21 and B3S firmware',
+    labelKey: 'device.variant.legacy',
+    hintKey: 'device.variant.legacyHint',
+  },
+  { value: 'd110', label: 'D110 family', hint: 'D110, B21S, B18 and similar', labelKey: 'device.variant.d110', hintKey: 'device.variant.d110Hint' },
+  {
+    value: 'modern',
+    label: 'Modern (B1 and newer)',
+    hint: 'B1, B2, B31, B32, K3, M2, M3, P1 and newer models',
+    labelKey: 'device.variant.modern',
+    hintKey: 'device.variant.modernHint',
+  },
 ];
 
 export const MODELS: PrinterModel[] = modelData as PrinterModel[];

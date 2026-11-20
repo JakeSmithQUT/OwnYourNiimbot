@@ -86,6 +86,7 @@ function browserApi(): DesktopApi {
     app: {
       info: async () => ({ version: 'dev', platform: 'browser', arch: '', electron: '', chrome: '' }),
       openDataFolder: async () => undefined,
+      setLanguage: async () => undefined,
       openExternal: async (url: string) => {
         window.open(url, '_blank', 'noopener');
       },

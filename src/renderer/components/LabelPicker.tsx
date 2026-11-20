@@ -2,27 +2,38 @@ import { useMemo } from 'react';
 import { compatibleLabels, editorSize, hasConfirmedLabels, labelName, physicalSize, type LabelProduct } from '../../printer/labels';
 import type { PrinterModel } from '../../printer/models';
 import { rollLabel, rollStore, type LoadedRoll } from '../state/roll';
+import { t } from '../i18n';
+import type { MessageKey } from '../../i18n/translate';
 
-const TYPE_SHORT: Record<number, string> = {
-  2: 'black mark',
-  3: 'continuous',
-  4: 'perforated',
-  5: 'transparent',
-  6: 'PVC tag',
-  10: 'black mark gap',
-  11: 'heat-shrink tube',
+const TYPE_SHORT: Record<number, MessageKey> = {
+  2: 'roll.type.blackMark',
+  3: 'roll.type.continuous',
+  4: 'roll.type.perforated',
+  5: 'roll.type.transparent',
+  6: 'roll.type.pvcTag',
+  10: 'roll.type.blackMarkGap',
+  11: 'roll.type.heatShrinkTube',
 };
 
-export const SOURCE_TEXT: Record<LoadedRoll['source'], string> = {
-  printer: 'read from the printer',
-  remembered: 'saved for this roll',
-  catalogue: 'from the label list',
-  unknown: 'size unknown',
+/** Where the size of the loaded roll comes from. Each read gives the text in the current language. */
+export const SOURCE_TEXT: Readonly<Record<LoadedRoll['source'], string>> = {
+  get printer() {
+    return t('roll.source.printer');
+  },
+  get remembered() {
+    return t('roll.source.remembered');
+  },
+  get catalogue() {
+    return t('roll.source.catalogue');
+  },
+  get unknown() {
+    return t('roll.source.unknown');
+  },
 };
 
 export function productLabel(l: LabelProduct): string {
   const type = TYPE_SHORT[l.type];
-  return type ? `${labelName(l)} · ${type}` : labelName(l);
+  return type ? `${labelName(l)} · ${t(type)}` : labelName(l);
 }
 
 const near = (a: number, b: number) => Math.abs(a - b) < 0.3;
@@ -71,14 +82,14 @@ export function LabelPicker(props: {
       }}
     >
       {roll && rollSize && (
-        <optgroup label="Loaded in the printer">
+        <optgroup label={t('roll.loaded')}>
           <option value="roll">
             {rollLabel(roll)} ({SOURCE_TEXT[roll.source]})
           </option>
         </optgroup>
       )}
       {labels.length > 0 && (
-        <optgroup label={confirmed ? `NIIMBOT rolls for the ${props.model.name}` : `Rolls that fit the print head (not confirmed for the ${props.model.name})`}>
+        <optgroup label={confirmed ? t('roll.forModel', { model: props.model.name }) : t('roll.fitModel', { model: props.model.name })}>
           {labels.map((l, i) => (
             <option key={i} value={`cat:${i}`}>
               {productLabel(l)}
@@ -86,7 +97,7 @@ export function LabelPicker(props: {
           ))}
         </optgroup>
       )}
-      <option value="custom">Custom size</option>
+      <option value="custom">{t('roll.custom')}</option>
     </select>
   );
 }

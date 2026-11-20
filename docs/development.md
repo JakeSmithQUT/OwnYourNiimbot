@@ -74,6 +74,26 @@ After a change, start `npm run dev`, open the **Templates** page and look at eac
 
 To add a symbol, add an entry to a group in `src/renderer/editor/icons.tsx`. Symbol names are lower case and must not change after a release, because saved labels and the assistant tools use them.
 
+## Translations
+
+The interface text is in `src/i18n`. English is the source and the fallback.
+
+- `src/i18n/en/*.ts`: the English text, one file for each part of the app. A key is `<area>.<name>`.
+- `src/i18n/locales/<code>.json`: one file for each other language, with the same keys.
+- `src/i18n/languages.ts`: the list of languages, with the name of each language in that language.
+
+To show a text, call `t('area.name')` in the renderer (`src/renderer/i18n.tsx`) or `tm('area.name')` in the main process (`src/main/i18n.ts`). Rules:
+
+- Use one key for a full sentence. Do not join translated parts, because the word order changes between languages.
+- Put values in the text as `{name}` and pass them: `t('settings.blackLevel', { level })`.
+- A text with a count has a key for each plural form (`_one`, `_other` in English) and uses `tn('key', count)`. Other languages use the forms of `Intl.PluralRules`, for example `one`, `few`, `many` and `other` in Polish.
+- Mark styled parts with tags, `<b>...</b>`, and show them with `tr()`.
+- Do not call `t()` when a module loads. Keep the key in constants, and call `t()` when the component renders.
+- Templates, symbol names and texts for AI assistants stay in English.
+- The side bar and the Insert buttons are narrow. A long word there has soft hyphens (U+00AD) at syllable breaks, so that it breaks with a hyphen at a correct place. Keep them when you change a translation.
+
+When you add or change an English text, add or change it in every language file. `tests/i18n.test.ts` checks that each language has every key, every plural form, the same `{values}` and the same tags.
+
 ## Update the printer model table
 
 The model table `src/printer/models.json` comes from the printer list in the official Android app.

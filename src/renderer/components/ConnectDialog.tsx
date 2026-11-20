@@ -6,6 +6,7 @@ import { connectBluetooth, connectSerial, printer } from '../state/printer';
 import { toast } from '../state/app';
 import { looksLikeNiimbot } from '../../printer/models';
 import type { DeviceEntry, SerialEntry } from '../../main/preload';
+import { t } from '../i18n';
 
 type Mode = 'choose' | 'bluetooth' | 'serial' | 'connecting';
 
@@ -26,8 +27,8 @@ export function ConnectDialog(props: { onClose: () => void }) {
   }, []);
 
   const finish = () => {
-    const name = printer.info.model?.name ?? printer.transport?.name ?? 'printer';
-    toast(`Connected to ${name}`, 'success');
+    const name = printer.info.model?.name ?? printer.transport?.name;
+    toast(name ? t('connect.connectedTo', { name }) : t('connect.connectedPrinter'), 'success');
     props.onClose();
   };
 
@@ -71,7 +72,7 @@ export function ConnectDialog(props: { onClose: () => void }) {
     .sort((a, b) => Number(looksLikeNiimbot(b.name)) - Number(looksLikeNiimbot(a.name)) || a.name.localeCompare(b.name));
 
   return (
-    <Modal title="Connect a printer" icon={<PrinterIcon size={18} />} onClose={close}>
+    <Modal title={t('connect.title')} icon={<PrinterIcon size={18} />} onClose={close}>
       {error && <div className="notice error">{error}</div>}
 
       {mode === 'choose' && (
@@ -79,12 +80,12 @@ export function ConnectDialog(props: { onClose: () => void }) {
           <button className="choice" onClick={startBluetooth}>
             <Bluetooth size={26} />
             <strong>Bluetooth</strong>
-            <span>Turn on the printer. You do not need to pair it in the system settings first.</span>
+            <span>{t('connect.bluetoothHint')}</span>
           </button>
           <button className="choice" onClick={startSerial}>
             <Usb size={26} />
-            <strong>USB cable or serial port</strong>
-            <span>Connect the printer with a USB data cable. Older models that pair as a Bluetooth serial port also show here.</span>
+            <strong>{t('connect.usb')}</strong>
+            <span>{t('connect.usbHint')}</span>
           </button>
         </div>
       )}
@@ -92,10 +93,10 @@ export function ConnectDialog(props: { onClose: () => void }) {
       {mode === 'bluetooth' && (
         <>
           <div className="scanning">
-            <Loader2 size={18} className="spin" /> Looking for printers nearby…
+            <Loader2 size={18} className="spin" /> {t('connect.searchingBluetooth')}
           </div>
           <div className="device-list">
-            {visibleDevices.length === 0 && <div className="empty">No printers found yet. Make sure that the printer is on and not connected to a phone.</div>}
+            {visibleDevices.length === 0 && <div className="empty">{t('connect.noPrinters')}</div>}
             {visibleDevices.map((d) => (
               <button
                 key={d.id}
@@ -106,7 +107,7 @@ export function ConnectDialog(props: { onClose: () => void }) {
               >
                 <Bluetooth size={18} />
                 <div>
-                  <div>{d.name || 'Unnamed device'}</div>
+                  <div>{d.name || t('connect.unnamedDevice')}</div>
                   <small>{d.id}</small>
                 </div>
               </button>
@@ -114,10 +115,10 @@ export function ConnectDialog(props: { onClose: () => void }) {
           </div>
           <div className="btn-row" style={{ marginTop: 12, justifyContent: 'space-between' }}>
             <Check checked={showAll} onChange={setShowAll}>
-              Show all Bluetooth devices
+              {t('connect.showAll')}
             </Check>
             <button className="btn" onClick={cancel}>
-              Back
+              {t('connect.back')}
             </button>
           </div>
         </>
@@ -126,10 +127,10 @@ export function ConnectDialog(props: { onClose: () => void }) {
       {mode === 'serial' && (
         <>
           <div className="scanning">
-            <Loader2 size={18} className="spin" /> Looking for serial ports…
+            <Loader2 size={18} className="spin" /> {t('connect.searchingSerial')}
           </div>
           <div className="device-list">
-            {ports.length === 0 && <div className="empty">No serial ports found. Connect the printer and turn it on.</div>}
+            {ports.length === 0 && <div className="empty">{t('connect.noPorts')}</div>}
             {ports.map((port) => (
               <button
                 key={port.id}
@@ -151,7 +152,7 @@ export function ConnectDialog(props: { onClose: () => void }) {
           </div>
           <div className="btn-row" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
             <button className="btn" onClick={cancel}>
-              Back
+              {t('connect.back')}
             </button>
           </div>
         </>
@@ -159,7 +160,7 @@ export function ConnectDialog(props: { onClose: () => void }) {
 
       {mode === 'connecting' && (
         <div className="scanning">
-          <Loader2 size={18} className="spin" /> Connecting and reading printer details…
+          <Loader2 size={18} className="spin" /> {t('connect.connecting')}
         </div>
       )}
     </Modal>

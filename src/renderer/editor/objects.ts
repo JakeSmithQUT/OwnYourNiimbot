@@ -1,5 +1,6 @@
 import { classRegistry, FabricObject, type FabricObjectProps } from 'fabric';
 import { toCanvas } from 'bwip-js/browser';
+import { currentLanguage, t } from '../i18n';
 
 // Fabric 7 changed the default origin to the centre of the object. The editor,
 // the properties panel and saved labels use the top-left corner as the position.
@@ -45,12 +46,13 @@ const barsCache = new Map<string, BarsResult>();
 
 /** Renders the symbol with one pixel per module. Results are cached by content. */
 export function renderBars(format: string, value: string, eclevel: string): BarsResult {
-  const key = `${format}\u0000${eclevel}\u0000${value}`;
+  // The error text is in the language of the app, so the language is part of the key.
+  const key = `${currentLanguage()}\u0000${format}\u0000${eclevel}\u0000${value}`;
   const cached = barsCache.get(key);
   if (cached) return cached;
   let result: BarsResult;
   if (!value) {
-    result = { error: 'No value' };
+    result = { error: t('editor.barcode.noValue') };
   } else {
     try {
       const canvas = document.createElement('canvas');
@@ -70,7 +72,7 @@ export function renderBars(format: string, value: string, eclevel: string): Bars
       result = { canvas };
     } catch (err) {
       const msg = String((err as Error)?.message ?? err).replace(/^bwip-js:\s*/i, '');
-      result = { error: msg.split(':').pop()?.trim() || 'Invalid value' };
+      result = { error: msg.split(':').pop()?.trim() || t('editor.barcode.invalidValue') };
     }
   }
   if (barsCache.size > 500) barsCache.clear();
@@ -140,7 +142,7 @@ export class LabelBarcode extends FabricObject {
       ctx.font = `${Math.max(12, Math.min(h / 4, 40))}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(error ?? 'Invalid', 0, 0, w);
+      ctx.fillText(error ?? t('editor.barcode.invalid'), 0, 0, w);
       ctx.restore();
       return;
     }

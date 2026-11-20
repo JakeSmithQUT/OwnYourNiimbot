@@ -1,0 +1,211 @@
+// English texts. See src/i18n/translate.ts for the rules.
+// The Design view: the Insert and Symbols panels, the toolbar, the stage, the
+// properties panel, the right-click menu of an element, and the texts that
+// the editor puts on a new element.
+export const editor = {
+  // Design view, Insert panel
+  'design.insert': 'Insert',
+  'design.insert.text': 'Text',
+  'design.insert.barcode': 'Barcode',
+  'design.insert.qrCode': 'QR code',
+  'design.insert.image': 'Image',
+  'design.insert.date': 'Date',
+  'design.insert.serial': 'Serial',
+  'design.insert.table': 'Table',
+  'design.insert.rectangle': 'Rectangle',
+  'design.insert.rounded': 'Rounded',
+  'design.insert.circle': 'Circle',
+  'design.insert.line': 'Line',
+  'design.insert.vertical': 'Vertical',
+
+  // Design view, Symbols panel
+  'design.symbols': 'Symbols',
+  'design.symbols.less': 'Less',
+  'design.symbols.all': 'All',
+  'design.symbols.search_one': 'Search {count} symbol',
+  'design.symbols.search_other': 'Search {count} symbols',
+  'design.symbols.searchLabel': 'Search symbols',
+  'design.symbols.none': 'No symbol has this name.',
+
+  // Design view, toolbar
+  'design.toolbar.undo': 'Undo (Ctrl+Z)',
+  'design.toolbar.redo': 'Redo (Ctrl+Y)',
+  'design.toolbar.zoomOut': 'Zoom out',
+  'design.toolbar.zoomHint': '100% is the real size on a 96 dpi screen',
+  'design.toolbar.zoomIn': 'Zoom in',
+  'design.toolbar.fit': 'Fit to window',
+  'design.toolbar.snap': 'Snap to grid',
+  'design.toolbar.printArea': 'Show the print area',
+  'design.toolbar.alignLeft': 'Align left',
+  'design.toolbar.centreHorizontally': 'Centre horizontally',
+  'design.toolbar.alignRight': 'Align right',
+  'design.toolbar.alignTop': 'Align top',
+  'design.toolbar.centreVertically': 'Centre vertically',
+  'design.toolbar.alignBottom': 'Align bottom',
+  'design.toolbar.toFront': 'Bring to front',
+  'design.toolbar.toBack': 'Send to back',
+  'design.toolbar.rotate': 'Rotate 90°',
+  'design.toolbar.duplicate': 'Duplicate (Ctrl+D)',
+  'design.toolbar.lock': 'Lock',
+  'design.toolbar.unlock': 'Unlock',
+  'design.toolbar.delete': 'Delete (Del)',
+
+  // Design view, banner for the roll in the printer
+  'design.roll.loaded': 'The printer has {width} × {height} mm labels loaded ({source}). This label is {labelWidth} × {labelHeight} mm.',
+  'design.roll.use': 'Use {width} × {height} mm',
+  'design.roll.keep': 'Keep this size',
+
+  // Design view, stage and status bar
+  'design.sideways': 'Printed sideways on this model',
+  'design.status.model': '{model} · {dpi} dpi · print head {width} mm',
+  'design.status.help': 'Right-click for more actions · <kbd>Ctrl</kbd> + scroll to zoom · <kbd>Shift</kbd> + arrows to move 5 mm',
+
+  // Properties panel, section titles
+  'props.title.element': 'Element',
+  'props.title.dateTime': 'Date and time',
+  'props.title.serial': 'Serial number',
+  'props.title.text': 'Text',
+  'props.title.code2d': '2D code',
+  'props.title.barcode': 'Barcode',
+  'props.title.image': 'Image',
+  'props.title.table': 'Table',
+  'props.title.shape': 'Shape',
+  'props.title.symbol': 'Symbol',
+  'props.title.position': 'Position',
+  'props.selected_one': '{count} element selected',
+  'props.selected_other': '{count} elements selected',
+  'props.selectedHint': 'Use the toolbar to align, move or delete the selected elements.',
+
+  // Properties panel, label settings (nothing selected)
+  'props.label': 'Label',
+  'props.label.roll': 'NIIMBOT roll',
+  'props.label.unknownRoll': 'The loaded roll ({barcode}) has no known size. Select its size, then save it for this roll.',
+  'props.label.saveRoll': 'Save {width} × {height} mm for this roll',
+  'props.label.rollSaved': 'Saved {width} × {height} mm for roll {barcode}',
+  'props.label.clipped': 'The {model} prints {head} mm across this {size} mm label.',
+  'props.label.outside_one': '{count} element goes outside the print area and will be cut off.',
+  'props.label.outside_other': '{count} elements go outside the print area and will be cut off.',
+  'props.label.fit': 'Fit into the print area',
+  'props.label.printAreaHint': 'The {model} prints {head} mm across this label. The shaded parts do not print.',
+  'props.label.type': 'Label type',
+  'props.label.typeNotListed': '{type} (not listed for this model)',
+  'props.label.cornerRadius': 'Corner radius (preview only)',
+  'props.label.snapGrid': 'Snap grid',
+  'props.label.hint': 'Select an element on the label to change it. Double-click text to edit it on the label.',
+
+  // Properties panel, label types of NIIMBOT rolls
+
+  // Properties panel, fields that most elements have
+  'props.width': 'Width',
+  'props.height': 'Height',
+  'props.rotation': 'Rotation',
+  'props.font': 'Font',
+  'props.font.bundled': 'Included with the app',
+  'props.font.system': 'Fonts on this computer',
+  'props.textSize': 'Text size',
+  'props.lineWidth': 'Line width',
+  'props.bold': 'Bold',
+
+  // Properties panel, menu to insert a data field
+  'props.field.insert': 'Insert a data field…',
+  'props.field.columns': 'Columns from {name}',
+  'props.field.builtIn': 'Built-in',
+  'props.field.date': 'date',
+  'props.field.time': 'time',
+  'props.field.index': 'label number',
+
+  // Properties panel, text, date and serial number
+  'props.text': 'Text',
+  'props.dateFormat': 'Date format',
+  'props.addDays': 'Add days',
+  'props.addDaysHint': 'Use this for best-before or expiry dates.',
+  'props.size': 'Size',
+  'props.lineSpacing': 'Line spacing',
+  'props.style': 'Style',
+  'props.italic': 'Italic',
+  'props.underline': 'Underline',
+  'props.strikethrough': 'Strikethrough',
+  'props.align.left': 'Left',
+  'props.align.centre': 'Centre',
+  'props.align.right': 'Right',
+  'props.align.justify': 'Justify',
+  'props.letterSpacing': 'Letter spacing',
+  'props.inverted': 'White text on black',
+  'props.serial.prefix': 'Prefix',
+  'props.serial.suffix': 'Suffix',
+  'props.serial.start': 'Start',
+  'props.serial.step': 'Step',
+  'props.serial.digits': 'Digits',
+  'props.serial.example': 'Example: {first}, {second}, {third}',
+
+  // Properties panel, barcode and 2D code
+  'props.barcode.type': 'Type',
+  'props.barcode.linear': 'Barcodes',
+  'props.barcode.twoD': '2D codes',
+  'props.barcode.content': 'Content',
+  'props.barcode.errorCorrection': 'Error correction',
+  'props.barcode.showText': 'Show text under the bars',
+
+  // Properties panel, image
+  'props.image.noSource': 'This image has no source data to process.',
+  'props.image.mode': 'Black and white',
+  'props.image.mode.floyd': 'Dither (photos)',
+  'props.image.mode.atkinson': 'Dither, high contrast',
+  'props.image.mode.threshold': 'Threshold (logos, line art)',
+  'props.image.mode.grey': 'Greyscale preview',
+  'props.image.threshold': 'Threshold {value}',
+  'props.image.brightness': 'Brightness {value}',
+  'props.image.contrast': 'Contrast {value}',
+  'props.image.invert': 'Invert',
+  'props.image.processing': 'Processing…',
+
+  // Properties panel, shapes
+  'props.shape.fill': 'Fill black',
+  'props.shape.dashed': 'Dashed line',
+  'props.shape.cornerRadius': 'Corner radius',
+
+  // Properties panel, table
+  'props.table.rows': 'Rows',
+  'props.table.columns': 'Columns',
+  'props.table.cells': 'Cells',
+
+  // Right-click menu of an element
+  'element.menu': 'Element',
+  'element.replaceWith': 'Replace with',
+  'element.replaceOne': 'Select one element to replace it',
+  'element.replaceUnlock': 'Unlock the element to replace it',
+  'element.sameType': 'This element is already this type',
+  'element.back': 'Back',
+  'element.symbols': 'Symbols',
+  'element.searchSymbols': 'Search symbols',
+  'element.duplicate': 'Duplicate',
+  'element.toFront': 'Bring to front',
+  'element.toBack': 'Send to back',
+  'element.lock': 'Lock',
+  'element.unlock': 'Unlock',
+  'element.delete': 'Delete',
+
+  // Right-click menu, element types in "Replace with"
+  'element.type.text': 'Text',
+  'element.type.barcode': 'Barcode',
+  'element.type.qrCode': 'QR code',
+  'element.type.image': 'Image…',
+  'element.type.date': 'Date',
+  'element.type.serial': 'Serial number',
+  'element.type.table': 'Table',
+  'element.type.rectangle': 'Rectangle',
+  'element.type.rounded': 'Rounded rectangle',
+  'element.type.circle': 'Circle',
+  'element.type.line': 'Line',
+  'element.type.verticalLine': 'Vertical line',
+  'element.type.symbol': 'Symbol',
+
+  // Editor: content of new elements, and errors
+  'editor.defaultText': 'Text',
+  'editor.tableItem': 'Item {number}',
+  'editor.barcode.noValue': 'No value',
+  'editor.barcode.invalidValue': 'Invalid value',
+  'editor.barcode.invalid': 'Invalid',
+  'editor.imageFiles': 'Images',
+  'editor.imageLoadFailed': 'The image could not be loaded',
+} as const;

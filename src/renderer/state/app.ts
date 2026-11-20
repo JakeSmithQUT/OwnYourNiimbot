@@ -5,6 +5,8 @@ import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/templ
 import { editor } from '../editor/EditorController';
 import { LIMITS, validateTemplate } from '../editor/validate';
 import type { PrintVariant } from '../../printer/models';
+import { DEFAULT_LANGUAGE, type LanguageCode } from '../../i18n/languages';
+import { setLanguage, t } from '../i18n';
 
 export type View = 'design' | 'library' | 'templates' | 'data' | 'printer' | 'history' | 'settings';
 
@@ -21,6 +23,8 @@ export interface Settings {
   autoLabelSize: boolean;
   /** Shade the parts of the label that the print head cannot reach. */
   printArea: boolean;
+  /** The language of the app. */
+  language: LanguageCode;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -34,6 +38,7 @@ export const DEFAULT_SETTINGS: Settings = {
   densityByModel: {},
   autoLabelSize: true,
   printArea: true,
+  language: DEFAULT_LANGUAGE,
 };
 
 export interface AppState {
@@ -82,6 +87,13 @@ export function updateSettings(patch: Partial<Settings>): void {
   void api.store.put('settings', 'app', settings);
 }
 
+/** Changes the language of the app and keeps it for the next start. */
+export async function chooseLanguage(language: LanguageCode): Promise<void> {
+  await setLanguage(language);
+  updateSettings({ language });
+  await api.app.setLanguage(language).catch(() => undefined);
+}
+
 export function markDirty(): void {
   if (!appStore.get().dirty) appStore.set({ dirty: true });
 }
@@ -107,26 +119,26 @@ export function captureTemplate(): LabelTemplate {
  * the label that was opened stays as it was.
  */
 export async function saveTemplate(): Promise<LabelTemplate> {
-  const t = captureTemplate();
-  const asNew = savesAsNewLabel(t.id, t.name, appStore.get().savedName);
+  const label = captureTemplate();
+  const asNew = savesAsNewLabel(label.id, label.name, appStore.get().savedName);
   if (asNew) {
-    t.id = newId();
-    t.createdAt = t.updatedAt;
+    label.id = newId();
+    label.createdAt = label.updatedAt;
   }
-  if (!t.id) t.id = newId();
-  await api.store.put('templates', t.id, t);
-  appStore.set({ template: t, dirty: false, savedName: t.name });
-  toast(asNew ? `Saved "${t.name}" as a new label` : `Saved "${t.name}"`, 'success');
-  return t;
+  if (!label.id) label.id = newId();
+  await api.store.put('templates', label.id, label);
+  appStore.set({ template: label, dirty: false, savedName: label.name });
+  toast(t(asNew ? 'state.savedAsNew' : 'state.saved', { name: label.name }), 'success');
+  return label;
 }
 
 /** Opens a label in the design view. Labels from files or the data folder are checked first. */
-export async function openTemplate(t: LabelTemplate): Promise<boolean> {
+export async function openTemplate(label: LabelTemplate): Promise<boolean> {
   let safe: LabelTemplate;
   try {
-    safe = validateTemplate(t);
+    safe = validateTemplate(label);
   } catch (err) {
-    toast(`This label cannot be opened. ${(err as Error).message}`, 'error');
+    toast(t('state.cannotOpen', { error: (err as Error).message }), 'error');
     return false;
   }
   appStore.set({
@@ -141,13 +153,13 @@ export async function openTemplate(t: LabelTemplate): Promise<boolean> {
 }
 
 export async function newTemplate(widthMm: number, heightMm: number, labelType?: number): Promise<void> {
-  const t = emptyTemplate(widthMm, heightMm, labelType);
-  appStore.set({ template: t, dirty: false, savedName: undefined, view: 'design' });
-  await editor.load(t.canvas, widthMm, heightMm);
+  const label = emptyTemplate(widthMm, heightMm, labelType);
+  appStore.set({ template: label, dirty: false, savedName: undefined, view: 'design' });
+  await editor.load(label.canvas, widthMm, heightMm);
 }
 
 export function confirmDiscard(): boolean {
-  return !appStore.get().dirty || window.confirm('The current label has changes that are not saved. Continue and lose the changes?');
+  return !appStore.get().dirty || window.confirm(t('state.confirmDiscard'));
 }
 
 /** True when the open label has no elements. */
@@ -163,8 +175,8 @@ export function applyLabelSize(widthMm: number, heightMm: number, labelType?: nu
   const w = Math.round(clamp(widthMm, LIMITS.maxWidthMm) * 10) / 10;
   const h = Math.round(clamp(heightMm, LIMITS.maxHeightMm) * 10) / 10;
   if (editor.canvas) editor.setLabelSize(w, h);
-  const t = appStore.get().template;
-  appStore.set({ template: { ...t, widthMm: w, heightMm: h, labelType: labelType ?? t.labelType } });
+  const label = appStore.get().template;
+  appStore.set({ template: { ...label, widthMm: w, heightMm: h, labelType: labelType ?? label.labelType } });
   markDirty();
   window.dispatchEvent(new Event('oyn-fit'));
 }

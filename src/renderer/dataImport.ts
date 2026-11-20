@@ -4,6 +4,7 @@
 
 import Papa from 'papaparse';
 import type { Dataset } from './editor/template';
+import { currentLanguage, t } from './i18n';
 
 export const DATA_LIMITS = {
   /** Data rows, without the header row. */
@@ -17,20 +18,22 @@ export const DATA_LIMITS = {
 
 export class DataFileError extends Error {}
 
-const TOO_MANY_ROWS = `The file has more than ${DATA_LIMITS.rows.toLocaleString('en-AU')} rows. Split it into smaller files.`;
-const TOO_MANY_COLS = `The file has more than ${DATA_LIMITS.cols} columns.`;
-const CELL_TOO_LONG = `A cell has more than ${DATA_LIMITS.cellChars.toLocaleString('en-AU')} characters.`;
+// The messages are made when an error occurs, so that they are in the current language.
+const tooManyRows = () => t('data.error.tooManyRows', { max: DATA_LIMITS.rows.toLocaleString(currentLanguage()) });
+const tooManyCols = () => t('data.error.tooManyColumns', { max: DATA_LIMITS.cols });
+const cellTooLong = () => t('data.error.cellTooLong', { max: DATA_LIMITS.cellChars.toLocaleString(currentLanguage()) });
 
 export function toDataset(name: string, matrix: unknown[][]): Dataset {
-  if (matrix.length > DATA_LIMITS.rows + 1) throw new DataFileError(TOO_MANY_ROWS);
+  if (matrix.length > DATA_LIMITS.rows + 1) throw new DataFileError(tooManyRows());
   const rows = matrix
     .map((r) => {
-      if (r.length > DATA_LIMITS.cols) throw new DataFileError(TOO_MANY_COLS);
+      if (r.length > DATA_LIMITS.cols) throw new DataFileError(tooManyCols());
       return r.map((c) => (c === null || c === undefined ? '' : c instanceof Date ? c.toLocaleDateString() : String(c)));
     })
     .filter((r) => r.some((c) => c.trim() !== ''));
-  if (!rows.length) throw new DataFileError('The file has no data.');
-  if (rows.some((r) => r.some((c) => c.length > DATA_LIMITS.cellChars))) throw new DataFileError(CELL_TOO_LONG);
+  if (!rows.length) throw new DataFileError(t('data.error.noData'));
+  if (rows.some((r) => r.some((c) => c.length > DATA_LIMITS.cellChars))) throw new DataFileError(cellTooLong());
+  // Column names are field names in labels, for example {{Column 2}}, so they are the same in every language.
   const header = rows[0].map((h, i) => h.trim() || `Column ${i + 1}`);
   const seen = new Map<string, number>();
   const columns = header.map((h) => {
@@ -54,9 +57,9 @@ export function parseDelimited(text: string, delimiter: '' | '\t' | ','): string
     delimiter,
     step: (result, parser) => {
       const row = result.data;
-      if (rows.length > DATA_LIMITS.rows) error = TOO_MANY_ROWS;
-      else if (row.length > DATA_LIMITS.cols) error = TOO_MANY_COLS;
-      else if (row.some((c) => c.length > DATA_LIMITS.cellChars)) error = CELL_TOO_LONG;
+      if (rows.length > DATA_LIMITS.rows) error = tooManyRows();
+      else if (row.length > DATA_LIMITS.cols) error = tooManyCols();
+      else if (row.some((c) => c.length > DATA_LIMITS.cellChars)) error = cellTooLong();
       if (error) parser.abort();
       else rows.push(row);
     },
@@ -71,8 +74,8 @@ export function parseDelimited(text: string, delimiter: '' | '\t' | ','): string
  * that the directory gives, so this check limits the memory that it uses.
  */
 export function checkXlsxSize(bytes: Uint8Array): void {
-  const invalid = () => new DataFileError('This file is not a valid .xlsx file.');
-  const tooLarge = () => new DataFileError('The spreadsheet is too large to open. Save a smaller part of it, or save it as CSV.');
+  const invalid = () => new DataFileError(t('data.error.invalidXlsx'));
+  const tooLarge = () => new DataFileError(t('data.error.xlsxTooLarge'));
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   // The end-of-directory record is in the last 22 to 65,557 bytes.
   let end = -1;

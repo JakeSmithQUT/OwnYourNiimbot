@@ -10,6 +10,7 @@ import { mcpStatus, startMcp, stopMcp } from './mcp/server';
 import type { ToolBridge, WindowResult } from './mcp/tools';
 import { isAllowedExternal } from './links';
 import { releaseUrl } from './updateRules';
+import { loadMainLanguage, mainLanguage, setMainLanguage, tm } from './i18n';
 import {
   canInstallAtLaunch,
   checkAtLaunch,
@@ -273,15 +274,15 @@ function configureSession(): void {
       callback({ confirmed: false });
       return;
     }
-    const pin = details.pairingKind === 'confirmPin' ? `\n\nPIN: ${details.pin ?? ''}` : '';
+    const pin = details.pairingKind === 'confirmPin' ? `\n\n${tm('main.pairing.pin', { pin: details.pin ?? '' })}` : '';
     void dialog
       .showMessageBox(mainWindow, {
         type: 'question',
-        buttons: ['Pair', 'Cancel'],
+        buttons: [tm('main.pairing.pair'), tm('common.cancel')],
         defaultId: 1,
         cancelId: 1,
-        message: 'A Bluetooth device asks to pair with this computer.',
-        detail: `NIIMBOT printers do not need pairing. Pair only if you expect this request.${pin}`,
+        message: tm('main.pairing.message'),
+        detail: `${tm('main.pairing.detail')}${pin}`,
       })
       .then((r) => callback({ confirmed: r.response === 0 }));
   });
@@ -329,7 +330,7 @@ function registerIpc(): void {
     await mkdir(dir, { recursive: true });
     const file = join(dir, `${checkId(id)}.json`);
     const json = JSON.stringify(value);
-    if (json === undefined || json.length > MAX_STORE_BYTES) throw new Error('The data is too large to save.');
+    if (json === undefined || json.length > MAX_STORE_BYTES) throw new Error(tm('main.file.dataTooLarge'));
     const tmp = `${file}.tmp`;
     await writeFile(tmp, json, 'utf8');
     await rename(tmp, file);
@@ -350,7 +351,7 @@ function registerIpc(): void {
     if (result.canceled || !result.filePaths[0]) return null;
     const path = result.filePaths[0];
     const buffer = await readLimited(path, MAX_OPEN_BYTES);
-    if (!buffer) throw new Error(`The file is larger than ${MAX_OPEN_BYTES / 1024 / 1024} MB.`);
+    if (!buffer) throw new Error(tm('main.file.tooLarge', { size: MAX_OPEN_BYTES / 1024 / 1024 }));
     return {
       name: basename(path),
       data: opts?.binary ? buffer.toString('base64') : buffer.toString('utf8'),
@@ -365,7 +366,7 @@ function registerIpc(): void {
       const encoding = opts?.encoding === 'base64' ? 'base64' : 'utf8';
       // Check the size of the file, not of the encoded text.
       const bytes = encoding === 'base64' ? Math.floor((data.length * 3) / 4) : Buffer.byteLength(data, 'utf8');
-      if (bytes > MAX_OPEN_BYTES) throw new Error('The data is too large to save.');
+      if (bytes > MAX_OPEN_BYTES) throw new Error(tm('main.file.dataTooLarge'));
       const result = await dialog.showSaveDialog(mainWindow, {
         defaultPath: safeFileName(opts?.defaultName, 'label.json'),
         filters: Array.isArray(opts?.filters) ? opts.filters : undefined,
@@ -383,6 +384,11 @@ function registerIpc(): void {
     electron: process.versions.electron,
     chrome: process.versions.chrome,
   }));
+
+  handle('app:setLanguage', (_event, code: unknown) => {
+    setMainLanguage(code);
+    buildMenu();
+  });
 
   handle('app:openDataFolder', async () => {
     const dir = libraryDir();
@@ -428,7 +434,14 @@ const toolBridge: ToolBridge = {
     if (!mainWindow) return false;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
-    const r = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: ['Print', 'Cancel'], defaultId: 1, cancelId: 1, message, detail });
+    const r = await dialog.showMessageBox(mainWindow, {
+      type: 'question',
+      buttons: [tm('main.printApproval.print'), tm('common.cancel')],
+      defaultId: 1,
+      cancelId: 1,
+      message,
+      detail,
+    });
     return r.response === 0;
   },
   confirmPrint: () => mcpConfig?.confirmPrint !== false,
@@ -548,8 +561,9 @@ function createUpdaterWindow(): BrowserWindow {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.webContents.on('will-redirect', (e) => e.preventDefault());
-  if (DEV_URL) void win.loadURL(new URL('updater.html', DEV_URL).href);
-  else void win.loadFile(join(__dirname, '../renderer/updater.html'));
+  // The page shows its texts in the language of the app. It checks the code itself.
+  if (DEV_URL) void win.loadURL(`${new URL('updater.html', DEV_URL).href}?lang=${encodeURIComponent(mainLanguage())}`);
+  else void win.loadFile(join(__dirname, '../renderer/updater.html'), { query: { lang: mainLanguage() } });
   return win;
 }
 
@@ -605,25 +619,48 @@ function registerUpdateIpc(): void {
   });
 }
 
+/** The application menu in the language of the app. Called again when the language changes. */
 function buildMenu(): void {
   const isMac = process.platform === 'darwin';
   const template: MenuItemConstructorOptions[] = [
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
-    { role: 'fileMenu' },
-    { role: 'editMenu' },
     {
-      label: 'View',
+      label: tm('menu.file'),
+      submenu: [isMac ? { role: 'close', label: tm('menu.closeWindow') } : { role: 'quit', label: tm('menu.exit') }],
+    },
+    {
+      label: tm('menu.edit'),
+      submenu: [
+        { role: 'undo', label: tm('menu.undo') },
+        { role: 'redo', label: tm('menu.redo') },
+        { type: 'separator' },
+        { role: 'cut', label: tm('menu.cut') },
+        { role: 'copy', label: tm('menu.copy') },
+        { role: 'paste', label: tm('menu.paste') },
+        { role: 'delete', label: tm('menu.delete') },
+        { type: 'separator' },
+        { role: 'selectAll', label: tm('menu.selectAll') },
+      ],
+    },
+    {
+      label: tm('menu.view'),
       submenu: [
         // Reload and developer tools are for development only.
         ...(app.isPackaged ? [] : [{ role: 'reload' as const }, { role: 'toggleDevTools' as const }, { type: 'separator' as const }]),
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: tm('menu.actualSize') },
+        { role: 'zoomIn', label: tm('menu.zoomIn') },
+        { role: 'zoomOut', label: tm('menu.zoomOut') },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        { role: 'togglefullscreen', label: tm('menu.fullScreen') },
       ],
     },
-    { role: 'windowMenu' },
+    {
+      label: tm('menu.window'),
+      submenu: [
+        { role: 'minimize', label: tm('menu.minimize') },
+        { role: 'close', label: tm('menu.closeWindow') },
+      ],
+    },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
@@ -646,6 +683,7 @@ if (isFirstInstance) {
     registerIpc();
     registerMcpIpc();
     registerUpdateIpc();
+    await loadMainLanguage(libraryDir('settings', 'app.json'));
     buildMenu();
     await startUpdates(sendUpdateStatus).catch((err) => console.error(`The update check did not start: ${String(err)}`));
     if (await updateBeforeStart().catch(() => false)) return; // The app closes to install the update.

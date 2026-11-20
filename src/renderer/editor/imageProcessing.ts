@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export type ImageMode = 'threshold' | 'floyd' | 'atkinson' | 'grey';
 
 export interface ImageSettings {
@@ -20,7 +22,7 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('The image could not be loaded'));
+    img.onerror = () => reject(new Error(t('editor.imageLoadFailed')));
     img.src = src;
   });
 }

@@ -1,5 +1,6 @@
 import catalogue from './labels.json';
 import { isRotated, type PrinterModel } from './models';
+import { t } from '../renderer/i18n';
 
 /**
  * A NIIMBOT label roll. Sizes are physical: width is across the print head,
@@ -36,10 +37,11 @@ export function labelKey(widthMm: number, lengthMm: number, type?: number): stri
   return `${widthMm}x${lengthMm}${type ? `-${type}` : ''}`;
 }
 
+/** The name of a roll in the language of the app. The note comes from the label list and stays in English. */
 export function labelName(l: Pick<LabelProduct, 'widthMm' | 'lengthMm' | 'shape' | 'tailMm' | 'note'>): string {
-  const size = l.shape === 'round' ? `Ø ${l.widthMm} mm round` : `${l.widthMm} × ${l.lengthMm} mm`;
-  const extra = [l.shape === 'cable' && l.tailMm ? `cable label, ${l.tailMm} mm tail` : '', l.note ?? ''].filter(Boolean).join(', ');
-  return extra ? `${size} (${extra})` : size;
+  const size = l.shape === 'round' ? t('device.roll.round', { width: l.widthMm }) : t('device.roll.size', { width: l.widthMm, length: l.lengthMm });
+  const extra = [l.shape === 'cable' && l.tailMm ? t('device.roll.cable', { tail: l.tailMm }) : '', l.note ?? ''].filter(Boolean).join(', ');
+  return extra ? t('device.roll.withDetails', { size, details: extra }) : size;
 }
 
 /**

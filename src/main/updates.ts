@@ -10,6 +10,7 @@ import { autoUpdater, type ProgressInfo, type UpdateInfo } from 'electron-update
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { inProgramFiles, installAtLaunch, isNewerVersion, releaseUrl, updateMode, type UpdateMode } from './updateRules';
+import { tm } from './i18n';
 
 /** Time for the check before the app opens. A slow or missing connection must not keep the app closed. */
 const LAUNCH_CHECK_MS = 6000;
@@ -169,9 +170,7 @@ export async function startUpdates(notify: (s: UpdateStatus) => void): Promise<v
     const noFiles = (err as Error & { code?: string }).code === 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND';
     set({
       state: 'error',
-      message: noFiles
-        ? 'The latest release has no update information. Look for a new version on the release page.'
-        : 'The app could not check for updates. Make sure that the computer is connected to the internet, then try again.',
+      message: noFiles ? tm('main.update.noUpdateInfo') : tm('main.update.checkFailed'),
       url: noFiles ? releaseUrl(undefined) : status.url,
       checkedAt: Date.now(),
     });
@@ -256,8 +255,8 @@ export function installUpdate(): boolean {
   const windows = process.platform === 'win32';
   if (!windows && Notification.isSupported()) {
     new Notification({
-      title: `Installing OwnYourNiimbot ${status.version}`,
-      body: 'OwnYourNiimbot opens again when the update is installed.',
+      title: tm('main.update.installingTitle', { version: status.version ?? '' }),
+      body: tm('main.update.installingBody'),
       silent: true,
     }).show();
   }

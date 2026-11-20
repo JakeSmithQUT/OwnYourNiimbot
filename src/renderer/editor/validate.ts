@@ -5,6 +5,8 @@
 
 import type { LabelTemplate } from './template';
 import { imageSize } from './imageSize';
+import { t } from '../i18n';
+import type { MessageKey } from '../../i18n/translate';
 
 export const LIMITS = {
   minMm: 5,
@@ -71,7 +73,7 @@ function cleanEditorData(v: unknown): Record<string, unknown> | undefined {
     };
   }
   if (d.original !== undefined) {
-    checkImageSrc(d.original, 'An image', LIMITS.maxOriginalPixels);
+    checkImageSrc(d.original, LIMITS.maxOriginalPixels);
     out.original = d.original;
   }
   if (d.settings && typeof d.settings === 'object' && !Array.isArray(d.settings)) {
@@ -91,8 +93,9 @@ function fail(msg: string): never {
   throw new LabelFileError(msg);
 }
 
-function finite(v: unknown, name: string, min: number, max: number): number {
-  if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) fail(`${name} is not a valid number.`);
+/** `name` is the property name for the default message. `message` is a key for a message of its own. */
+function finite(v: unknown, name: string, min: number, max: number, message: MessageKey = 'errors.label.notNumber'): number {
+  if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) fail(t(message, { name }));
   return v;
 }
 
@@ -100,25 +103,25 @@ function finite(v: unknown, name: string, min: number, max: number): number {
  * Checks an embedded image and returns its number of pixels. The size comes
  * from the image header, because a small file can describe a very large image.
  */
-function checkImageSrc(src: unknown, where: string, maxPixels: number): number {
+function checkImageSrc(src: unknown, maxPixels: number): number {
   if (typeof src !== 'string' || !/^data:image\/(png|jpeg|gif|bmp|webp|svg\+xml);base64,/i.test(src)) {
-    fail(`${where} must be an embedded image. Links to files or websites are not accepted.`);
+    fail(t('errors.label.imageNotEmbedded'));
   }
-  if (src.length > LIMITS.maxImageChars) fail(`${where} is too large.`);
+  if (src.length > LIMITS.maxImageChars) fail(t('errors.label.imageTooLarge'));
   if (/^data:image\/svg\+xml/i.test(src)) return 0;
   const size = imageSize(src);
-  if (!size || !size.width || !size.height) fail(`${where} is not a valid image.`);
+  if (!size || !size.width || !size.height) fail(t('errors.label.imageNotValid'));
   const pixels = size.width * size.height;
-  if (pixels > maxPixels) fail(`${where} is too large (${size.width} x ${size.height} pixels).`);
+  if (pixels > maxPixels) fail(t('errors.label.imagePixels', { width: size.width, height: size.height }));
   return pixels;
 }
 
 function checkObject(o: unknown, depth: number, count: { n: number; pixels: number }): void {
-  if (!o || typeof o !== 'object' || Array.isArray(o)) fail('A label element is not valid.');
+  if (!o || typeof o !== 'object' || Array.isArray(o)) fail(t('errors.label.elementNotValid'));
   const obj = o as Record<string, unknown>;
-  if (++count.n > LIMITS.maxObjects) fail(`The label has more than ${LIMITS.maxObjects} elements.`);
+  if (++count.n > LIMITS.maxObjects) fail(t('errors.label.tooManyElements', { max: LIMITS.maxObjects }));
   const type = typeof obj.type === 'string' ? obj.type.toLowerCase() : '';
-  if (!TYPES.has(type)) fail(`The label has an element of an unknown type (${String(obj.type).slice(0, 30)}).`);
+  if (!TYPES.has(type)) fail(t('errors.label.unknownType', { type: String(obj.type).slice(0, 30) }));
 
   for (const k of NUMBERS) if (k in obj && obj[k] !== null) finite(obj[k], k, -1e6, 1e6);
   if ('fontSize' in obj) finite(obj.fontSize, 'fontSize', 0, 5000);
@@ -127,13 +130,13 @@ function checkObject(o: unknown, depth: number, count: { n: number; pixels: numb
   // The scaled size counts too. A small image with a large scale would need a very large canvas.
   // 20,000 units is 2 m, four times the longest label.
   const scaled = (size: unknown, scale: unknown) => Math.abs(Number(size ?? 0) * Number(scale ?? 1));
-  if (scaled(obj.width, obj.scaleX) > 2e4 || scaled(obj.height, obj.scaleY) > 2e4) fail('An element of the label is too large.');
+  if (scaled(obj.width, obj.scaleX) > 2e4 || scaled(obj.height, obj.scaleY) > 2e4) fail(t('errors.label.elementTooLarge'));
 
   for (const k of COLOUR_PROPS) {
-    if (k in obj && obj[k] !== null && obj[k] !== undefined && typeof obj[k] !== 'string') fail(`${k} must be a colour.`);
+    if (k in obj && obj[k] !== null && obj[k] !== undefined && typeof obj[k] !== 'string') fail(t('errors.label.notColour', { name: k }));
   }
-  if ('text' in obj && (typeof obj.text !== 'string' || obj.text.length > LIMITS.maxText)) fail('A text element is too long.');
-  if ('path' in obj && JSON.stringify(obj.path ?? '').length > LIMITS.maxImageChars) fail('A shape is too large.');
+  if ('text' in obj && (typeof obj.text !== 'string' || obj.text.length > LIMITS.maxText)) fail(t('errors.label.textTooLong'));
+  if ('path' in obj && JSON.stringify(obj.path ?? '').length > LIMITS.maxImageChars) fail(t('errors.label.shapeTooLarge'));
   // Effects that the editor does not use. Fabric can load images or run filters for these.
   delete obj.shadow;
   delete obj.filters;
@@ -146,64 +149,64 @@ function checkObject(o: unknown, depth: number, count: { n: number; pixels: numb
     else delete obj.oyn;
   }
   if (type === 'image') {
-    count.pixels += checkImageSrc(obj.src, 'An image', LIMITS.maxImagePixels);
-    if (count.pixels > LIMITS.maxLabelPixels) fail('The images in the label are too large together.');
+    count.pixels += checkImageSrc(obj.src, LIMITS.maxImagePixels);
+    if (count.pixels > LIMITS.maxLabelPixels) fail(t('errors.label.imagesTooLarge'));
   }
   if (type === 'labelbarcode') {
-    if (typeof obj.value !== 'string' || obj.value.length > 4000) fail('A barcode value is too long.');
-    if (typeof obj.format !== 'string' || !/^[a-z0-9-]{2,30}$/i.test(obj.format)) fail('A barcode type is not valid.');
+    if (typeof obj.value !== 'string' || obj.value.length > 4000) fail(t('errors.label.barcodeTooLong'));
+    if (typeof obj.format !== 'string' || !/^[a-z0-9-]{2,30}$/i.test(obj.format)) fail(t('errors.label.barcodeType'));
   }
   if (type === 'labeltable') {
     const rows = finite(obj.rows, 'rows', 1, LIMITS.maxTableRows);
     const cols = finite(obj.cols, 'cols', 1, LIMITS.maxTableCols);
-    if (!Array.isArray(obj.cells) || obj.cells.length > rows) fail('A table is not valid.');
+    if (!Array.isArray(obj.cells) || obj.cells.length > rows) fail(t('errors.label.tableNotValid'));
     for (const r of obj.cells) {
-      if (!Array.isArray(r) || r.length > cols || r.some((c) => typeof c !== 'string' || c.length > 1000)) fail('A table is not valid.');
+      if (!Array.isArray(r) || r.length > cols || r.some((c) => typeof c !== 'string' || c.length > 1000)) fail(t('errors.label.tableNotValid'));
     }
   }
   if (obj.clipPath !== undefined && obj.clipPath !== null) {
-    if (depth >= LIMITS.maxDepth) fail('The label has too many nested elements.');
+    if (depth >= LIMITS.maxDepth) fail(t('errors.label.tooDeep'));
     checkObject(obj.clipPath, depth + 1, count);
   }
   if (type === 'group') {
-    if (depth >= LIMITS.maxDepth) fail('The label has too many nested elements.');
-    if (!Array.isArray(obj.objects)) fail('A group is not valid.');
+    if (depth >= LIMITS.maxDepth) fail(t('errors.label.tooDeep'));
+    if (!Array.isArray(obj.objects)) fail(t('errors.label.groupNotValid'));
     for (const child of obj.objects) checkObject(child, depth + 1, count);
   }
 }
 
 /** Returns a checked copy of a label, or raises LabelFileError. */
 export function validateTemplate(input: unknown): LabelTemplate {
-  if (!input || typeof input !== 'object') fail('This file is not a label file.');
+  if (!input || typeof input !== 'object') fail(t('errors.label.notLabelFile'));
   // A JSON round trip drops functions, undefined values and prototype tricks.
-  const t = JSON.parse(JSON.stringify(input)) as Record<string, unknown>;
-  const widthMm = finite(t.widthMm, 'The label width', LIMITS.minMm, LIMITS.maxWidthMm);
-  const heightMm = finite(t.heightMm, 'The label height', LIMITS.minMm, LIMITS.maxHeightMm);
-  const canvas = t.canvas as Record<string, unknown> | undefined;
-  if (!canvas || typeof canvas !== 'object' || !Array.isArray(canvas.objects)) fail('This file is not a label file.');
+  const raw = JSON.parse(JSON.stringify(input)) as Record<string, unknown>;
+  const widthMm = finite(raw.widthMm, 'widthMm', LIMITS.minMm, LIMITS.maxWidthMm, 'errors.label.widthNotNumber');
+  const heightMm = finite(raw.heightMm, 'heightMm', LIMITS.minMm, LIMITS.maxHeightMm, 'errors.label.heightNotNumber');
+  const canvas = raw.canvas as Record<string, unknown> | undefined;
+  if (!canvas || typeof canvas !== 'object' || !Array.isArray(canvas.objects)) fail(t('errors.label.notLabelFile'));
   const count = { n: 0, pixels: 0 };
   for (const o of canvas.objects) checkObject(o, 0, count);
 
-  const labelType = typeof t.labelType === 'number' && Number.isInteger(t.labelType) && t.labelType >= 0 && t.labelType <= 255 ? t.labelType : 1;
-  const radius = typeof t.cornerRadiusMm === 'number' && Number.isFinite(t.cornerRadiusMm) ? Math.max(0, Math.min(250, t.cornerRadiusMm)) : 1.5;
-  const name = typeof t.name === 'string' && t.name.trim() ? t.name.slice(0, 200) : 'Imported label';
+  const labelType = typeof raw.labelType === 'number' && Number.isInteger(raw.labelType) && raw.labelType >= 0 && raw.labelType <= 255 ? raw.labelType : 1;
+  const radius = typeof raw.cornerRadiusMm === 'number' && Number.isFinite(raw.cornerRadiusMm) ? Math.max(0, Math.min(250, raw.cornerRadiusMm)) : 1.5;
+  const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.slice(0, 200) : t('state.importedLabel');
   const now = Date.now();
   const time = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : now);
-  const thumbnail = typeof t.thumbnail === 'string' && t.thumbnail.startsWith('data:image/png;base64,') && t.thumbnail.length < 2_000_000 ? t.thumbnail : undefined;
+  const thumbnail = typeof raw.thumbnail === 'string' && raw.thumbnail.startsWith('data:image/png;base64,') && raw.thumbnail.length < 2_000_000 ? raw.thumbnail : undefined;
 
   return {
-    id: typeof t.id === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(t.id) ? t.id : '',
+    id: typeof raw.id === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(raw.id) ? raw.id : '',
     name,
     widthMm,
     heightMm,
     cornerRadiusMm: radius,
     labelType,
-    modelName: typeof t.modelName === 'string' ? t.modelName.slice(0, 50) : undefined,
+    modelName: typeof raw.modelName === 'string' ? raw.modelName.slice(0, 50) : undefined,
     // Only the object list is kept. Canvas-level images and overlays are dropped.
     canvas: { version: typeof canvas.version === 'string' ? canvas.version.slice(0, 20) : '6', objects: canvas.objects },
-    dataset: validDataset(t.dataset),
-    createdAt: time(t.createdAt),
-    updatedAt: time(t.updatedAt),
+    dataset: validDataset(raw.dataset),
+    createdAt: time(raw.createdAt),
+    updatedAt: time(raw.updatedAt),
     thumbnail,
   };
 }
@@ -220,5 +223,5 @@ function validDataset(d: unknown): LabelTemplate['dataset'] {
   if (!ds.columns.every((c) => typeof c === 'string')) return undefined;
   if (!ds.columns.every((c) => (c as string).length <= 4000)) return undefined;
   if (!ds.rows.every((r) => Array.isArray(r) && r.length <= 200 && r.every((c) => typeof c === 'string' && c.length <= 4000))) return undefined;
-  return { name: typeof ds.name === 'string' ? ds.name.slice(0, 200) : 'Data', columns: ds.columns as string[], rows: ds.rows as string[][] };
+  return { name: typeof ds.name === 'string' ? ds.name.slice(0, 200) : t('state.dataName'), columns: ds.columns as string[], rows: ds.rows as string[][] };
 }

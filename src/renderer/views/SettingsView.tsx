@@ -8,6 +8,9 @@ import { appStore, updateSettings, type Settings } from '../state/app';
 import { MODELS, PRINT_VARIANTS, type PrintVariant } from '../../printer/models';
 import { Check, Field, Modal, Segmented } from '../components/ui';
 import { UpdateSettings } from '../components/Updates';
+import { t } from '../i18n';
+import { LANGUAGES } from '../../i18n/languages';
+import { chooseLanguage } from '../state/app';
 
 /**
  * A value with a copy button. A secret value is hidden, and the app reads it
@@ -26,7 +29,7 @@ function CopyBox(props: { label: string; value: string | (() => Promise<string>)
         <code>{shown ?? '•'.repeat(24)}</code>
         {props.secret && (
           <button className="btn small ghost" onClick={() => void (shown === undefined ? read().then(setShown) : setShown(undefined))}>
-            {shown === undefined ? 'Show' : 'Hide'}
+            {shown === undefined ? t('common.show') : t('common.hide')}
           </button>
         )}
         <button
@@ -34,10 +37,10 @@ function CopyBox(props: { label: string; value: string | (() => Promise<string>)
           onClick={() =>
             void read()
               .then((v) => navigator.clipboard.writeText(v))
-              .then(() => toast('Copied', 'success'))
+              .then(() => toast(t('common.copied'), 'success'))
           }
         >
-          <Copy size={13} /> Copy
+          <Copy size={13} /> {t('common.copy')}
         </button>
       </div>
       {props.hint && <small className="muted">{props.hint}</small>}
@@ -77,24 +80,24 @@ function AssistantSettings() {
   return (
     <div className="card" style={{ marginBottom: 16 }}>
       <h3>
-        <Bot size={16} /> AI assistants (MCP)
+        <Bot size={16} /> {t('settings.ai.title')}
       </h3>
       <p className="muted" style={{ marginTop: 0 }}>
-        Lets an AI assistant on this computer, for example Claude, make, preview and print labels through the Model Context Protocol. The connection is local only and needs a token.
+        {t('settings.ai.intro')}
       </p>
       <Check checked={cfg.enabled} onChange={(enabled) => void set({ enabled })}>
-        Allow AI assistants to use OwnYourNiimbot
+        {t('settings.ai.allow')}
       </Check>
       <Check checked={cfg.confirmPrint} onChange={(confirmPrint) => void set({ confirmPrint })}>
-        Ask me before an assistant prints
+        {t('settings.ai.confirmPrint')}
       </Check>
       {cfg.enabled && (
         <>
           <p>
-            <span className={`pill ${cfg.running ? 'ok' : 'warn'}`}>{cfg.running ? `Running on port ${cfg.port}` : 'Not running'}</span>
+            <span className={`pill ${cfg.running ? 'ok' : 'warn'}`}>{cfg.running ? t('settings.ai.running', { port: cfg.port ?? '' }) : t('common.notRunning')}</span>
           </p>
-          <CopyBox label="Address" value={cfg.url} />
-          <CopyBox key={`token-${tokenVersion}`} label="Token" value={() => api.mcp.getToken()} secret hint="Other MCP clients send this token in the Authorization header." />
+          <CopyBox label={t('settings.ai.address')} value={cfg.url} />
+          <CopyBox key={`token-${tokenVersion}`} label={t('settings.ai.token')} value={() => api.mcp.getToken()} secret hint={t('settings.ai.tokenHint')} />
           <div className="btn-row" style={{ marginBottom: 12 }}>
             <button
               className="btn small"
@@ -102,27 +105,23 @@ function AssistantSettings() {
                 void api.mcp.newToken().then((c) => {
                   setCfg(c);
                   setTokenVersion((v) => v + 1);
-                  toast('New token made. Update the token in your assistant.', 'info');
+                  toast(t('settings.ai.newTokenDone'), 'info');
                 })
               }
             >
-              <RefreshCw size={13} /> Make a new token
+              <RefreshCw size={13} /> {t('settings.ai.newToken')}
             </button>
           </div>
           {cfg.bridgeAvailable ? (
             <>
-              <CopyBox
-                label="Claude Code command"
-                value={claudeCodeBridge}
-                hint="Run it one time in a terminal: PowerShell, Command Prompt, or Terminal on macOS and Linux. Then start a new Claude Code session."
-              />
-              <CopyBox label="Claude Desktop (claude_desktop_config.json)" value={desktopJson} />
-              {!cfg.packaged && <p className="muted">In development, run npm run build first, so that the bridge file exists.</p>}
+              <CopyBox label={t('settings.ai.claudeCode')} value={claudeCodeBridge} hint={t('settings.ai.claudeCodeHint')} />
+              <CopyBox label={t('settings.ai.claudeDesktop')} value={desktopJson} />
+              {!cfg.packaged && <p className="muted">{t('settings.ai.devBuild')}</p>}
             </>
           ) : (
             <>
-              <CopyBox key={`http-${tokenVersion}`} label="Claude Code command" value={claudeCodeHttp} secret />
-              <p className="muted">This version of the app runs from a temporary folder, so Claude Desktop cannot start it. To use Claude Desktop, install the app with the installer.</p>
+              <CopyBox key={`http-${tokenVersion}`} label={t('settings.ai.claudeCode')} value={claudeCodeHttp} secret />
+              <p className="muted">{t('settings.ai.portable')}</p>
             </>
           )}
         </>
@@ -143,14 +142,23 @@ export function SettingsView() {
   return (
     <div className="page" style={{ maxWidth: 760 }}>
       <div className="card" style={{ marginBottom: 16 }}>
-        <h3>Appearance</h3>
-        <Field label="Theme">
+        <h3>{t('settings.appearance')}</h3>
+        <Field label={t('settings.language')} hint={t('settings.languageHint')}>
+          <select value={settings.language} onChange={(e) => void chooseLanguage(e.target.value as Settings['language'])}>
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code} lang={l.code}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t('settings.theme')}>
           <Segmented<Settings['theme']>
             value={settings.theme}
             options={[
-              { value: 'system', label: 'System' },
-              { value: 'light', label: 'Light' },
-              { value: 'dark', label: 'Dark' },
+              { value: 'system', label: t('settings.theme.system') },
+              { value: 'light', label: t('settings.theme.light') },
+              { value: 'dark', label: t('settings.theme.dark') },
             ]}
             onChange={(theme) => updateSettings({ theme })}
           />
@@ -158,11 +166,8 @@ export function SettingsView() {
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <h3>Printing</h3>
-        <Field
-          label="Printer model when no printer is connected"
-          hint="The app sets this to the last printer that was connected. The design view uses this model for the resolution, the print width and the print area."
-        >
+        <h3>{t('settings.printing')}</h3>
+        <Field label={t('settings.model')} hint={t('settings.modelHint')}>
           <select value={settings.modelName} onChange={(e) => updateSettings({ modelName: e.target.value })}>
             {MODELS.filter((m) => m.protocol === 'niimbot').map((m) => (
               <option key={m.name} value={m.name}>
@@ -171,24 +176,24 @@ export function SettingsView() {
             ))}
           </select>
         </Field>
-        <Field label="Command set" hint="Leave this on Auto. Change it only if a printer does not print with the automatic choice.">
+        <Field label={t('settings.commandSet')} hint={t('settings.commandSetHint')}>
           <select value={settings.variant} onChange={(e) => updateSettings({ variant: e.target.value as 'auto' | PrintVariant })}>
-            <option value="auto">Auto (by model)</option>
+            <option value="auto">{t('settings.commandSetAuto')}</option>
             {PRINT_VARIANTS.map((v) => (
               <option key={v.value} value={v.value}>
-                {v.label}: {v.hint}
+                {t(v.labelKey)}: {t(v.hintKey)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label={`Black level ${settings.threshold}`} hint="Grey pixels darker than this level print black. Increase it to make thin or light content print darker.">
+        <Field label={t('settings.blackLevel', { level: settings.threshold })} hint={t('settings.blackLevelHint')}>
           <input type="range" min={40} max={220} value={settings.threshold} onChange={(e) => updateSettings({ threshold: Number(e.target.value) })} />
         </Field>
         <Check checked={settings.flip180} onChange={(flip180) => updateSettings({ flip180 })}>
-          Turn every print 180°
+          {t('settings.flip180')}
         </Check>
         <Check checked={settings.autoLabelSize} onChange={(autoLabelSize) => updateSettings({ autoLabelSize })}>
-          Give a new, empty label the size of the roll in the printer
+          {t('settings.autoLabelSize')}
         </Check>
       </div>
 
@@ -197,41 +202,38 @@ export function SettingsView() {
       <UpdateSettings />
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <h3>Data</h3>
+        <h3>{t('settings.data')}</h3>
         <p className="muted" style={{ marginTop: 0 }}>
-          Labels, history and settings are stored in the app data folder on this computer. The app does not send labels or other data to any server. The update check
-          only asks GitHub for the latest version.
+          {t('settings.dataText')}
         </p>
         <button className="btn" onClick={() => void api.app.openDataFolder()}>
-          <FolderOpen size={15} /> Open data folder
+          <FolderOpen size={15} /> {t('settings.openDataFolder')}
         </button>
       </div>
 
       <div className="card">
-        <h3>About</h3>
+        <h3>{t('settings.about')}</h3>
         <dl className="kv">
-          <dt>Version</dt>
+          <dt>{t('settings.version')}</dt>
           <dd>{info?.version ?? '–'}</dd>
-          <dt>Platform</dt>
+          <dt>{t('settings.platform')}</dt>
           <dd>
             {info?.platform} {info?.arch}
           </dd>
           <dt>Electron</dt>
           <dd>{info?.electron}</dd>
         </dl>
-        <p className="muted">
-          OwnYourNiimbot is an independent project. It is not made, approved or supported by NIIMBOT. NIIMBOT is a trademark of its owner.
-        </p>
+        <p className="muted">{t('settings.independent')}</p>
         <div className="btn-row">
           <button className="btn" onClick={() => void api.app.openExternal('https://github.com/JakeSmithQUT/OwnYourNiimbot')}>
-            <ExternalLink size={15} /> Project page
+            <ExternalLink size={15} /> {t('settings.projectPage')}
           </button>
           <button className="btn" onClick={() => setShowLicences(true)}>
-            <ScrollText size={15} /> Open-source licences
+            <ScrollText size={15} /> {t('settings.licences')}
           </button>
         </div>
         {showLicences && (
-          <Modal title="Open-source licences" wide onClose={() => setShowLicences(false)}>
+          <Modal title={t('settings.licences')} wide onClose={() => setShowLicences(false)}>
             <pre className="licences">{LICENCES}</pre>
           </Modal>
         )}

@@ -5,6 +5,9 @@
 // The checksum is the XOR of cmd, len and every data byte. The connect
 // request is the only packet that has an extra 0x03 byte before the head.
 
+import { t, tn } from '../renderer/i18n';
+import type { MessageKey } from '../i18n/translate';
+
 export const PACKET_HEAD = [0x55, 0x55] as const;
 export const PACKET_TAIL = [0xaa, 0xaa] as const;
 
@@ -103,6 +106,7 @@ export const LabelType = {
   HeatShrinkTube: 11,
 } as const;
 
+/** Label type names in English. AI assistants get these names. The windows use labelTypeName. */
 export const LABEL_TYPE_NAMES: Record<number, string> = {
   1: 'Gap (die-cut)',
   2: 'Black mark',
@@ -114,35 +118,54 @@ export const LABEL_TYPE_NAMES: Record<number, string> = {
   11: 'Heat-shrink tube',
 };
 
-export const PRINT_ERRORS: Record<number, string> = {
-  1: 'The cover is open',
-  2: 'No labels are loaded',
-  3: 'The battery is low',
-  4: 'Battery fault',
-  5: 'Print cancelled on the printer',
-  6: 'The printer rejected the print data',
-  7: 'The print head is too hot',
-  8: 'Label output fault',
-  9: 'The printer is busy',
-  10: 'No print head detected',
-  11: 'The temperature is too low',
-  12: 'The print head is loose',
-  13: 'No ribbon is loaded',
-  14: 'The ribbon is loose',
-  15: 'The ribbon is used up',
-  16: 'This label type is not supported',
-  17: 'Label type setting error',
-  18: 'No label size is set',
-  19: 'RFID write failed',
-  20: 'The command is not supported',
+const LABEL_TYPE_KEYS: Record<number, MessageKey> = {
+  1: 'device.labelType.gap',
+  2: 'device.labelType.blackMark',
+  3: 'device.labelType.continuous',
+  4: 'device.labelType.perforated',
+  5: 'device.labelType.transparent',
+  6: 'device.labelType.pvcTag',
+  10: 'device.labelType.blackMarkGap',
+  11: 'device.labelType.heatShrinkTube',
 };
 
-export const AUTO_SHUTDOWN_OPTIONS = [
-  { value: 1, label: '15 minutes' },
-  { value: 2, label: '30 minutes' },
-  { value: 3, label: '45 minutes' },
-  { value: 4, label: '60 minutes' },
-];
+/** The name of a label type in the language of the app, or undefined for an unknown type. */
+export function labelTypeName(type: number): string | undefined {
+  const key = LABEL_TYPE_KEYS[type];
+  return key ? t(key) : undefined;
+}
+
+/** Text keys of the error codes that the printer sends. */
+export const PRINT_ERRORS: Record<number, MessageKey> = {
+  1: 'errors.printer.coverOpen',
+  2: 'errors.printer.noLabels',
+  3: 'errors.printer.batteryLow',
+  4: 'errors.printer.batteryFault',
+  5: 'errors.printer.cancelledOnPrinter',
+  6: 'errors.printer.dataRejected',
+  7: 'errors.printer.headTooHot',
+  8: 'errors.printer.outputFault',
+  9: 'errors.printer.printerBusy',
+  10: 'errors.printer.noHead',
+  11: 'errors.printer.tooCold',
+  12: 'errors.printer.headLoose',
+  13: 'errors.printer.noRibbon',
+  14: 'errors.printer.ribbonLoose',
+  15: 'errors.printer.ribbonUsedUp',
+  16: 'errors.printer.labelTypeNotSupported',
+  17: 'errors.printer.labelTypeSetting',
+  18: 'errors.printer.noLabelSize',
+  19: 'errors.printer.rfidWrite',
+  20: 'errors.printer.commandNotSupported',
+};
+
+/** Auto shutdown times. The label is read when the list shows, so it is in the language of the app. */
+export const AUTO_SHUTDOWN_OPTIONS: { readonly value: number; readonly label: string }[] = [15, 30, 45, 60].map((minutes, i) => ({
+  value: i + 1,
+  get label() {
+    return tn('device.autoShutdown.minutes', minutes);
+  },
+}));
 
 export interface Packet {
   command: number;

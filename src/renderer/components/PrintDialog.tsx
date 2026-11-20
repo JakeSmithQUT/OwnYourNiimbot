@@ -5,13 +5,14 @@ import { appStore, captureTemplate, toast, updateSettings } from '../state/app';
 import { activeModel, activeVariant, usePrinter } from '../state/printer';
 import { buildPrintImage, monoToCanvas } from '../editor/render';
 import type { RecordContext } from '../editor/placeholders';
-import { LABEL_TYPE_NAMES } from '../../printer/protocol';
+import { LABEL_TYPE_NAMES, labelTypeName } from '../../printer/protocol';
 import { MODELS, PRINT_VARIANTS, printheadDots, type PrintVariant } from '../../printer/models';
 import { MAX_LABELS_PER_JOB, type PrintPage, type PrintProgress } from '../../printer/client';
 import { api, newId } from '../api';
 import { PrintAreaOverlay } from './PrintAreaOverlay';
 import { printArea } from '../../printer/printArea';
 import { rollEditorSize, rollStore } from '../state/roll';
+import { t, tn, tr } from '../i18n';
 
 const BUILT_INS = new Set(['date', 'time', 'datetime', 'index']);
 
@@ -109,7 +110,7 @@ export function PrintDialog(props: { onClose: () => void }) {
   const doPrint = async () => {
     setError(undefined);
     if (total > MAX_LABELS_PER_JOB) {
-      setError(`One print job can have up to ${MAX_LABELS_PER_JOB.toLocaleString('en-AU')} labels. Print fewer copies, or print the data in parts with From and To.`);
+      setError(t('print.tooMany', { max: MAX_LABELS_PER_JOB.toLocaleString('en-AU') }));
       return;
     }
     setBusy(true);
@@ -137,11 +138,11 @@ export function PrintDialog(props: { onClose: () => void }) {
         template: { ...template, thumbnail: undefined },
       };
       void api.store.put('history', entry.id, entry);
-      toast(`Printed ${total} label${total === 1 ? '' : 's'}`, 'success');
+      toast(tn('print.printed', total), 'success');
       props.onClose();
     } catch (err) {
       const e = err as Error;
-      setError(e.name === 'AbortError' ? 'The print job was cancelled.' : e.message);
+      setError(e.name === 'AbortError' ? t('print.cancelled') : e.message);
     } finally {
       setBusy(false);
       abortRef.current = undefined;
@@ -151,7 +152,7 @@ export function PrintDialog(props: { onClose: () => void }) {
   const savePng = async () => {
     const { preview } = await buildPrintImage(template, model, records[Math.min(previewIndex, records.length - 1)] ?? { index: 0 }, { threshold: settings.threshold });
     const data = monoToCanvas(preview).toDataURL('image/png').split(',')[1];
-    await api.files.save({ defaultName: `${template.name || 'label'}.png`, filters: [{ name: 'PNG image', extensions: ['png'] }], data, encoding: 'base64' });
+    await api.files.save({ defaultName: `${template.name || 'label'}.png`, filters: [{ name: t('print.pngFile'), extensions: ['png'] }], data, encoding: 'base64' });
   };
 
   const unsupported = model.protocol !== 'niimbot';
@@ -159,7 +160,7 @@ export function PrintDialog(props: { onClose: () => void }) {
 
   return (
     <Modal
-      title="Print"
+      title={t('print.title')}
       icon={<PrinterIcon size={18} />}
       wide
       onClose={() => {
@@ -169,26 +170,26 @@ export function PrintDialog(props: { onClose: () => void }) {
       footer={
         <>
           <button className="btn ghost" onClick={() => void savePng()} disabled={busy}>
-            <Download size={15} /> Save as PNG
+            <Download size={15} /> {t('print.savePng')}
           </button>
           <div style={{ flex: 1 }} />
           {busy ? (
             <button className="btn danger" onClick={() => abortRef.current?.abort()}>
-              Cancel
+              {t('common.cancel')}
             </button>
           ) : (
             <button className="btn" onClick={props.onClose}>
-              Close
+              {t('common.close')}
             </button>
           )}
           {p.connected ? (
             <button className="btn primary" disabled={busy || unsupported || records.length === 0} onClick={() => void doPrint()}>
               {busy ? <Loader2 size={15} className="spin" /> : <PrinterIcon size={15} />}
-              Print {total} label{total === 1 ? '' : 's'}
+              {tn('print.printButton', total)}
             </button>
           ) : (
             <button className="btn primary" onClick={() => appStore.set({ connectOpen: true })}>
-              Connect a printer
+              {t('print.connect')}
             </button>
           )}
         </>
@@ -201,30 +202,26 @@ export function PrintDialog(props: { onClose: () => void }) {
               <div ref={previewRef} />
               <PrintAreaOverlay widthMm={template.widthMm} heightMm={template.heightMm} area={printArea(template.widthMm, template.heightMm, model, flip)} />
             </div>
-            {printArea(template.widthMm, template.heightMm, model, flip).clipped && <p className="muted small-note">The shaded parts do not print.</p>}
+            {printArea(template.widthMm, template.heightMm, model, flip).clipped && <p className="muted small-note">{t('print.shaded')}</p>}
             {records.length > 1 && (
               <div className="btn-row">
                 <button className="btn small icon" disabled={previewIndex === 0} onClick={() => setPreviewIndex(previewIndex - 1)}>
                   <ChevronLeft size={15} />
                 </button>
-                <span className="muted">
-                  Label {Math.min(previewIndex, records.length - 1) + 1} of {records.length}
-                </span>
+                <span className="muted">{t('print.previewIndex', { number: Math.min(previewIndex, records.length - 1) + 1, total: records.length })}</span>
                 <button className="btn small icon" disabled={previewIndex >= records.length - 1} onClick={() => setPreviewIndex(previewIndex + 1)}>
                   <ChevronRight size={15} />
                 </button>
               </div>
             )}
-            <small className="muted">Preview at {model.dpi} dpi, as the printer receives it</small>
+            <small className="muted">{t('print.previewNote', { dpi: model.dpi })}</small>
           </div>
           {busy && progress && (
             <div style={{ marginTop: 14 }}>
               <div className="progress">
                 <div style={{ width: `${pct}%` }} />
               </div>
-              <p className="muted">
-                {progress.message} · {progress.printed} of {progress.total}
-              </p>
+              <p className="muted">{t('print.progress', { message: progress.message, printed: progress.printed, total: progress.total })}</p>
             </div>
           )}
           {error && (
@@ -236,7 +233,7 @@ export function PrintDialog(props: { onClose: () => void }) {
 
         <div>
           {!connectedModel && (
-            <Field label="Printer model" hint="Connect a printer to detect the model.">
+            <Field label={t('print.model')} hint={t('print.modelHint')}>
               <select value={modelName} onChange={(e) => setModelName(e.target.value)}>
                 {MODELS.filter((m) => m.protocol === 'niimbot').map((m) => (
                   <option key={m.name} value={m.name}>
@@ -248,69 +245,72 @@ export function PrintDialog(props: { onClose: () => void }) {
           )}
           {connectedModel && (
             <p className="muted" style={{ marginTop: 0 }}>
-              Printer: <strong>{connectedModel.name}</strong> on {p.transport?.kind === 'bluetooth' ? 'Bluetooth' : 'USB'}
+              {tr(p.transport?.kind === 'bluetooth' ? 'print.connectedBluetooth' : 'print.connectedUsb', { b: (s) => <strong>{s}</strong> }, { model: connectedModel.name })}
             </p>
           )}
           {sizeMismatch && roll && rollSize && (
             <div className="notice warn">
-              The printer has {rollSize.widthMm} × {rollSize.heightMm} mm labels loaded. This label is {template.widthMm} × {template.heightMm} mm.
+              {t('print.sizeMismatch', { rollWidth: rollSize.widthMm, rollHeight: rollSize.heightMm, width: template.widthMm, height: template.heightMm })}
             </div>
           )}
-          {unsupported && (
-            <div className="notice warn">
-              The {model.name} uses a different command set ({model.protocol}). This app supports NIIMBOT protocol printers only.
-            </div>
-          )}
+          {unsupported && <div className="notice warn">{t('print.unsupported', { model: model.name, protocol: model.protocol })}</div>}
 
           {usesData && dataset ? (
-            <Field label={`Data rows (${rowCount} in ${dataset.name})`}>
+            <Field label={t('print.dataRows', { count: rowCount, name: dataset.name })}>
               <div className="field-row">
-                <NumberInput value={from} min={1} max={rowCount} step={1} decimals={0} onChange={(v) => setFrom(Math.round(v))} />
-                <NumberInput value={to} min={1} max={rowCount} step={1} decimals={0} onChange={(v) => setTo(Math.round(v))} />
+                <label className="sub-field">
+                  <small className="muted">{t('print.rowFrom')}</small>
+                  <NumberInput value={from} min={1} max={rowCount} step={1} decimals={0} onChange={(v) => setFrom(Math.round(v))} />
+                </label>
+                <label className="sub-field">
+                  <small className="muted">{t('print.rowTo')}</small>
+                  <NumberInput value={to} min={1} max={rowCount} step={1} decimals={0} onChange={(v) => setTo(Math.round(v))} />
+                </label>
               </div>
             </Field>
           ) : hasSerial ? (
-            <Field label="Number of serial labels">
+            <Field label={t('print.serialCount')}>
               <NumberInput value={labelCount} min={1} max={9999} step={1} decimals={0} onChange={(v) => setLabelCount(Math.round(v))} />
             </Field>
           ) : null}
           {missingFields.length > 0 && (
-            <div className="notice warn">
-              No data column for: {missingFields.map((f) => `{{${f}}}`).join(', ')}. Load a data file on the Data page.
-            </div>
+            <div className="notice warn">{t('print.missingFields', { fields: missingFields.map((f) => `{{${f}}}`).join(', ') })}</div>
           )}
 
-          <Field label="Copies of each label">
+          <Field label={t('print.copies')}>
             <NumberInput value={copies} min={1} max={999} step={1} decimals={0} onChange={(v) => setCopies(Math.round(v))} />
           </Field>
-          <Field label={`Print density ${density} (${model.density.min} to ${model.density.max})`}>
+          <Field label={t('print.density', { density, min: model.density.min, max: model.density.max })}>
             <input type="range" min={model.density.min} max={model.density.max} step={1} value={density} onChange={(e) => setDensity(Number(e.target.value))} />
           </Field>
-          <Field label="Label type">
+          <Field label={t('print.labelType')}>
             <select value={labelType} onChange={(e) => setLabelType(Number(e.target.value))}>
-              {(model.paperTypes.length ? model.paperTypes : Object.keys(LABEL_TYPE_NAMES).map(Number)).map((t) => (
-                <option key={t} value={t}>
-                  {LABEL_TYPE_NAMES[t] ?? `Type ${t}`}
+              {(model.paperTypes.length ? model.paperTypes : Object.keys(LABEL_TYPE_NAMES).map(Number)).map((type) => (
+                <option key={type} value={type}>
+                  {labelTypeName(type) ?? t('print.labelTypeNumber', { type })}
                 </option>
               ))}
             </select>
           </Field>
           <details>
             <summary className="muted" style={{ cursor: 'pointer', marginBottom: 8 }}>
-              Advanced
+              {t('print.advanced')}
             </summary>
-            <Field label="Command set" hint={`Auto uses ${PRINT_VARIANTS.find((v) => v.value === activeVariant(model))?.label} for the ${model.name}.`}>
+            <Field
+              label={t('print.commandSet')}
+              hint={t('print.commandSetHint', { variant: ((v) => (v ? t(v.labelKey) : ''))(PRINT_VARIANTS.find((v) => v.value === activeVariant(model))), model: model.name })}
+            >
               <select value={variant} onChange={(e) => setVariant(e.target.value as 'auto' | PrintVariant)}>
-                <option value="auto">Auto</option>
+                <option value="auto">{t('print.auto')}</option>
                 {PRINT_VARIANTS.map((v) => (
                   <option key={v.value} value={v.value}>
-                    {v.label}
+                    {t(v.labelKey)}
                   </option>
                 ))}
               </select>
             </Field>
             <Check checked={flip} onChange={setFlip}>
-              Turn the print 180°
+              {t('print.flip')}
             </Check>
           </details>
         </div>

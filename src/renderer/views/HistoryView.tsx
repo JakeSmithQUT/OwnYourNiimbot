@@ -4,6 +4,7 @@ import { api } from '../api';
 import { appStore, confirmDiscard, openTemplate } from '../state/app';
 import type { HistoryEntry } from '../components/PrintDialog';
 import { isPreview } from '../editor/validate';
+import { t, tn } from '../i18n';
 
 export function HistoryView() {
   const [items, setItems] = useState<HistoryEntry[]>([]);
@@ -29,7 +30,7 @@ export function HistoryView() {
   };
 
   const clearAll = async () => {
-    if (!window.confirm('Delete all print history? You cannot undo this.')) return;
+    if (!window.confirm(t('history.confirmClear'))) return;
     await Promise.all(items.map((h) => api.store.delete('history', h.id)));
     await reload();
   };
@@ -38,19 +39,19 @@ export function HistoryView() {
     <div className="page">
       <div className="btn-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <h2>Print history</h2>
+          <h2>{t('history.title')}</h2>
           <p className="lead" style={{ margin: 0 }}>
-            Each print job keeps a copy of the label, so you can print it again.
+            {t('history.lead')}
           </p>
         </div>
         {items.length > 0 && (
           <button className="btn danger" onClick={() => void clearAll()}>
-            <Trash2 size={15} /> Clear history
+            <Trash2 size={15} /> {t('history.clear')}
           </button>
         )}
       </div>
       {items.length === 0 ? (
-        <div className="card empty">Nothing has been printed yet.</div>
+        <div className="card empty">{t('history.empty')}</div>
       ) : (
         <div className="card" style={{ padding: 0 }}>
           {items.map((h) => (
@@ -59,16 +60,16 @@ export function HistoryView() {
               <div className="info">
                 <strong>{h.name}</strong>
                 <span className="muted">
-                  {new Date(h.time).toLocaleString()} · {h.labels} label{h.labels === 1 ? '' : 's'} · {h.modelName}
+                  {new Date(h.time).toLocaleString()} · {tn('history.labels', h.labels)} · {h.modelName}
                 </span>
               </div>
               <button className="btn small" onClick={() => void open(h, false)}>
-                <FolderOpen size={14} /> Open
+                <FolderOpen size={14} /> {t('common.open')}
               </button>
               <button className="btn small" onClick={() => void open(h, true)}>
-                <PrinterIcon size={14} /> Print again
+                <PrinterIcon size={14} /> {t('history.printAgain')}
               </button>
-              <button className="btn small icon ghost danger" title="Delete" onClick={() => void remove(h)}>
+              <button className="btn small icon ghost danger" title={t('common.delete')} onClick={() => void remove(h)}>
                 <Trash2 size={14} />
               </button>
             </div>

@@ -170,6 +170,62 @@ input[type='checkbox'] {
   flex: 1;
 }
 
+/* Side bar labels in other languages can be longer than the English ones. */
+.rail > button {
+  padding-left: 2px;
+  padding-right: 2px;
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.rail .lang {
+  position: relative;
+}
+
+.rail .lang-btn {
+  flex-direction: row;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.lang-menu {
+  position: absolute;
+  left: calc(100% + 8px);
+  bottom: 0;
+  z-index: 60;
+  min-width: 200px;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.rail .lang-menu button {
+  width: 100%;
+  flex-direction: row;
+  justify-content: flex-start;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+}
+
+.rail .lang-menu button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -360,6 +416,13 @@ input[type='checkbox'] {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.sub-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
 .field-row.three {
@@ -558,7 +621,8 @@ input[type='checkbox'] {
 
 .tools {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, 1fr): a long word in another language must not make a column wider. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-bottom: 18px;
 }
@@ -573,7 +637,13 @@ input[type='checkbox'] {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  min-width: 0;
+  padding: 0 2px;
   font-size: 11px;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+  hyphens: auto;
   cursor: pointer;
   color: var(--text);
 }

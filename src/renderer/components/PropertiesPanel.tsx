@@ -25,8 +25,10 @@ import { rememberRoll, rollStore } from '../state/roll';
 import { physicalSize } from '../../printer/labels';
 import { printArea } from '../../printer/printArea';
 import { LabelPicker } from './LabelPicker';
-import { LABEL_TYPE_NAMES } from '../../printer/protocol';
+import { LABEL_TYPE_NAMES, labelTypeName } from '../../printer/protocol';
 import { Check, Field, NumberInput, Segmented, TextInput } from './ui';
+import { t, tn } from '../i18n';
+import type { MessageKey } from '../../i18n/translate';
 
 function useFonts(): string[] {
   const [fonts, setFonts] = useState<string[]>([]);
@@ -44,14 +46,14 @@ function FontSelect(props: { value: string; fonts: string[]; onChange: (f: strin
   return (
     <select value={props.value} onChange={(e) => props.onChange(e.target.value)}>
       {!known && <option value={props.value}>{props.value}</option>}
-      <optgroup label="Included with the app">
+      <optgroup label={t('props.font.bundled')}>
         {BUNDLED_FONTS.map((f) => (
           <option key={f.family} value={f.family} style={{ fontFamily: `"${f.family}"` }}>
             {f.family} · {f.style.toLowerCase()}
           </option>
         ))}
       </optgroup>
-      <optgroup label="Fonts on this computer">
+      <optgroup label={t('props.font.system')}>
         {system.map((f) => (
           <option key={f} value={f}>
             {f}
@@ -62,9 +64,16 @@ function FontSelect(props: { value: string; fonts: string[]; onChange: (f: strin
   );
 }
 
+/** Names of the built-in data fields in the field menu. The inserted token stays the same in every language. */
+const BUILT_IN_FIELDS: Record<string, MessageKey> = {
+  date: 'props.field.date',
+  time: 'props.field.time',
+  index: 'props.field.index',
+};
+
 function FieldInsert(props: { onInsert: (token: string) => void }) {
   const { dataset } = appStore.use();
-  const options = [...(dataset?.columns ?? []), 'date', 'time', 'index'];
+  const options = [...(dataset?.columns ?? []), ...Object.keys(BUILT_IN_FIELDS)];
   return (
     <select
       value=""
@@ -72,9 +81,9 @@ function FieldInsert(props: { onInsert: (token: string) => void }) {
         if (e.target.value) props.onInsert(`{{${e.target.value}}}`);
       }}
     >
-      <option value="">Insert a data field…</option>
+      <option value="">{t('props.field.insert')}</option>
       {dataset?.columns.length ? (
-        <optgroup label={`Columns from ${dataset.name}`}>
+        <optgroup label={t('props.field.columns', { name: dataset.name })}>
           {dataset.columns.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -82,10 +91,10 @@ function FieldInsert(props: { onInsert: (token: string) => void }) {
           ))}
         </optgroup>
       ) : null}
-      <optgroup label="Built-in">
+      <optgroup label={t('props.field.builtIn')}>
         {options.slice(dataset?.columns.length ?? 0).map((c) => (
           <option key={c} value={c}>
-            {c === 'index' ? 'label number' : c}
+            {t(BUILT_IN_FIELDS[c])}
           </option>
         ))}
       </optgroup>
@@ -109,7 +118,7 @@ function GeometryFields({ obj }: { obj: FabricObject }) {
       </div>
       {!isLine && (
         <div className="field-row">
-          <Field label="Width">
+          <Field label={t('props.width')}>
             <NumberInput
               unit="mm"
               min={0.5}
@@ -127,7 +136,7 @@ function GeometryFields({ obj }: { obj: FabricObject }) {
             />
           </Field>
           {!(obj instanceof Textbox) && (
-            <Field label="Height">
+            <Field label={t('props.height')}>
               <NumberInput
                 unit="mm"
                 min={0.5}
@@ -147,7 +156,7 @@ function GeometryFields({ obj }: { obj: FabricObject }) {
           )}
         </div>
       )}
-      <Field label="Rotation">
+      <Field label={t('props.rotation')}>
         <Segmented
           value={String(Math.round(obj.angle ?? 0) % 360)}
           options={['0', '90', '180', '270'].map((d) => ({ value: d, label: `${d}°` }))}
@@ -170,7 +179,7 @@ function TextProps({ obj }: { obj: Textbox }) {
     <>
       {data.kind === 'datetime' ? (
         <>
-          <Field label="Date format">
+          <Field label={t('props.dateFormat')}>
             <select
               value={data.format}
               onChange={(e) => {
@@ -185,7 +194,7 @@ function TextProps({ obj }: { obj: Textbox }) {
               ))}
             </select>
           </Field>
-          <Field label="Add days" hint="Use this for best-before or expiry dates.">
+          <Field label={t('props.addDays')} hint={t('props.addDaysHint')}>
             <NumberInput
               value={data.offsetDays ?? 0}
               step={1}
@@ -207,7 +216,7 @@ function TextProps({ obj }: { obj: Textbox }) {
         />
       ) : (
         <>
-          <Field label="Text">
+          <Field label={t('props.text')}>
             <TextInput multiline value={obj.text ?? ''} onChange={(v) => set({ text: v })} />
           </Field>
           <div className="field">
@@ -215,51 +224,51 @@ function TextProps({ obj }: { obj: Textbox }) {
           </div>
         </>
       )}
-      <Field label="Font">
+      <Field label={t('props.font')}>
         <FontSelect value={obj.fontFamily ?? 'Arial'} fonts={fonts} onChange={(f) => set({ fontFamily: f })} />
       </Field>
       <div className="field-row">
-        <Field label="Size">
+        <Field label={t('props.size')}>
           <NumberInput unit="pt" min={2} max={400} value={unitsToPt(obj.fontSize ?? 12)} onChange={(v) => set({ fontSize: ptToUnits(v) })} />
         </Field>
-        <Field label="Line spacing">
+        <Field label={t('props.lineSpacing')}>
           <NumberInput min={0.5} max={4} step={0.05} decimals={2} value={obj.lineHeight ?? 1.1} onChange={(v) => set({ lineHeight: v })} />
         </Field>
       </div>
       <div className="field">
-        <label>Style</label>
+        <label>{t('props.style')}</label>
         <div className="btn-row">
           <div className="seg">
-            <button className={obj.fontWeight === 'bold' ? 'on' : ''} title="Bold" onClick={() => set({ fontWeight: obj.fontWeight === 'bold' ? 'normal' : 'bold' })}>
+            <button className={obj.fontWeight === 'bold' ? 'on' : ''} title={t('props.bold')} onClick={() => set({ fontWeight: obj.fontWeight === 'bold' ? 'normal' : 'bold' })}>
               <Bold size={15} />
             </button>
-            <button className={obj.fontStyle === 'italic' ? 'on' : ''} title="Italic" onClick={() => set({ fontStyle: obj.fontStyle === 'italic' ? 'normal' : 'italic' })}>
+            <button className={obj.fontStyle === 'italic' ? 'on' : ''} title={t('props.italic')} onClick={() => set({ fontStyle: obj.fontStyle === 'italic' ? 'normal' : 'italic' })}>
               <Italic size={15} />
             </button>
-            <button className={obj.underline ? 'on' : ''} title="Underline" onClick={() => set({ underline: !obj.underline })}>
+            <button className={obj.underline ? 'on' : ''} title={t('props.underline')} onClick={() => set({ underline: !obj.underline })}>
               <Underline size={15} />
             </button>
-            <button className={obj.linethrough ? 'on' : ''} title="Strikethrough" onClick={() => set({ linethrough: !obj.linethrough })}>
+            <button className={obj.linethrough ? 'on' : ''} title={t('props.strikethrough')} onClick={() => set({ linethrough: !obj.linethrough })}>
               <Strikethrough size={15} />
             </button>
           </div>
           <Segmented
             value={obj.textAlign ?? 'left'}
             options={[
-              { value: 'left', label: <AlignLeft size={15} />, title: 'Left' },
-              { value: 'center', label: <AlignCenter size={15} />, title: 'Centre' },
-              { value: 'right', label: <AlignRight size={15} />, title: 'Right' },
-              { value: 'justify', label: <AlignJustify size={15} />, title: 'Justify' },
+              { value: 'left', label: <AlignLeft size={15} />, title: t('props.align.left') },
+              { value: 'center', label: <AlignCenter size={15} />, title: t('props.align.centre') },
+              { value: 'right', label: <AlignRight size={15} />, title: t('props.align.right') },
+              { value: 'justify', label: <AlignJustify size={15} />, title: t('props.align.justify') },
             ]}
             onChange={(v) => set({ textAlign: v })}
           />
         </div>
       </div>
-      <Field label="Letter spacing">
+      <Field label={t('props.letterSpacing')}>
         <input type="range" min={-100} max={800} step={10} value={obj.charSpacing ?? 0} onChange={(e) => set({ charSpacing: Number(e.target.value) })} />
       </Field>
       <Check checked={inverted} onChange={(v) => set(v ? { backgroundColor: '#000000', fill: '#ffffff' } : { backgroundColor: '', fill: '#000000' })}>
-        White text on black
+        {t('props.inverted')}
       </Check>
     </>
   );
@@ -271,27 +280,25 @@ function SerialFields(props: { value: SerialSettings; onChange: (s: SerialSettin
   return (
     <>
       <div className="field-row">
-        <Field label="Prefix">
+        <Field label={t('props.serial.prefix')}>
           <TextInput value={s.prefix} onChange={(v) => set({ prefix: v })} />
         </Field>
-        <Field label="Suffix">
+        <Field label={t('props.serial.suffix')}>
           <TextInput value={s.suffix} onChange={(v) => set({ suffix: v })} />
         </Field>
       </div>
       <div className="field-row three">
-        <Field label="Start">
+        <Field label={t('props.serial.start')}>
           <NumberInput value={s.start} step={1} decimals={0} onChange={(v) => set({ start: Math.round(v) })} />
         </Field>
-        <Field label="Step">
+        <Field label={t('props.serial.step')}>
           <NumberInput value={s.step} step={1} decimals={0} onChange={(v) => set({ step: Math.round(v) })} />
         </Field>
-        <Field label="Digits">
+        <Field label={t('props.serial.digits')}>
           <NumberInput value={s.digits} min={1} max={12} step={1} decimals={0} onChange={(v) => set({ digits: Math.round(v) })} />
         </Field>
       </div>
-      <p className="muted">
-        Example: {formatSerial(s, 0)}, {formatSerial(s, 1)}, {formatSerial(s, 2)}
-      </p>
+      <p className="muted">{t('props.serial.example', { first: formatSerial(s, 0), second: formatSerial(s, 1), third: formatSerial(s, 2) })}</p>
     </>
   );
 }
@@ -302,7 +309,7 @@ function BarcodeProps({ obj }: { obj: LabelBarcode }) {
   const error = obj.error;
   return (
     <>
-      <Field label="Type">
+      <Field label={t('props.barcode.type')}>
         <select
           value={obj.format}
           onChange={(e) => {
@@ -310,14 +317,14 @@ function BarcodeProps({ obj }: { obj: LabelBarcode }) {
             set({ format: next.id, showText: next.twoD ? false : obj.showText, value: next.twoD === fmt.twoD && !obj.error ? obj.value : next.sample });
           }}
         >
-          <optgroup label="Barcodes">
+          <optgroup label={t('props.barcode.linear')}>
             {BARCODE_FORMATS.filter((f) => !f.twoD).map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
               </option>
             ))}
           </optgroup>
-          <optgroup label="2D codes">
+          <optgroup label={t('props.barcode.twoD')}>
             {BARCODE_FORMATS.filter((f) => f.twoD).map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
@@ -326,7 +333,7 @@ function BarcodeProps({ obj }: { obj: LabelBarcode }) {
           </optgroup>
         </select>
       </Field>
-      <Field label="Content">
+      <Field label={t('props.barcode.content')}>
         <TextInput multiline={fmt.twoD} value={obj.value} onChange={(v) => set({ value: v })} />
       </Field>
       <div className="field">
@@ -334,7 +341,7 @@ function BarcodeProps({ obj }: { obj: LabelBarcode }) {
       </div>
       {error && !/\{\{/.test(obj.value) && <div className="notice error">{error}</div>}
       {obj.format === 'qrcode' && (
-        <Field label="Error correction">
+        <Field label={t('props.barcode.errorCorrection')}>
           <Segmented
             value={obj.eclevel}
             options={['L', 'M', 'Q', 'H'].map((l) => ({ value: l, label: l }))}
@@ -345,10 +352,10 @@ function BarcodeProps({ obj }: { obj: LabelBarcode }) {
       {!fmt.twoD && (
         <>
           <Check checked={obj.showText} onChange={(v) => set({ showText: v })}>
-            Show text under the bars
+            {t('props.barcode.showText')}
           </Check>
           {obj.showText && (
-            <Field label="Text size">
+            <Field label={t('props.textSize')}>
               <NumberInput unit="pt" min={3} max={40} value={unitsToPt(obj.textSize)} onChange={(v) => set({ textSize: ptToUnits(v) })} />
             </Field>
           )}
@@ -375,30 +382,30 @@ function ImageProps({ obj }: { obj: FabricImage }) {
       setBusy(false);
     }
   };
-  if (!data.original) return <p className="muted">This image has no source data to process.</p>;
+  if (!data.original) return <p className="muted">{t('props.image.noSource')}</p>;
   return (
     <>
-      <Field label="Black and white">
+      <Field label={t('props.image.mode')}>
         <select value={settings.mode} onChange={(e) => void apply({ mode: e.target.value as ImageMode })}>
-          <option value="floyd">Dither (photos)</option>
-          <option value="atkinson">Dither, high contrast</option>
-          <option value="threshold">Threshold (logos, line art)</option>
-          <option value="grey">Greyscale preview</option>
+          <option value="floyd">{t('props.image.mode.floyd')}</option>
+          <option value="atkinson">{t('props.image.mode.atkinson')}</option>
+          <option value="threshold">{t('props.image.mode.threshold')}</option>
+          <option value="grey">{t('props.image.mode.grey')}</option>
         </select>
       </Field>
-      <Field label={`Threshold ${settings.threshold}`}>
+      <Field label={t('props.image.threshold', { value: settings.threshold })}>
         <input type="range" min={10} max={245} value={settings.threshold} onChange={(e) => setSettings({ ...settings, threshold: Number(e.target.value) })} onMouseUp={() => void apply({})} />
       </Field>
-      <Field label={`Brightness ${settings.brightness}`}>
+      <Field label={t('props.image.brightness', { value: settings.brightness })}>
         <input type="range" min={-100} max={100} value={settings.brightness} onChange={(e) => setSettings({ ...settings, brightness: Number(e.target.value) })} onMouseUp={() => void apply({})} />
       </Field>
-      <Field label={`Contrast ${settings.contrast}`}>
+      <Field label={t('props.image.contrast', { value: settings.contrast })}>
         <input type="range" min={-100} max={100} value={settings.contrast} onChange={(e) => setSettings({ ...settings, contrast: Number(e.target.value) })} onMouseUp={() => void apply({})} />
       </Field>
       <Check checked={settings.invert} onChange={(v) => void apply({ invert: v })}>
-        Invert
+        {t('props.image.invert')}
       </Check>
-      {busy && <p className="muted">Processing…</p>}
+      {busy && <p className="muted">{t('props.image.processing')}</p>}
     </>
   );
 }
@@ -409,19 +416,19 @@ function ShapeProps({ obj }: { obj: FabricObject }) {
   const dashed = Array.isArray(obj.strokeDashArray) && obj.strokeDashArray.length > 0;
   return (
     <>
-      <Field label="Line width">
+      <Field label={t('props.lineWidth')}>
         <NumberInput unit="mm" min={0.1} max={10} value={unitsToMm(obj.strokeWidth ?? 0)} onChange={(v) => set({ strokeWidth: mmToUnits(v) })} />
       </Field>
       {!(obj instanceof Line) && (
         <Check checked={filled} onChange={(v) => set({ fill: v ? '#000000' : 'transparent' })}>
-          Fill black
+          {t('props.shape.fill')}
         </Check>
       )}
       <Check checked={dashed} onChange={(v) => set({ strokeDashArray: v ? [mmToUnits(1.2), mmToUnits(0.8)] : null })}>
-        Dashed line
+        {t('props.shape.dashed')}
       </Check>
       {obj instanceof Rect && (
-        <Field label="Corner radius">
+        <Field label={t('props.shape.cornerRadius')}>
           <NumberInput unit="mm" min={0} max={50} value={unitsToMm(obj.rx ?? 0)} onChange={(v) => set({ rx: mmToUnits(v), ry: mmToUnits(v) })} />
         </Field>
       )}
@@ -435,13 +442,13 @@ function TableProps({ obj }: { obj: LabelTable }) {
   return (
     <>
       <div className="field-row">
-        <Field label="Rows">
+        <Field label={t('props.table.rows')}>
           <NumberInput value={obj.rows} min={1} max={30} step={1} decimals={0} onChange={(v) => {
             obj.resize(v, obj.cols);
             set({});
           }} />
         </Field>
-        <Field label="Columns">
+        <Field label={t('props.table.columns')}>
           <NumberInput value={obj.cols} min={1} max={12} step={1} decimals={0} onChange={(v) => {
             obj.resize(obj.rows, v);
             set({});
@@ -449,7 +456,7 @@ function TableProps({ obj }: { obj: LabelTable }) {
         </Field>
       </div>
       <div className="field">
-        <label>Cells</label>
+        <label>{t('props.table.cells')}</label>
         <div className="cell-grid" style={{ gridTemplateColumns: `repeat(${obj.cols}, 1fr)` }}>
           {obj.cells.map((row, r) =>
             row.map((cell, c) => (
@@ -468,14 +475,14 @@ function TableProps({ obj }: { obj: LabelTable }) {
           )}
         </div>
       </div>
-      <Field label="Font">
+      <Field label={t('props.font')}>
         <FontSelect value={obj.fontFamily} fonts={fonts} onChange={(f) => set({ fontFamily: f })} />
       </Field>
       <div className="field-row">
-        <Field label="Text size">
+        <Field label={t('props.textSize')}>
           <NumberInput unit="pt" min={2} max={100} value={unitsToPt(obj.fontSize)} onChange={(v) => set({ fontSize: ptToUnits(v) })} />
         </Field>
-        <Field label="Line width">
+        <Field label={t('props.lineWidth')}>
           <NumberInput unit="mm" min={0} max={5} value={unitsToMm(obj.lineWidth)} onChange={(v) => set({ lineWidth: mmToUnits(v) })} />
         </Field>
       </div>
@@ -490,7 +497,7 @@ function TableProps({ obj }: { obj: LabelTable }) {
           onChange={(v) => set({ textAlign: v })}
         />
         <Check checked={obj.fontWeight === 'bold'} onChange={(v) => set({ fontWeight: v ? 'bold' : 'normal' })}>
-          Bold
+          {t('props.bold')}
         </Check>
       </div>
     </>
@@ -511,35 +518,35 @@ function LabelProps() {
   const outside = editor.elementsOutside(area);
   return (
     <>
-      <div className="section-title">Label</div>
-      <Field label="NIIMBOT roll">
+      <div className="section-title">{t('props.label')}</div>
+      <Field label={t('props.label.roll')}>
         <LabelPicker model={model} widthMm={editor.widthMm} heightMm={editor.heightMm} labelType={template.labelType} onPick={(p) => setSize(p.widthMm, p.heightMm, p.labelType)} />
       </Field>
       {roll && roll.source === 'unknown' && roll.barcode && (
         <div className="notice">
           <div>
-            The loaded roll ({roll.barcode}) has no known size. Select its size, then save it for this roll.
+            {t('props.label.unknownRoll', { barcode: roll.barcode })}
             <div style={{ marginTop: 8 }}>
               <button
                 className="btn small"
                 onClick={() => {
                   const phys = physicalSize(editor.widthMm, editor.heightMm, model);
                   void rememberRoll(roll.barcode!, phys.widthMm, phys.lengthMm, template.labelType).then(() =>
-                    toast(`Saved ${editor.widthMm} × ${editor.heightMm} mm for roll ${roll.barcode}`, 'success'),
+                    toast(t('props.label.rollSaved', { width: editor.widthMm, height: editor.heightMm, barcode: roll.barcode! }), 'success'),
                   );
                 }}
               >
-                Save {editor.widthMm} × {editor.heightMm} mm for this roll
+                {t('props.label.saveRoll', { width: editor.widthMm, height: editor.heightMm })}
               </button>
             </div>
           </div>
         </div>
       )}
       <div className="field-row">
-        <Field label="Width">
+        <Field label={t('props.width')}>
           <NumberInput unit="mm" min={5} max={300} value={editor.widthMm} onChange={(v) => setSize(v, editor.heightMm)} />
         </Field>
-        <Field label="Height">
+        <Field label={t('props.height')}>
           <NumberInput unit="mm" min={5} max={500} value={editor.heightMm} onChange={(v) => setSize(editor.widthMm, v)} />
         </Field>
       </div>
@@ -547,40 +554,45 @@ function LabelProps() {
         (outside.length ? (
           <div className="notice warn">
             <div>
-              The {model.name} prints {Number(area.headMm.toFixed(1))} mm across this {Number((area.sideways ? editor.heightMm : editor.widthMm).toFixed(1))} mm label.{' '}
-              {outside.length === 1 ? '1 element goes' : `${outside.length} elements go`} outside the print area and will be cut off.
+              {t('props.label.clipped', {
+                model: model.name,
+                head: Number(area.headMm.toFixed(1)),
+                size: Number((area.sideways ? editor.heightMm : editor.widthMm).toFixed(1)),
+              })}{' '}
+              {tn('props.label.outside', outside.length)}
               <div style={{ marginTop: 8 }}>
                 <button className="btn small" onClick={() => editor.fitToArea(area)}>
-                  Fit into the print area
+                  {t('props.label.fit')}
                 </button>
               </div>
             </div>
           </div>
         ) : (
-          <p className="muted print-area-hint">
-            The {model.name} prints {Number(area.headMm.toFixed(1))} mm across this label. The shaded parts do not print.
-          </p>
+          <p className="muted print-area-hint">{t('props.label.printAreaHint', { model: model.name, head: Number(area.headMm.toFixed(1)) })}</p>
         ))}
-      <Field label="Label type">
+      <Field label={t('props.label.type')}>
         <select value={template.labelType} onChange={(e) => setTemplate({ labelType: Number(e.target.value) })}>
-          {Object.entries(LABEL_TYPE_NAMES).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-              {model.paperTypes.length && !model.paperTypes.includes(Number(k)) ? ' (not listed for this model)' : ''}
-            </option>
-          ))}
+          {Object.entries(LABEL_TYPE_NAMES).map(([k, v]) => {
+            const name = labelTypeName(Number(k)) ?? v;
+            const listed = !model.paperTypes.length || model.paperTypes.includes(Number(k));
+            return (
+              <option key={k} value={k}>
+                {listed ? name : t('props.label.typeNotListed', { type: name })}
+              </option>
+            );
+          })}
         </select>
       </Field>
-      <Field label="Corner radius (preview only)">
+      <Field label={t('props.label.cornerRadius')}>
         <NumberInput unit="mm" min={0} max={20} value={template.cornerRadiusMm} onChange={(v) => setTemplate({ cornerRadiusMm: v })} />
       </Field>
-      <Field label="Snap grid">
+      <Field label={t('props.label.snapGrid')}>
         <NumberInput unit="mm" min={0.1} max={10} value={settings.gridMm} onChange={(v) => {
           editor.gridMm = v;
           appStore.set({ settings: { ...settings, gridMm: v } });
         }} />
       </Field>
-      <p className="muted">Select an element on the label to change it. Double-click text to edit it on the label.</p>
+      <p className="muted">{t('props.label.hint')}</p>
     </>
   );
 }
@@ -589,26 +601,26 @@ export function PropertiesPanel() {
   useEditor();
   const selection = editor.selection;
   const obj = selection.length === 1 ? selection[0] : undefined;
-  let title = 'Element';
+  let title: MessageKey = 'props.title.element';
   let body: React.ReactNode = null;
   if (obj instanceof Textbox) {
     const kind = oyn(obj).kind;
-    title = kind === 'datetime' ? 'Date and time' : kind === 'serial' ? 'Serial number' : 'Text';
+    title = kind === 'datetime' ? 'props.title.dateTime' : kind === 'serial' ? 'props.title.serial' : 'props.title.text';
     body = <TextProps obj={obj} />;
   } else if (obj instanceof LabelBarcode) {
-    title = barcodeFormat(obj.format).twoD ? '2D code' : 'Barcode';
+    title = barcodeFormat(obj.format).twoD ? 'props.title.code2d' : 'props.title.barcode';
     body = <BarcodeProps obj={obj} />;
   } else if (obj instanceof FabricImage) {
-    title = 'Image';
+    title = 'props.title.image';
     body = <ImageProps obj={obj} />;
   } else if (obj instanceof LabelTable) {
-    title = 'Table';
+    title = 'props.title.table';
     body = <TableProps obj={obj} />;
   } else if (obj instanceof Rect || obj instanceof Ellipse || obj instanceof Line) {
-    title = 'Shape';
+    title = 'props.title.shape';
     body = <ShapeProps obj={obj} />;
   } else if (obj) {
-    title = oyn(obj).kind === 'icon' ? 'Symbol' : 'Element';
+    title = oyn(obj).kind === 'icon' ? 'props.title.symbol' : 'props.title.element';
   }
 
   return (
@@ -616,16 +628,16 @@ export function PropertiesPanel() {
       {selection.length === 0 && <LabelProps />}
       {selection.length > 1 && (
         <>
-          <div className="section-title">{selection.length} elements selected</div>
-          <p className="muted">Use the toolbar to align, move or delete the selected elements.</p>
+          <div className="section-title">{tn('props.selected', selection.length)}</div>
+          <p className="muted">{t('props.selectedHint')}</p>
         </>
       )}
       {obj && (
         <>
-          <div className="section-title">{title}</div>
+          <div className="section-title">{t(title)}</div>
           {body}
           <div className="section-title" style={{ marginTop: 16 }}>
-            Position
+            {t('props.title.position')}
           </div>
           <GeometryFields obj={obj} />
         </>

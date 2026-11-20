@@ -31,21 +31,23 @@ import { iconSvg, searchIcons } from '../editor/icons';
 import { pickImage } from '../editor/pickImage';
 import { oyn } from '../editor/render';
 import { toast } from '../state/app';
+import { t } from '../i18n';
+import type { MessageKey } from '../../i18n/translate';
 
-const REPLACE_ITEMS: { kind: ElementKind; label: string; icon: LucideIcon }[] = [
-  { kind: 'text', label: 'Text', icon: Type },
-  { kind: 'barcode', label: 'Barcode', icon: Barcode },
-  { kind: 'qrcode', label: 'QR code', icon: QrCode },
-  { kind: 'image', label: 'Image…', icon: ImageIcon },
-  { kind: 'date', label: 'Date', icon: Calendar },
-  { kind: 'serial', label: 'Serial number', icon: Hash },
-  { kind: 'table', label: 'Table', icon: Table },
-  { kind: 'rect', label: 'Rectangle', icon: Square },
-  { kind: 'rounded', label: 'Rounded rectangle', icon: SquareDashed },
-  { kind: 'circle', label: 'Circle', icon: Circle },
-  { kind: 'line', label: 'Line', icon: Minus },
-  { kind: 'vline', label: 'Vertical line', icon: Slash },
-  { kind: 'symbol', label: 'Symbol', icon: Shapes },
+const REPLACE_ITEMS: { kind: ElementKind; label: MessageKey; icon: LucideIcon }[] = [
+  { kind: 'text', label: 'element.type.text', icon: Type },
+  { kind: 'barcode', label: 'element.type.barcode', icon: Barcode },
+  { kind: 'qrcode', label: 'element.type.qrCode', icon: QrCode },
+  { kind: 'image', label: 'element.type.image', icon: ImageIcon },
+  { kind: 'date', label: 'element.type.date', icon: Calendar },
+  { kind: 'serial', label: 'element.type.serial', icon: Hash },
+  { kind: 'table', label: 'element.type.table', icon: Table },
+  { kind: 'rect', label: 'element.type.rectangle', icon: Square },
+  { kind: 'rounded', label: 'element.type.rounded', icon: SquareDashed },
+  { kind: 'circle', label: 'element.type.circle', icon: Circle },
+  { kind: 'line', label: 'element.type.line', icon: Minus },
+  { kind: 'vline', label: 'element.type.verticalLine', icon: Slash },
+  { kind: 'symbol', label: 'element.type.symbol', icon: Shapes },
 ];
 
 type Panel = 'none' | 'replace' | 'symbols';
@@ -131,8 +133,8 @@ export function ElementMenu() {
   useEffect(() => {
     if (!req) return;
     const onDown = (e: PointerEvent) => {
-      const t = e.target as Node;
-      if (menuRef.current?.contains(t) || subRef.current?.contains(t)) return;
+      const node = e.target as Node;
+      if (menuRef.current?.contains(node) || subRef.current?.contains(node)) return;
       close();
     };
     const onKey = (e: KeyboardEvent) => {
@@ -206,7 +208,7 @@ export function ElementMenu() {
   const multiple = target instanceof ActiveSelection;
   const locked = !multiple && Boolean(oyn(target).locked);
   const current = multiple ? undefined : editor.kindOf(target);
-  const replaceHint = multiple ? 'Select one element to replace it' : locked ? 'Unlock the element to replace it' : undefined;
+  const replaceHint = multiple ? t('element.replaceOne') : locked ? t('element.replaceUnlock') : undefined;
 
   const finish = () => {
     close();
@@ -274,9 +276,9 @@ export function ElementMenu() {
       <Item
         key={it.kind}
         icon={it.icon}
-        label={it.label}
+        label={t(it.label)}
         disabled={it.kind === current}
-        title={it.kind === current ? 'This element is already this type' : undefined}
+        title={it.kind === current ? t('element.sameType') : undefined}
         sub={it.kind === 'symbol'}
         onClick={() => replace(it.kind)}
       />
@@ -284,13 +286,13 @@ export function ElementMenu() {
   } else if (panel === 'symbols') {
     sub = (
       <>
-        <Item icon={ArrowLeft} label="Back" onClick={() => openPanel('replace', true)} />
+        <Item icon={ArrowLeft} label={t('element.back')} onClick={() => openPanel('replace', true)} />
         <div className="ctx-sep" />
         <input
           type="search"
           className="ctx-search"
-          placeholder="Search symbols"
-          aria-label="Search symbols"
+          placeholder={t('element.searchSymbols')}
+          aria-label={t('element.searchSymbols')}
           value={symbolQuery}
           onChange={(e) => setSymbolQuery(e.target.value)}
         />
@@ -311,7 +313,7 @@ export function ElementMenu() {
         ref={menuRef}
         className="ctx-menu"
         role="menu"
-        aria-label="Element"
+        aria-label={t('element.menu')}
         style={pos ? { left: pos.left, top: pos.top } : { left: req.x, top: req.y, visibility: 'hidden' }}
         onKeyDown={onMenuKey}
         onContextMenu={(e) => e.preventDefault()}
@@ -319,7 +321,7 @@ export function ElementMenu() {
         <div ref={replaceRef} className="ctx-row">
           <Item
             icon={Replace}
-            label="Replace with"
+            label={t('element.replaceWith')}
             sub
             expanded={panel !== 'none'}
             disabled={Boolean(replaceHint)}
@@ -329,19 +331,19 @@ export function ElementMenu() {
           />
         </div>
         <div className="ctx-sep" />
-        <Item icon={Copy} label="Duplicate" keys="Ctrl+D" onClick={run(() => editor.duplicate())} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />
-        {!multiple && <Item icon={ArrowUpToLine} label="Bring to front" onClick={run(() => editor.layer('front'))} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />}
-        {!multiple && <Item icon={ArrowDownToLine} label="Send to back" onClick={run(() => editor.layer('back'))} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />}
-        {!multiple && <Item icon={locked ? Unlock : Lock} label={locked ? 'Unlock' : 'Lock'} onClick={run(() => editor.toggleLock())} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />}
+        <Item icon={Copy} label={t('element.duplicate')} keys="Ctrl+D" onClick={run(() => editor.duplicate())} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />
+        {!multiple && <Item icon={ArrowUpToLine} label={t('element.toFront')} onClick={run(() => editor.layer('front'))} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />}
+        {!multiple && <Item icon={ArrowDownToLine} label={t('element.toBack')} onClick={run(() => editor.layer('back'))} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />}
+        {!multiple && <Item icon={locked ? Unlock : Lock} label={locked ? t('element.unlock') : t('element.lock')} onClick={run(() => editor.toggleLock())} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />}
         <div className="ctx-sep" />
-        <Item icon={Trash2} label="Delete" keys="Del" danger disabled={locked} onClick={run(() => editor.deleteSelection())} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />
+        <Item icon={Trash2} label={t('element.delete')} keys="Del" danger disabled={locked} onClick={run(() => editor.deleteSelection())} onHover={() => setPanel('none')} onFocus={() => setPanel('none')} />
       </div>
       {panel !== 'none' && (
         <div
           ref={subRef}
           className={`ctx-menu ctx-sub${panel === 'symbols' ? ' wide' : ''}`}
           role="menu"
-          aria-label={panel === 'symbols' ? 'Symbols' : 'Replace with'}
+          aria-label={panel === 'symbols' ? t('element.symbols') : t('element.replaceWith')}
           style={subPos ? { left: subPos.left, top: subPos.top } : { left: 0, top: 0, visibility: 'hidden' }}
           onKeyDown={onSubKey}
           onContextMenu={(e) => e.preventDefault()}

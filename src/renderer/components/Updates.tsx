@@ -5,6 +5,7 @@ import { api } from '../api';
 import { appStore, saveTemplate, toast } from '../state/app';
 import { createStore } from '../state/store';
 import { Check } from './ui';
+import { t } from '../i18n';
 
 export const updateStore = createStore<{ status?: UpdateStatus; dismissed?: string; updatedSeen?: boolean }>({});
 
@@ -31,7 +32,7 @@ async function restartAndInstall(): Promise<void> {
 /** Download progress as text, for example "42% · 52 of 125 MB · 6.1 MB/s". */
 export function progressText(s: UpdateStatus): string {
   const parts = [`${s.percent ?? 0}%`];
-  if (s.total) parts.push(`${formatMegabytes(s.transferred ?? 0)} of ${formatMegabytes(s.total)}`);
+  if (s.total) parts.push(t('updates.progressOf', { done: formatMegabytes(s.transferred ?? 0), total: formatMegabytes(s.total) }));
   if (s.bytesPerSecond) parts.push(formatSpeed(s.bytesPerSecond));
   return parts.join(' · ');
 }
@@ -47,11 +48,11 @@ export function UpdateBanner() {
     return (
       <div className="update-banner" role="status">
         <CircleCheck size={16} />
-        <span>OwnYourNiimbot is updated to version {status.current}.</span>
+        <span>{t('updates.updatedTo', { version: status.current })}</span>
         <button className="btn small" onClick={() => void api.updates.openRelease('current')}>
-          What's new
+          {t('updates.whatsNew')}
         </button>
-        <button className="btn small ghost" onClick={() => updateStore.set({ updatedSeen: true })} aria-label="Close">
+        <button className="btn small ghost" onClick={() => updateStore.set({ updatedSeen: true })} aria-label={t('common.close')}>
           <X size={14} />
         </button>
       </div>
@@ -64,13 +65,13 @@ export function UpdateBanner() {
       <div className="update-banner" role="status">
         <Download size={16} />
         <span>
-          Downloading version {status.version}. {progressText(status)}
+          {t('updates.downloadingBanner', { version: status.version, progress: progressText(status) })}
           <span className="update-progress" aria-hidden="true">
             <span style={{ width: `${status.percent ?? 0}%` }} />
           </span>
         </span>
         <button className="btn small ghost" onClick={close}>
-          Hide
+          {t('common.hide')}
         </button>
       </div>
     );
@@ -79,14 +80,12 @@ export function UpdateBanner() {
     return (
       <div className="update-banner" role="status">
         <RotateCw size={16} />
-        <span>
-          Version {status.version} is ready to install. The app restarts to install it{dirty ? ', after it saves this label' : ''}.
-        </span>
+        <span>{t(dirty ? 'updates.readyToInstallSave' : 'updates.readyToInstall', { version: status.version })}</span>
         <button className="btn small primary" onClick={() => void restartAndInstall()}>
-          {dirty ? 'Save and restart' : 'Restart now'}
+          {dirty ? t('updates.saveAndRestart') : t('updates.restartNow')}
         </button>
         <button className="btn small ghost" onClick={close}>
-          Later
+          {t('updates.later')}
         </button>
       </div>
     );
@@ -95,11 +94,11 @@ export function UpdateBanner() {
     return (
       <div className="update-banner" role="status">
         <Download size={16} />
-        <span>Version {status.version} is available. This version of the app cannot install it, so download it from the release page.</span>
+        <span>{t('updates.availableBanner', { version: status.version })}</span>
         <button className="btn small primary" onClick={() => void api.updates.openRelease('new')}>
-          Open release page
+          {t('updates.openReleasePage')}
         </button>
-        <button className="btn small ghost" onClick={close} aria-label="Close">
+        <button className="btn small ghost" onClick={close} aria-label={t('common.close')}>
           <X size={14} />
         </button>
       </div>
@@ -117,9 +116,9 @@ export function UpdatePill() {
     <button
       className="update-pill"
       onClick={() => void restartAndInstall()}
-      title={`Version ${status.version} is ready. ${dirty ? 'The app saves this label, then restarts' : 'The app restarts'} to install it.`}
+      title={t(dirty ? 'updates.pillTitleSave' : 'updates.pillTitle', { version: status.version ?? '' })}
     >
-      <RotateCw size={14} /> Restart to update
+      <RotateCw size={14} /> {t('updates.restartToUpdate')}
     </button>
   );
 }
@@ -127,19 +126,19 @@ export function UpdatePill() {
 function describe(s: UpdateStatus): string {
   switch (s.state) {
     case 'checking':
-      return 'Checking for updates…';
+      return t('updates.checking');
     case 'none':
-      return `Version ${s.current} is the latest version.`;
+      return t('updates.latest', { version: s.current });
     case 'available':
-      return `Version ${s.version} is available. Download it from the release page.`;
+      return t('updates.available', { version: s.version ?? '' });
     case 'downloading':
-      return `Downloading version ${s.version}… ${progressText(s)}`;
+      return t('updates.downloading', { version: s.version ?? '', progress: progressText(s) });
     case 'ready':
-      return `Version ${s.version} is ready. Restart the app to install it.`;
+      return t('updates.ready', { version: s.version ?? '' });
     case 'error':
-      return s.message ?? 'The app could not check for updates.';
+      return s.message ?? t('updates.checkFailed');
     default:
-      return `Version ${s.current}.`;
+      return t('updates.current', { version: s.current });
   }
 }
 
@@ -150,36 +149,32 @@ export function UpdateSettings() {
   const busy = status.state === 'checking' || status.state === 'downloading';
   return (
     <div className="card" style={{ marginBottom: 16 }}>
-      <h3>Updates</h3>
+      <h3>{t('updates.title')}</h3>
       {status.mode === 'none' ? (
         <p className="muted" style={{ marginTop: 0 }}>
-          The installed app checks for updates. This development build does not.
+          {t('updates.devBuild')}
         </p>
       ) : (
         <>
           <Check checked={status.checkOnLaunch} onChange={(v) => void api.updates.setCheckOnLaunch(v).then((s) => updateStore.set({ status: s }))}>
-            Check for updates automatically
+            {t('updates.checkAutomatically')}
           </Check>
           <p className="muted">
-            The app asks the GitHub releases of this project for the latest version. GitHub gets the app version and the IP address of this computer. No labels or
-            other data are sent.{' '}
-            {status.mode === 'install'
-              ? 'The app checks when it starts and every 6 hours while it is open. It downloads an update, checks it, and installs it when the app restarts.'
-              : 'The app checks when it starts and every 6 hours while it is open. This version of the app cannot install updates itself. It shows a link to the release page.'}
+            {t('updates.privacy')} {status.mode === 'install' ? t('updates.scheduleInstall') : t('updates.scheduleNotify')}
           </p>
           <p>{describe(status)}</p>
           <div className="btn-row">
             <button className="btn" disabled={busy} onClick={() => void api.updates.check().then((s) => updateStore.set({ status: s }))}>
-              <RefreshCw size={15} /> Check now
+              <RefreshCw size={15} /> {t('updates.checkNow')}
             </button>
             {status.state === 'ready' && (
               <button className="btn primary" onClick={() => void restartAndInstall()}>
-                <RotateCw size={15} /> Restart and install
+                <RotateCw size={15} /> {t('updates.restartAndInstall')}
               </button>
             )}
             {status.state === 'available' && (
               <button className="btn primary" onClick={() => void api.updates.openRelease('new')}>
-                <Download size={15} /> Open release page
+                <Download size={15} /> {t('updates.openReleasePage')}
               </button>
             )}
           </div>

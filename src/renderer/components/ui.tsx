@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { t } from '../i18n';
 
 export function Modal(props: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; wide?: boolean; icon?: ReactNode }) {
   useEffect(() => {
@@ -15,7 +16,7 @@ export function Modal(props: { title: ReactNode; onClose: () => void; children: 
         <header>
           {props.icon}
           <h2>{props.title}</h2>
-          <button className="btn ghost icon" onClick={props.onClose} aria-label="Close">
+          <button className="btn ghost icon" onClick={props.onClose} aria-label={t('common.close')}>
             <X size={18} />
           </button>
         </header>

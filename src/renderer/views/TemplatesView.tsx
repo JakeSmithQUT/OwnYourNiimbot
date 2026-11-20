@@ -8,6 +8,7 @@ import { LabelPicker } from '../components/LabelPicker';
 import { activeModel, usePrinter } from '../state/printer';
 import { rollEditorSize, rollStore } from '../state/roll';
 import { Field, Modal, NumberInput } from '../components/ui';
+import { t } from '../i18n';
 
 function formatDate(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -28,20 +29,20 @@ function NewLabelDialog(props: { onClose: () => void }) {
   };
   return (
     <Modal
-      title="New label"
+      title={t('labels.new.title')}
       onClose={props.onClose}
       footer={
         <>
           <button className="btn" onClick={props.onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn primary" onClick={create}>
-            Create
+            {t('labels.new.create')}
           </button>
         </>
       }
     >
-      <Field label={`NIIMBOT roll for the ${model.name}`} hint={roll?.widthMm ? 'The roll in the printer is selected.' : undefined}>
+      <Field label={t('labels.new.roll', { model: model.name })} hint={roll?.widthMm ? t('labels.new.rollSelected') : undefined}>
         <LabelPicker
           model={model}
           widthMm={w}
@@ -55,10 +56,10 @@ function NewLabelDialog(props: { onClose: () => void }) {
         />
       </Field>
       <div className="field-row">
-        <Field label="Width">
+        <Field label={t('labels.new.width')}>
           <NumberInput unit="mm" min={5} max={300} value={w} onChange={setW} />
         </Field>
-        <Field label="Height">
+        <Field label={t('labels.new.height')}>
           <NumberInput unit="mm" min={5} max={500} value={h} onChange={setH} />
         </Field>
       </div>
@@ -79,42 +80,42 @@ export function TemplatesView() {
     void reload();
   }, []);
 
-  const open = (t: LabelTemplate) => {
+  const open = (tpl: LabelTemplate) => {
     if (!confirmDiscard()) return;
-    void openTemplate(t);
+    void openTemplate(tpl);
   };
 
-  const duplicate = async (t: LabelTemplate) => {
-    const copy = { ...t, id: newId(), name: `${t.name} copy`, createdAt: Date.now(), updatedAt: Date.now() };
+  const duplicate = async (tpl: LabelTemplate) => {
+    const copy = { ...tpl, id: newId(), name: t('labels.copyName', { name: tpl.name }), createdAt: Date.now(), updatedAt: Date.now() };
     await api.store.put('templates', copy.id, copy);
     await reload();
   };
 
-  const remove = async (t: LabelTemplate) => {
-    if (!window.confirm(`Delete "${t.name}"? You cannot undo this.`)) return;
-    await api.store.delete('templates', t.id);
-    if (appStore.get().template.id === t.id) appStore.set({ template: { ...appStore.get().template, id: '' } });
+  const remove = async (tpl: LabelTemplate) => {
+    if (!window.confirm(t('labels.deleteConfirm', { name: tpl.name }))) return;
+    await api.store.delete('templates', tpl.id);
+    if (appStore.get().template.id === tpl.id) appStore.set({ template: { ...appStore.get().template, id: '' } });
     await reload();
   };
 
-  const exportOne = async (t: LabelTemplate) => {
+  const exportOne = async (tpl: LabelTemplate) => {
     await api.files.save({
-      defaultName: `${t.name || 'label'}.oynlabel.json`,
-      filters: [{ name: 'Label file', extensions: ['json'] }],
-      data: JSON.stringify({ format: 'ownyourniimbot-label', version: 1, template: t }, null, 2),
+      defaultName: `${tpl.name || 'label'}.oynlabel.json`,
+      filters: [{ name: t('labels.fileType'), extensions: ['json'] }],
+      data: JSON.stringify({ format: 'ownyourniimbot-label', version: 1, template: tpl }, null, 2),
     });
   };
 
   const importFile = async () => {
-    const file = await api.files.open({ filters: [{ name: 'Label file', extensions: ['json'] }] });
+    const file = await api.files.open({ filters: [{ name: t('labels.fileType'), extensions: ['json'] }] });
     if (!file) return;
     try {
       const parsed = JSON.parse(file.data);
-      const t = validateTemplate(parsed?.template ?? parsed);
-      const copy = { ...t, id: newId(), updatedAt: Date.now() };
+      const tpl = validateTemplate(parsed?.template ?? parsed);
+      const copy = { ...tpl, id: newId(), updatedAt: Date.now() };
       await api.store.put('templates', copy.id, copy);
       await reload();
-      toast(`Imported "${copy.name}"`, 'success');
+      toast(t('labels.imported', { name: copy.name }), 'success');
     } catch (err) {
       toast((err as Error).message, 'error');
     }
@@ -124,14 +125,14 @@ export function TemplatesView() {
     <div className="page">
       <div className="btn-row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <h2>Saved labels</h2>
+          <h2>{t('labels.title')}</h2>
           <p className="lead" style={{ margin: 0 }}>
-            Labels are saved on this computer only.
+            {t('labels.lead')}
           </p>
         </div>
         <div className="btn-row">
           <button className="btn" onClick={() => void importFile()}>
-            <Upload size={15} /> Import
+            <Upload size={15} /> {t('labels.import')}
           </button>
           <button
             className="btn primary"
@@ -139,32 +140,32 @@ export function TemplatesView() {
               if (confirmDiscard()) setCreating(true);
             }}
           >
-            <FilePlus2 size={15} /> New label
+            <FilePlus2 size={15} /> {t('labels.newLabel')}
           </button>
         </div>
       </div>
 
       {items.length === 0 ? (
-        <div className="card empty">No saved labels yet. Create a label or start from an example.</div>
+        <div className="card empty">{t('labels.empty')}</div>
       ) : (
         <div className="template-grid">
-          {items.map((t) => (
-            <div key={t.id} className="template-card" onClick={() => open(t)}>
-              <div className="thumb">{isPreview(t.thumbnail) ? <img src={t.thumbnail} alt="" /> : <span className="muted">No preview</span>}</div>
+          {items.map((tpl) => (
+            <div key={tpl.id} className="template-card" onClick={() => open(tpl)}>
+              <div className="thumb">{isPreview(tpl.thumbnail) ? <img src={tpl.thumbnail} alt="" /> : <span className="muted">{t('labels.noPreview')}</span>}</div>
               <div className="meta" onClick={(e) => e.stopPropagation()}>
-                <div style={{ flex: 1, minWidth: 0 }} onClick={() => open(t)}>
-                  <div className="name">{t.name}</div>
+                <div style={{ flex: 1, minWidth: 0 }} onClick={() => open(tpl)}>
+                  <div className="name">{tpl.name}</div>
                   <small>
-                    {t.widthMm} × {t.heightMm} mm · {formatDate(t.updatedAt)}
+                    {tpl.widthMm} × {tpl.heightMm} mm · {formatDate(tpl.updatedAt)}
                   </small>
                 </div>
-                <button className="btn ghost small icon" title="Duplicate" onClick={() => void duplicate(t)}>
+                <button className="btn ghost small icon" title={t('labels.duplicate')} onClick={() => void duplicate(tpl)}>
                   <Copy size={14} />
                 </button>
-                <button className="btn ghost small icon" title="Export" onClick={() => void exportOne(t)}>
+                <button className="btn ghost small icon" title={t('labels.export')} onClick={() => void exportOne(tpl)}>
                   <Download size={14} />
                 </button>
-                <button className="btn ghost small icon danger" title="Delete" onClick={() => void remove(t)}>
+                <button className="btn ghost small icon danger" title={t('common.delete')} onClick={() => void remove(tpl)}>
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -175,11 +176,11 @@ export function TemplatesView() {
 
       <div className="card" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <strong>Start from a template</strong>
-          <div className="muted">The template library has labels for servers, cables, storage, food, retail, shipping and more.</div>
+          <strong>{t('labels.library.title')}</strong>
+          <div className="muted">{t('labels.library.text')}</div>
         </div>
         <button className="btn primary" onClick={() => appStore.set({ view: 'library' })}>
-          Open the template library
+          {t('labels.library.open')}
         </button>
       </div>
 
