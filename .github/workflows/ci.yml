@@ -24,6 +24,6 @@ jobs:
       - run: npm test
       - run: npm run build
       - name: Start-up test
-        run: xvfb-run -a npx electron . --no-sandbox
+        run: xvfb-run -a npx electron . --no-sandbox --disable-gpu
         env:
           OYN_SMOKE_TEST: smoke.png
