@@ -8,7 +8,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 // The production build gets a strict Content Security Policy. The dev server
 // does not, because React Fast Refresh adds an inline script.
 const CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:";
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'";
 
 function contentSecurityPolicy(): Plugin {
   return {
