@@ -18,6 +18,7 @@ import { oyn, type OynData } from './render';
 import { DEFAULT_IMAGE_SETTINGS, processImage, type ImageSettings } from './imageProcessing';
 import { formatDate, formatSerial, type SerialSettings } from './placeholders';
 import { mmToUnits, ptToUnits, UNITS_PER_MM } from './units';
+import { outsideArea, type PrintArea } from '../../printer/printArea';
 
 export const SERIAL_PROPS = ['oyn'];
 FabricObject.customProperties = ['oyn'];
@@ -923,6 +924,62 @@ export class EditorController {
 
   allObjects(): FabricObject[] {
     return this.canvas?.getObjects() ?? [];
+  }
+
+  // ---------- print area ----------
+
+  /** Elements that go outside the printable area. */
+  elementsOutside(area: PrintArea): FabricObject[] {
+    if (!area.clipped || !this.canvas) return [];
+    return this.canvas.getObjects().filter((o) => {
+      const r = o.getBoundingRect();
+      return outsideArea({ x: r.left / UNITS_PER_MM, y: r.top / UNITS_PER_MM, width: r.width / UNITS_PER_MM, height: r.height / UNITS_PER_MM }, area);
+    });
+  }
+
+  /**
+   * Makes all elements smaller by the same amount, if necessary, and moves
+   * them as little as possible so that they are inside the printable area.
+   * The layout stays the same. One undo step.
+   */
+  fitToArea(area: PrintArea): void {
+    const canvas = this.canvas;
+    if (!canvas || !area.clipped) return;
+    const objs = canvas.getObjects();
+    if (!objs.length) return;
+    canvas.discardActiveObject();
+    const rects = objs.map((o) => o.getBoundingRect());
+    const left = Math.min(...rects.map((r) => r.left));
+    const top = Math.min(...rects.map((r) => r.top));
+    const right = Math.max(...rects.map((r) => r.left + r.width));
+    const bottom = Math.max(...rects.map((r) => r.top + r.height));
+    // Keep a small margin, because the label can move a little in the printer.
+    const margin = mmToUnits(0.5);
+    const ax = mmToUnits(area.x) + margin;
+    const ay = mmToUnits(area.y) + margin;
+    const aw = mmToUnits(area.width) - 2 * margin;
+    const ah = mmToUnits(area.height) - 2 * margin;
+    const s = Math.min(1, aw / Math.max(1, right - left), ah / Math.max(1, bottom - top));
+    // Scale around the centre of the content, then move it into the area.
+    const cx = (left + right) / 2;
+    const cy = (top + bottom) / 2;
+    const nw = (right - left) * s;
+    const nh = (bottom - top) * s;
+    const dx = Math.min(Math.max(cx - nw / 2, ax), ax + aw - nw) - (cx - nw / 2);
+    const dy = Math.min(Math.max(cy - nh / 2, ay), ay + ah - nh) - (cy - nh / 2);
+    for (const o of objs) {
+      o.set({
+        left: cx + ((o.left ?? 0) - cx) * s + dx,
+        top: cy + ((o.top ?? 0) - cy) * s + dy,
+        scaleX: (o.scaleX ?? 1) * s,
+        scaleY: (o.scaleY ?? 1) * s,
+      });
+      if (s !== 1) this.normaliseScale(o);
+      o.setCoords();
+    }
+    canvas.requestRenderAll();
+    this.recordHistory();
+    this.emit();
   }
 
   isGroup(obj: FabricObject): obj is Group {

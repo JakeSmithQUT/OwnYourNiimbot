@@ -23,6 +23,7 @@ import { appStore, applyLabelSize, markDirty, toast } from '../state/app';
 import { activeModel, usePrinter } from '../state/printer';
 import { rememberRoll, rollStore } from '../state/roll';
 import { physicalSize } from '../../printer/labels';
+import { printArea } from '../../printer/printArea';
 import { LabelPicker } from './LabelPicker';
 import { LABEL_TYPE_NAMES } from '../../printer/protocol';
 import { Check, Field, NumberInput, Segmented, TextInput } from './ui';
@@ -506,8 +507,8 @@ function LabelProps() {
     appStore.set({ template: { ...appStore.get().template, ...patch } });
     markDirty();
   };
-  const maxHead = model.printWidthMm.max;
-  const across = model.printDirection === 90 || model.printDirection === 270 ? editor.heightMm : editor.widthMm;
+  const area = printArea(editor.widthMm, editor.heightMm, model, settings.flip180);
+  const outside = editor.elementsOutside(area);
   return (
     <>
       <div className="section-title">Label</div>
@@ -542,11 +543,24 @@ function LabelProps() {
           <NumberInput unit="mm" min={5} max={500} value={editor.heightMm} onChange={(v) => setSize(editor.widthMm, v)} />
         </Field>
       </div>
-      {maxHead && across > maxHead + 2 && (
-        <div className="notice warn">
-          The {model.name} prints up to {maxHead} mm across the label. Content outside that width is cut off.
-        </div>
-      )}
+      {area.clipped &&
+        (outside.length ? (
+          <div className="notice warn">
+            <div>
+              The {model.name} prints {Number(area.headMm.toFixed(1))} mm across this {Number((area.sideways ? editor.heightMm : editor.widthMm).toFixed(1))} mm label.{' '}
+              {outside.length === 1 ? '1 element goes' : `${outside.length} elements go`} outside the print area and will be cut off.
+              <div style={{ marginTop: 8 }}>
+                <button className="btn small" onClick={() => editor.fitToArea(area)}>
+                  Fit into the print area
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="muted print-area-hint">
+            The {model.name} prints {Number(area.headMm.toFixed(1))} mm across this label. The shaded parts do not print.
+          </p>
+        ))}
       <Field label="Label type">
         <select value={template.labelType} onChange={(e) => setTemplate({ labelType: Number(e.target.value) })}>
           {Object.entries(LABEL_TYPE_NAMES).map(([k, v]) => (

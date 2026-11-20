@@ -723,6 +723,41 @@ input[type='checkbox'] {
   border-radius: inherit;
 }
 
+.print-area {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.print-shade {
+  position: absolute;
+  background: repeating-linear-gradient(135deg, rgba(220, 38, 38, 0.16) 0 6px, rgba(220, 38, 38, 0.06) 6px 12px);
+}
+
+.print-edge {
+  position: absolute;
+  outline: 1px dashed rgba(220, 38, 38, 0.75);
+}
+
+.print-area-hint {
+  font-size: 12px;
+  margin: -4px 0 12px;
+}
+
+.preview-frame {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.small-note {
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+
 .size-badge {
   position: absolute;
   top: -24px;

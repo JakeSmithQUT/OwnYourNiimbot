@@ -18,6 +18,8 @@ export interface Settings {
   densityByModel: Record<string, number>;
   /** Give a blank label the size of the roll that is loaded in the printer. */
   autoLabelSize: boolean;
+  /** Shade the parts of the label that the print head cannot reach. */
+  printArea: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -30,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   snap: true,
   densityByModel: {},
   autoLabelSize: true,
+  printArea: true,
 };
 
 export interface AppState {

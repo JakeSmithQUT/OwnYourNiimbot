@@ -12,6 +12,7 @@ import {
   Calendar,
   Circle,
   Copy,
+  Crop,
   Grid3x3,
   Hash,
   Image as ImageIcon,
@@ -45,6 +46,8 @@ import { pixelsPerMm } from '../../printer/models';
 import { rollEditorSize, rollStore, applyRollSize } from '../state/roll';
 import { SOURCE_TEXT } from '../components/LabelPicker';
 import { ElementMenu } from '../components/ElementMenu';
+import { PrintAreaOverlay } from '../components/PrintAreaOverlay';
+import { printArea } from '../../printer/printArea';
 
 export function useEditor(): number {
   return useVersion((fn) => editor.subscribe(fn), () => editor.version);
@@ -153,6 +156,14 @@ function Toolbar() {
       <button className={`btn ghost icon${settings.snap ? ' active' : ''}`} title="Snap to grid" onClick={() => updateSettings({ snap: !settings.snap })}>
         <Grid3x3 size={16} />
       </button>
+      <button
+        className={`btn ghost icon${settings.printArea ? ' active' : ''}`}
+        title="Show the print area"
+        aria-pressed={settings.printArea}
+        onClick={() => updateSettings({ printArea: !settings.printArea })}
+      >
+        <Crop size={16} />
+      </button>
       <div className="sep" />
       <button className="btn ghost icon" title="Align left" disabled={!active} onClick={() => editor.align('left')}>
         <AlignStartVertical size={17} />
@@ -220,10 +231,11 @@ function RollSuggestion() {
 function Stage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const { template } = appStore.use();
+  const { template, settings } = appStore.use();
   usePrinter();
   useEditor();
   const model = activeModel();
+  const area = printArea(editor.widthMm, editor.heightMm, model, settings.flip180);
 
   useLayoutEffect(() => {
     if (!canvasRef.current) return;
@@ -299,6 +311,7 @@ function Stage() {
               {editor.widthMm} × {editor.heightMm} mm
             </span>
             <canvas ref={canvasRef} />
+            {settings.printArea && <PrintAreaOverlay widthMm={editor.widthMm} heightMm={editor.heightMm} area={area} />}
             <span className="feed-hint">{rotated ? 'Printed sideways on this model' : ''}</span>
           </div>
         </div>

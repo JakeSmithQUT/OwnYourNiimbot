@@ -9,6 +9,8 @@ import { LABEL_TYPE_NAMES } from '../../printer/protocol';
 import { MODELS, PRINT_VARIANTS, printheadDots, type PrintVariant } from '../../printer/models';
 import { MAX_LABELS_PER_JOB, type PrintPage, type PrintProgress } from '../../printer/client';
 import { api, newId } from '../api';
+import { PrintAreaOverlay } from './PrintAreaOverlay';
+import { printArea } from '../../printer/printArea';
 import { rollEditorSize, rollStore } from '../state/roll';
 
 const BUILT_INS = new Set(['date', 'time', 'datetime', 'index']);
@@ -195,7 +197,11 @@ export function PrintDialog(props: { onClose: () => void }) {
       <div className="print-layout">
         <div>
           <div className="preview-box">
-            <div ref={previewRef} />
+            <div className="preview-frame">
+              <div ref={previewRef} />
+              <PrintAreaOverlay widthMm={template.widthMm} heightMm={template.heightMm} area={printArea(template.widthMm, template.heightMm, model, flip)} />
+            </div>
+            {printArea(template.widthMm, template.heightMm, model, flip).clipped && <p className="muted small-note">The shaded parts do not print.</p>}
             {records.length > 1 && (
               <div className="btn-row">
                 <button className="btn small icon" disabled={previewIndex === 0} onClick={() => setPreviewIndex(previewIndex - 1)}>
