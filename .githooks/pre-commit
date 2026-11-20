@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks commits that contain app packages, keys or tokens.
+# Enable with: git config core.hooksPath .githooks
+exec node scripts/check-secrets.mjs --staged

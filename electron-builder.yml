@@ -1,0 +1,77 @@
+appId: io.github.jakesmithqut.ownyourniimbot
+productName: OwnYourNiimbot
+copyright: Copyright © 2026 Jake Smith
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - package.json
+  - "!**/*.map"
+
+asar: true
+npmRebuild: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+    - target: portable
+      arch: [x64]
+  icon: build/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: OwnYourNiimbot
+  artifactName: ${productName}-${version}-windows-${arch}-setup.${ext}
+
+portable:
+  artifactName: ${productName}-${version}-windows-${arch}-portable.${ext}
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+  category: public.app-category.productivity
+  icon: build/icon.png
+  identity: "-"
+  hardenedRuntime: false
+  extendInfo:
+    NSBluetoothAlwaysUsageDescription: OwnYourNiimbot uses Bluetooth to connect to your label printer.
+    NSBluetoothPeripheralUsageDescription: OwnYourNiimbot uses Bluetooth to connect to your label printer.
+
+dmg:
+  artifactName: ${productName}-${version}-macos-${arch}.${ext}
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64, arm64]
+    - target: deb
+      arch: [x64, arm64]
+  category: Office
+  icon: build/icon.png
+  maintainer: Jake Smith
+  synopsis: Offline label designer for NIIMBOT printers
+  description: Design and print labels on NIIMBOT label printers over Bluetooth or USB. No account and no internet connection are necessary.
+
+appImage:
+  artifactName: ${productName}-${version}-linux-${arch}.${ext}
+
+deb:
+  artifactName: ${productName}-${version}-linux-${arch}.${ext}
+  depends:
+    - libnotify4
+    - libxtst6
+    - libnss3
+
+publish: null
