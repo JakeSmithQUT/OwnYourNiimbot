@@ -13,7 +13,7 @@ import {
   util,
   type TPointerEventInfo,
 } from 'fabric';
-import { LabelBarcode, LabelTable, barcodeFormat } from './objects';
+import { LabelBarcode, LabelTable, barcodeFormat, renderBars } from './objects';
 import { oyn, type OynData } from './render';
 import { DEFAULT_IMAGE_SETTINGS, processImage, type ImageSettings } from './imageProcessing';
 import { formatDate, formatSerial, type SerialSettings } from './placeholders';
@@ -34,6 +34,48 @@ FabricObject.ownDefaults.borderScaleFactor = 1.5;
 
 type Listener = () => void;
 
+/** Element types that can replace another element. */
+export type ElementKind =
+  | 'text'
+  | 'barcode'
+  | 'qrcode'
+  | 'image'
+  | 'date'
+  | 'serial'
+  | 'table'
+  | 'rect'
+  | 'rounded'
+  | 'circle'
+  | 'line'
+  | 'vline'
+  | 'symbol';
+
+/** A right-click on an element of the label. The position is in window coordinates. */
+export interface ContextMenuRequest {
+  x: number;
+  y: number;
+  target: FabricObject;
+}
+
+/** Image or symbol for a replacement. Other element types need no source. */
+export interface ReplaceSource {
+  dataUrl?: string;
+  svg?: string;
+  name?: string;
+}
+
+/** Centre, size and rotation of an element in label units. */
+interface Box {
+  center: Point;
+  w: number;
+  h: number;
+  angle: number;
+}
+
+const TEXT_STYLE = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'underline', 'linethrough', 'textAlign', 'fill', 'lineHeight', 'charSpacing'] as const;
+
+const DEFAULT_SERIAL: SerialSettings = { start: 1, step: 1, digits: 4, prefix: 'SN-', suffix: '' };
+
 export type AlignOp = 'left' | 'hcenter' | 'right' | 'top' | 'vcenter' | 'bottom';
 
 const HISTORY_LIMIT = 100;
@@ -51,6 +93,7 @@ export class EditorController {
 
   private listeners = new Set<Listener>();
   private contentListeners = new Set<Listener>();
+  private menuListeners = new Set<(req: ContextMenuRequest) => void>();
   private history: string[] = [];
   private historyIndex = -1;
   private suspendHistory = false;
@@ -67,6 +110,12 @@ export class EditorController {
   onContentChange(fn: Listener): () => void {
     this.contentListeners.add(fn);
     return () => this.contentListeners.delete(fn);
+  }
+
+  /** Called when the user right-clicks an element. */
+  onContextMenu(fn: (req: ContextMenuRequest) => void): () => void {
+    this.menuListeners.add(fn);
+    return () => this.menuListeners.delete(fn);
   }
 
   /** Notifies React that something changed. */
@@ -112,6 +161,17 @@ export class EditorController {
     canvas.on('after:render', () => this.drawGuides());
     canvas.on('mouse:dblclick', (e: TPointerEventInfo) => {
       if (e.target instanceof LabelTable || e.target instanceof LabelBarcode) this.emit();
+    });
+    canvas.on('contextmenu', ({ e, target }) => {
+      if (!target || (target as { isEditing?: boolean }).isEditing) return;
+      // Select the element under the pointer, unless it is part of the current selection.
+      if (canvas.getActiveObject() !== target) {
+        canvas.setActiveObject(target);
+        canvas.requestRenderAll();
+        this.emit();
+      }
+      const { clientX, clientY } = e as MouseEvent;
+      for (const fn of this.menuListeners) fn({ x: clientX, y: clientY, target });
     });
     this.applySize();
   }
@@ -310,6 +370,12 @@ export class EditorController {
   }
 
   addText(text = 'Text', data: OynData = { kind: 'text' }): Textbox {
+    const box = this.newText(text, data);
+    this.place(box);
+    return box;
+  }
+
+  private newText(text: string, data: OynData): Textbox {
     const { w } = this.labelUnits;
     const box = new Textbox(text, {
       width: Math.min(w * 0.8, Math.max(80, text.length * this.defaultFontSize() * 0.6)),
@@ -321,7 +387,6 @@ export class EditorController {
       lineHeight: 1.1,
     });
     (box as unknown as { oyn: OynData }).oyn = data;
-    this.place(box);
     return box;
   }
 
@@ -329,11 +394,17 @@ export class EditorController {
     return this.addText(formatDate(new Date(), format), { kind: 'datetime', format, offsetDays: 0 });
   }
 
-  addSerial(serial: SerialSettings = { start: 1, step: 1, digits: 4, prefix: 'SN-', suffix: '' }): Textbox {
+  addSerial(serial: SerialSettings = { ...DEFAULT_SERIAL }): Textbox {
     return this.addText(formatSerial(serial, 0), { kind: 'serial', serial });
   }
 
   addBarcode(format = 'code128', value?: string): LabelBarcode {
+    const barcode = this.newBarcode(format, value);
+    this.place(barcode);
+    return barcode;
+  }
+
+  private newBarcode(format: string, value?: string): LabelBarcode {
     const f = barcodeFormat(format);
     const { w, h } = this.labelUnits;
     const size = Math.min(w, h) * 0.7;
@@ -345,11 +416,16 @@ export class EditorController {
       textSize: Math.max(ptToUnits(5), Math.min(ptToUnits(9), h * 0.12)),
       showText: !f.twoD,
     });
-    this.place(barcode);
     return barcode;
   }
 
   addRect(rounded = false): Rect {
+    const rect = this.newRect(rounded);
+    this.place(rect);
+    return rect;
+  }
+
+  private newRect(rounded: boolean): Rect {
     const { w, h } = this.labelUnits;
     const rect = new Rect({
       width: w * 0.5,
@@ -362,33 +438,47 @@ export class EditorController {
       ry: rounded ? 20 : 0,
     });
     (rect as unknown as { oyn: OynData }).oyn = { kind: 'shape' };
-    this.place(rect);
     return rect;
   }
 
   addEllipse(): Ellipse {
+    const el = this.newEllipse();
+    this.place(el);
+    return el;
+  }
+
+  private newEllipse(): Ellipse {
     const { w, h } = this.labelUnits;
     const r = Math.min(w, h) * 0.25;
     const el = new Ellipse({ rx: r, ry: r, fill: 'transparent', stroke: '#000000', strokeWidth: 4, strokeUniform: true });
     (el as unknown as { oyn: OynData }).oyn = { kind: 'shape' };
-    this.place(el);
     return el;
   }
 
   addLine(vertical = false): Line {
     const { w, h } = this.labelUnits;
-    const len = vertical ? h * 0.7 : w * 0.7;
+    const line = this.newLine(vertical, vertical ? h * 0.7 : w * 0.7);
+    this.place(line);
+    return line;
+  }
+
+  private newLine(vertical: boolean, len: number): Line {
     const line = new Line(vertical ? [0, 0, 0, len] : [0, 0, len, 0], {
       stroke: '#000000',
       strokeWidth: 4,
       strokeUniform: true,
     });
     (line as unknown as { oyn: OynData }).oyn = { kind: 'shape' };
-    this.place(line);
     return line;
   }
 
   addTable(rows = 3, cols = 2): LabelTable {
+    const table = this.newTable(rows, cols);
+    this.place(table);
+    return table;
+  }
+
+  private newTable(rows: number, cols: number): LabelTable {
     const { w, h } = this.labelUnits;
     const table = new LabelTable({
       rows,
@@ -398,14 +488,20 @@ export class EditorController {
       fontSize: this.defaultFontSize() * 0.8,
     });
     table.cells = Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => (c === 0 ? `Item ${r + 1}` : '')));
-    this.place(table);
     return table;
   }
 
   async addImageFromDataUrl(dataUrl: string, settings: ImageSettings = DEFAULT_IMAGE_SETTINGS): Promise<FabricImage> {
-    const probe = await util.loadImage(dataUrl);
     const { w, h } = this.labelUnits;
-    const scale = Math.min((w * 0.8) / probe.width, (h * 0.8) / probe.height);
+    const img = await this.newImage(dataUrl, settings, w * 0.8, h * 0.8);
+    this.place(img);
+    return img;
+  }
+
+  /** Loads an image, scaled to fit in maxW × maxH, and converts it at print resolution. */
+  private async newImage(dataUrl: string, settings: ImageSettings, maxW: number, maxH: number): Promise<FabricImage> {
+    const probe = await util.loadImage(dataUrl);
+    const scale = Math.min(maxW / probe.width, maxH / probe.height);
     const targetW = probe.width * scale;
     const targetH = probe.height * scale;
     const processed = await processImage(dataUrl, (targetW / UNITS_PER_MM) * this.dotsPerMm, (targetH / UNITS_PER_MM) * this.dotsPerMm, settings);
@@ -413,7 +509,6 @@ export class EditorController {
     img.set({ imageSmoothing: false });
     img.scaleToWidth(targetW);
     (img as unknown as { oyn: OynData }).oyn = { kind: 'image', original: dataUrl, settings: { ...settings } };
-    this.place(img);
     return img;
   }
 
@@ -435,17 +530,196 @@ export class EditorController {
   }
 
   async addSvg(svg: string, name: string): Promise<FabricObject | undefined> {
-    const { objects, options } = await loadSVGFromString(svg);
-    const parts = objects.filter((o): o is FabricObject => Boolean(o));
-    if (!parts.length) return undefined;
-    const group = util.groupSVGElements(parts, options) as FabricObject;
+    const group = await this.newSvg(svg, name);
+    if (!group) return undefined;
     const { w, h } = this.labelUnits;
     const size = Math.min(w, h) * 0.5;
     group.scaleToWidth(size);
     if (group.getScaledHeight() > size) group.scaleToHeight(size);
-    (group as unknown as { oyn: OynData }).oyn = { kind: 'icon', name };
     this.place(group);
     return group;
+  }
+
+  private async newSvg(svg: string, name: string): Promise<FabricObject | undefined> {
+    const { objects, options } = await loadSVGFromString(svg);
+    const parts = objects.filter((o): o is FabricObject => Boolean(o));
+    if (!parts.length) return undefined;
+    const group = util.groupSVGElements(parts, options) as FabricObject;
+    (group as unknown as { oyn: OynData }).oyn = { kind: 'icon', name };
+    return group;
+  }
+
+  // ---------- replace ----------
+
+  /** The element type of an object, as the replace menu shows it. */
+  kindOf(obj: FabricObject): ElementKind | undefined {
+    const kind = oyn(obj).kind;
+    if (obj instanceof Textbox) return kind === 'datetime' ? 'date' : kind === 'serial' ? 'serial' : 'text';
+    if (obj instanceof LabelBarcode) {
+      if (obj.format === 'qrcode') return 'qrcode';
+      return barcodeFormat(obj.format).twoD ? undefined : 'barcode';
+    }
+    if (obj instanceof LabelTable) return 'table';
+    if (obj instanceof FabricImage && kind === 'image') return 'image';
+    if (obj instanceof Rect) return (obj.rx ?? 0) > 0 ? 'rounded' : 'rect';
+    if (obj instanceof Ellipse) return 'circle';
+    if (obj instanceof Line) return Math.abs((obj.x2 ?? 0) - (obj.x1 ?? 0)) < Math.abs((obj.y2 ?? 0) - (obj.y1 ?? 0)) ? 'vline' : 'line';
+    if (kind === 'icon') return 'symbol';
+    return undefined;
+  }
+
+  /**
+   * Replaces an element with a new element of a different type. The new element
+   * gets the same position, size, rotation and layer. Text and code values are
+   * kept where the new type can show them. The change is one undo step.
+   */
+  async replace(old: FabricObject, kind: ElementKind, source: ReplaceSource = {}): Promise<FabricObject | undefined> {
+    const canvas = this.canvas;
+    if (!canvas || old instanceof ActiveSelection || oyn(old).locked) return undefined;
+    const box = this.usableBox(this.boxOf(old), kind);
+    const words = this.wordsOf(old);
+    let obj: FabricObject | undefined;
+    switch (kind) {
+      case 'text':
+        obj = this.newText(words ?? (old instanceof Textbox ? old.text : undefined) ?? 'Text', { kind: 'text' });
+        break;
+      case 'date':
+        obj = this.newText(formatDate(new Date(), 'DD/MM/YYYY'), { kind: 'datetime', format: 'DD/MM/YYYY', offsetDays: 0 });
+        break;
+      case 'serial': {
+        const serial = { ...DEFAULT_SERIAL };
+        obj = this.newText(formatSerial(serial, 0), { kind: 'serial', serial });
+        break;
+      }
+      case 'barcode':
+        obj = this.newBarcode('code128', codeValue('code128', words));
+        break;
+      case 'qrcode':
+        obj = this.newBarcode('qrcode', codeValue('qrcode', words));
+        break;
+      case 'table':
+        obj = this.newTable(3, 2);
+        break;
+      case 'rect':
+      case 'rounded':
+        obj = this.newRect(kind === 'rounded');
+        break;
+      case 'circle':
+        obj = this.newEllipse();
+        break;
+      case 'line':
+      case 'vline':
+        obj = this.newLine(kind === 'vline', kind === 'vline' ? box.h : box.w);
+        break;
+      case 'image':
+        if (source.dataUrl) obj = await this.newImage(source.dataUrl, DEFAULT_IMAGE_SETTINGS, box.w, box.h);
+        break;
+      case 'symbol':
+        if (source.svg) obj = await this.newSvg(source.svg, source.name ?? 'symbol');
+        break;
+    }
+    if (!obj) return undefined;
+    if (obj instanceof Textbox && old instanceof Textbox) {
+      for (const key of TEXT_STYLE) obj.set(key, old[key]);
+    }
+    this.fitInto(obj, box, obj instanceof Textbox && old instanceof Textbox ? old.fontSize : undefined);
+    // The label can change while an image loads.
+    if (this.canvas !== canvas) return undefined;
+    const index = canvas.getObjects().indexOf(old);
+    if (index < 0) return undefined;
+    canvas.discardActiveObject();
+    canvas.remove(old);
+    canvas.insertAt(index, obj);
+    canvas.setActiveObject(obj);
+    canvas.requestRenderAll();
+    this.emit();
+    return obj;
+  }
+
+  /** Text that a replacement can keep: the words of a text element or the value of a code. */
+  private wordsOf(obj: FabricObject): string | undefined {
+    if (obj instanceof LabelBarcode) return obj.value || undefined;
+    const kind = oyn(obj).kind;
+    if (obj instanceof Textbox && kind !== 'datetime' && kind !== 'serial') return obj.text?.trim() || undefined;
+    return undefined;
+  }
+
+  private boxOf(obj: FabricObject): Box {
+    const { w: labelW, h: labelH } = this.labelUnits;
+    let w = obj.getScaledWidth();
+    let h = obj.getScaledHeight();
+    // A line is almost flat. Give the replacement a size that it can use.
+    const min = mmToUnits(2);
+    if (h < min) h = Math.min(Math.max(min, w * 0.25), labelH * 0.5);
+    if (w < min) w = Math.min(Math.max(min, h * 0.25), labelW * 0.5);
+    return { center: obj.getCenterPoint(), w, h, angle: obj.angle ?? 0 };
+  }
+
+  /**
+   * Makes a flat box taller for element types that need area. For example, a
+   * QR code that replaces one line of text gets a usable size.
+   */
+  private usableBox(box: Box, kind: ElementKind): Box {
+    const { w: labelW, h: labelH } = this.labelUnits;
+    const area = Math.min(labelW, labelH) * 0.6;
+    let { w, h } = box;
+    if (kind === 'barcode') {
+      h = Math.max(h, Math.min(labelH * 0.4, w * 0.5));
+    } else if (kind === 'qrcode' || kind === 'image' || kind === 'symbol' || kind === 'table' || kind === 'circle') {
+      if (h < w) h = Math.max(h, Math.min(w, area));
+      else w = Math.max(w, Math.min(h, area));
+    }
+    return { ...box, w, h };
+  }
+
+  /** Sizes the new element to the box, then puts it at the centre of the box with the same rotation. */
+  private fitInto(obj: FabricObject, box: Box, fontSize?: number): void {
+    const { w, h } = box;
+    if (obj instanceof Textbox) {
+      // Start from the font size of the old text, or from the box height. Make it smaller until the text fits.
+      const minSize = ptToUnits(5);
+      let size = Math.max(minSize, Math.min(fontSize ?? h / 1.25, ptToUnits(48)));
+      obj.set({ fontSize: size, width: w });
+      obj.initDimensions();
+      while (size > minSize && (obj.height > h * 1.05 || obj.width > w * 1.01)) {
+        size = Math.max(minSize, size * 0.92);
+        obj.set({ fontSize: size, width: w });
+        obj.initDimensions();
+      }
+    } else if (obj instanceof LabelBarcode) {
+      if (barcodeFormat(obj.format).twoD) {
+        const side = Math.min(w, h);
+        obj.set({ width: side, height: side });
+      } else {
+        obj.set({ width: w, height: h, textSize: Math.max(ptToUnits(5), Math.min(ptToUnits(9), h * 0.18)) });
+      }
+    } else if (obj instanceof LabelTable) {
+      obj.set({ width: w, height: h, fontSize: Math.max(ptToUnits(4), Math.min(obj.fontSize, (h / obj.rows) * 0.55)) });
+    } else if (obj instanceof Rect) {
+      const sw = obj.strokeWidth ?? 0;
+      obj.set({ width: Math.max(1, w - sw), height: Math.max(1, h - sw) });
+    } else if (obj instanceof Ellipse) {
+      const r = Math.max(1, Math.min(w, h) / 2 - (obj.strokeWidth ?? 0) / 2);
+      obj.set({ rx: r, ry: r });
+    } else if (!(obj instanceof Line)) {
+      // Image or symbol: keep the aspect ratio and fit inside the box.
+      const s = Math.min(w / (obj.width || 1), h / (obj.height || 1));
+      obj.set({ scaleX: s, scaleY: s });
+    }
+    obj.set({ angle: box.angle });
+    obj.setPositionByOrigin(box.center, 'center', 'center');
+    obj.setCoords();
+    // Move the element back onto the label if it is now bigger than the old one.
+    const { w: labelW, h: labelH } = this.labelUnits;
+    const r = obj.getBoundingRect();
+    let dx = 0;
+    let dy = 0;
+    if (r.width <= labelW) dx = r.left < 0 ? -r.left : r.left + r.width > labelW ? labelW - r.left - r.width : 0;
+    if (r.height <= labelH) dy = r.top < 0 ? -r.top : r.top + r.height > labelH ? labelH - r.top - r.height : 0;
+    if (dx || dy) {
+      obj.set({ left: (obj.left ?? 0) + dx, top: (obj.top ?? 0) + dy });
+      obj.setCoords();
+    }
   }
 
   // ---------- edit operations ----------
@@ -654,6 +928,14 @@ export class EditorController {
   isGroup(obj: FabricObject): obj is Group {
     return obj instanceof Group;
   }
+}
+
+/** A value for a new code: the old text if the format can encode it, or else the sample value. */
+function codeValue(format: string, text: string | undefined): string {
+  const f = barcodeFormat(format);
+  if (!text) return f.sample;
+  const value = f.twoD ? text : text.replace(/\s*\n\s*/g, ' ');
+  return renderBars(format, value, 'M').error ? f.sample : value;
 }
 
 export const editor = new EditorController();

@@ -40,22 +40,14 @@ import { activeModel, usePrinter } from '../state/printer';
 import { PropertiesPanel } from '../components/PropertiesPanel';
 import { ICONS, iconSvg } from '../editor/icons';
 import { oyn } from '../editor/render';
-import { api } from '../api';
+import { pickImage } from '../editor/pickImage';
 import { pixelsPerMm } from '../../printer/models';
 import { rollEditorSize, rollStore, applyRollSize } from '../state/roll';
 import { SOURCE_TEXT } from '../components/LabelPicker';
+import { ElementMenu } from '../components/ElementMenu';
 
 export function useEditor(): number {
   return useVersion((fn) => editor.subscribe(fn), () => editor.version);
-}
-
-const IMAGE_TYPES: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
-
-export async function pickImage(): Promise<string | null> {
-  const file = await api.files.open({ filters: [{ name: 'Images', extensions: Object.keys(IMAGE_TYPES) }], binary: true });
-  if (!file) return null;
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'png';
-  return `data:${IMAGE_TYPES[ext] ?? 'image/png'};base64,${file.data}`;
 }
 
 function Sidebar() {
@@ -292,9 +284,10 @@ function Stage() {
           {model.name} · {model.dpi} dpi · print head {model.printWidthMm.max ?? '?'} mm
         </span>
         <span>
-          <kbd>Ctrl</kbd> + scroll to zoom · <kbd>Shift</kbd> + arrows to move 5 mm
+          Right-click for more actions · <kbd>Ctrl</kbd> + scroll to zoom · <kbd>Shift</kbd> + arrows to move 5 mm
         </span>
       </div>
+      <ElementMenu />
     </div>
   );
 }
