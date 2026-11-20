@@ -24,6 +24,8 @@ Typical flow:
 3. Call preview_label and look at the image. It shows the exact dots that the printer prints.
 4. Call print_label. The user may be asked to approve the print in the app.
 
+Print area: the print head can be narrower than the label, most often on printers that feed the label sideways (for example the D110 and H1S with 15 mm rolls). get_status, list_label_sizes and every label result give print_area_mm: the rectangle that prints, in mm from the top-left corner of the label. Keep all text, codes and shapes inside it. The automatic layout for "lines" and "code" already stays inside it. With "elements", place them inside print_area_mm yourself. A result with outside_print_area lists elements that will be cut off: fix them before you print. Grey parts of a preview image do not print.
+
 Sizes are in millimetres. Width and height are the label as the user sees it on screen. Prefer the loaded roll size (use_loaded_roll) when a roll is detected. Text that does not set size_pt is sized automatically to fill its box. Thermal labels print black only, so avoid tiny text (under 5 pt) and thin lines (under 0.3 mm).`;
 
 const mm = z.number().min(-50).max(500);
@@ -148,7 +150,7 @@ export function registerTools(server: McpServer, bridge: ToolBridge): void {
     {
       title: 'Make a label',
       description:
-        'Makes a label from your own layout. Use "lines" (with an optional "code") for a quick stacked layout, or "elements" with positions in mm for full control. Returns a label_id and a preview image.',
+        'Makes a label from your own layout. Use "lines" (with an optional "code") for a quick stacked layout inside the print area, or "elements" with positions in mm for full control (keep them inside print_area_mm from get_status). Returns a label_id, the print area, any elements outside it and a preview image.',
       inputSchema: {
         name: z.string().max(120).optional(),
         use_loaded_roll: z.boolean().optional().describe('Use the size of the roll in the printer. Default true when no size is given.'),
@@ -202,7 +204,7 @@ export function registerTools(server: McpServer, bridge: ToolBridge): void {
     'preview_label',
     {
       title: 'Preview a label',
-      description: 'Returns an image of a label as the printer will print it. Pass "record" to fill {{fields}} with values.',
+      description: 'Returns an image of a label as the printer will print it, with the parts outside the print area in grey, and lists elements that go outside print_area_mm. Pass "record" to fill {{fields}} with values.',
       inputSchema: { label_id: labelId, record: record.optional() },
       annotations: { readOnlyHint: true },
     },

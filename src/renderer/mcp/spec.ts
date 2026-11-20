@@ -5,6 +5,7 @@
 import { Ellipse, Line } from 'fabric';
 import { barcode, box, datamatrix, date, icon, qr, rect, serial, table, text, type Part, type TextOptions } from '../templates/layout';
 import { area, stack, withCode, type Line as KitLine } from '../templates/kit';
+import type { Box } from '../templates/layout';
 import { ICONS, iconSvg } from '../editor/icons';
 import { emptyTemplate, type LabelTemplate } from '../editor/template';
 import { validateTemplate } from '../editor/validate';
@@ -139,11 +140,21 @@ function elementParts(e: SpecElement): Part[] {
   }
 }
 
-/** Builds and checks a label of the given size from a spec. */
-export async function buildFromSpec(spec: LabelSpec, widthMm: number, heightMm: number, defaultType: number): Promise<LabelTemplate> {
+/**
+ * Builds and checks a label of the given size from a spec. `printable` is the
+ * part of the label that the printer can reach. The automatic layout for
+ * "lines" and "code" stays inside it. Elements keep the positions they give.
+ */
+export async function buildFromSpec(
+  spec: LabelSpec,
+  widthMm: number,
+  heightMm: number,
+  defaultType: number,
+  printable?: { x: number; y: number; width: number; height: number },
+): Promise<LabelTemplate> {
   await loadBundledFonts();
   const parts: Part[] = [];
-  const a = area(widthMm, heightMm);
+  const a: Box = printable ? offsetBox(area(printable.width, printable.height), printable.x, printable.y) : area(widthMm, heightMm);
   if (spec.lines?.length) {
     const lines: KitLine[] = spec.lines.map((l) => ({ t: l.text, weight: l.weight, bold: l.bold, italic: l.italic, font: l.font, align: l.align ?? 'center', invert: l.invert }));
     if (spec.code) {
@@ -163,6 +174,10 @@ export async function buildFromSpec(spec: LabelSpec, widthMm: number, heightMm: 
   t.name = spec.name?.trim() || 'Label from assistant';
   t.canvas = { version: '7', objects: objects.map((o) => o.toObject(['oyn'])) };
   return validateTemplate(t);
+}
+
+function offsetBox(b: Box, dx: number, dy: number): Box {
+  return { x: b.x + dx, y: b.y + dy, w: b.w, h: b.h };
 }
 
 /** Replaces text in text boxes, barcodes, QR codes and tables. */

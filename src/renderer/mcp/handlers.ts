@@ -15,11 +15,14 @@ import { ICONS } from '../editor/icons';
 import { DESIGNS } from '../templates/catalogue';
 import { buildTemplate, fitFor } from '../templates/materialise';
 import { compatibleLabels, editorSize, labelName } from '../../printer/labels';
-import { printheadDots } from '../../printer/models';
+import { pixelsPerMm, printheadDots } from '../../printer/models';
 import { batteryPercent, type PrintPage } from '../../printer/client';
 import { LABEL_TYPE_NAMES } from '../../printer/protocol';
 import type { HistoryEntry } from '../components/PrintDialog';
 import { buildFromSpec, replaceText, type LabelSpec } from './spec';
+import { util, type FabricObject } from 'fabric';
+import { outsideArea, printArea, type PrintArea } from '../../printer/printArea';
+import { UNITS_PER_MM } from '../editor/units';
 
 interface Result {
   data?: unknown;
@@ -60,6 +63,51 @@ function hasSerial(t: LabelTemplate): boolean {
   return JSON.stringify(t.canvas).includes('"kind":"serial"');
 }
 
+const r1 = (v: number) => Math.round(v * 10) / 10;
+
+/** The printable area of a label size on the active printer, with the "Turn the print 180°" setting. */
+function areaFor(widthMm: number, heightMm: number): PrintArea {
+  return printArea(widthMm, heightMm, activeModel(), appStore.get().settings.flip180);
+}
+
+function areaData(a: PrintArea) {
+  return {
+    print_area_mm: { x: r1(a.x), y: r1(a.y), width: r1(a.width), height: r1(a.height) },
+    whole_label_prints: !a.clipped,
+  };
+}
+
+/** Elements of a label that go outside the printable area, with a short description of each. */
+async function outsideElements(t: LabelTemplate, a: PrintArea): Promise<{ index: number; type: string; text?: string }[]> {
+  if (!a.clipped || !t.canvas.objects?.length) return [];
+  const objects = (await util.enlivenObjects(t.canvas.objects)) as FabricObject[];
+  const out: { index: number; type: string; text?: string }[] = [];
+  objects.forEach((o, index) => {
+    const r = o.getBoundingRect();
+    const rect = { x: r.left / UNITS_PER_MM, y: r.top / UNITS_PER_MM, width: r.width / UNITS_PER_MM, height: r.height / UNITS_PER_MM };
+    if (!outsideArea(rect, a)) return;
+    const raw = o as unknown as { text?: string; value?: string };
+    const text = (raw.text ?? raw.value)?.slice(0, 40);
+    out.push({ index, type: o.type, ...(text ? { text } : {}) });
+  });
+  return out;
+}
+
+/** The print area of a label and the elements that go outside it, for the tool results. */
+async function areaReport(t: LabelTemplate) {
+  const a = areaFor(t.widthMm, t.heightMm);
+  const outside = await outsideElements(t, a);
+  return {
+    ...areaData(a),
+    ...(outside.length
+      ? {
+          outside_print_area: outside,
+          warning: `${outside.length} element(s) go outside print_area_mm and will be cut off. Move or resize them so that they are inside print_area_mm, or make the label again with lines (the automatic layout stays inside the print area).`,
+        }
+      : {}),
+  };
+}
+
 function info(id: string, t: LabelTemplate) {
   const model = activeModel();
   return {
@@ -79,7 +127,20 @@ function info(id: string, t: LabelTemplate) {
 async function preview(t: LabelTemplate, record?: Record<string, string>): Promise<string> {
   const model = activeModel();
   const { preview: mono } = await buildPrintImage(t, model, { index: 0, row: record, now: new Date() }, { threshold: appStore.get().settings.threshold });
-  return monoToCanvas(mono).toDataURL('image/png').split(',')[1];
+  const canvas = monoToCanvas(mono);
+  // Grey out the parts that the print head cannot reach, so that the assistant can see them.
+  const a = areaFor(t.widthMm, t.heightMm);
+  if (a.clipped) {
+    const ctx = canvas.getContext('2d')!;
+    const sx = canvas.width / t.widthMm;
+    const sy = canvas.height / t.heightMm;
+    ctx.fillStyle = 'rgba(128, 128, 128, 0.6)';
+    ctx.fillRect(0, 0, canvas.width, a.y * sy);
+    ctx.fillRect(0, (a.y + a.height) * sy, canvas.width, canvas.height - (a.y + a.height) * sy);
+    ctx.fillRect(0, a.y * sy, a.x * sx, a.height * sy);
+    ctx.fillRect((a.x + a.width) * sx, a.y * sy, canvas.width - (a.x + a.width) * sx, a.height * sy);
+  }
+  return canvas.toDataURL('image/png').split(',')[1];
 }
 
 async function maybeOpen(t: LabelTemplate, open: boolean | undefined): Promise<{ opened: boolean; note?: string }> {
@@ -139,7 +200,16 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
               labels_remaining: roll.total !== undefined && roll.used !== undefined ? Math.max(0, roll.total - roll.used) : undefined,
             }
           : null,
-        open_label: { label_id: 'open', name: template.name, width_mm: template.widthMm, height_mm: template.heightMm, unsaved_changes: dirty },
+        open_label: {
+          label_id: 'open',
+          name: template.name,
+          width_mm: template.widthMm,
+          height_mm: template.heightMm,
+          unsaved_changes: dirty,
+          ...areaData(areaFor(template.widthMm, template.heightMm)),
+        },
+        print_head_mm: r1(printheadDots(model) / pixelsPerMm(model.dpi)),
+        prints_sideways: model.printDirection === 90 || model.printDirection === 270,
         print_resolution_dpi: model.dpi,
         fonts: BUNDLED_FONTS.map((f) => `${f.family} (${f.style.toLowerCase()})`),
         barcode_types: BARCODE_FORMATS.map((f) => f.id),
@@ -157,7 +227,7 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
         loaded_roll: roll ? rollEditorSize(roll) : null,
         rolls: compatibleLabels(model).map((l) => {
           const s = editorSize(l.widthMm, l.lengthMm, model);
-          return { name: labelName(l), width_mm: s.widthMm, height_mm: s.heightMm, label_type: LABEL_TYPE_NAMES[l.type] ?? l.type };
+          return { name: labelName(l), width_mm: s.widthMm, height_mm: s.heightMm, label_type: LABEL_TYPE_NAMES[l.type] ?? l.type, ...areaData(areaFor(s.widthMm, s.heightMm)) };
         }),
       },
     };
@@ -189,10 +259,11 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
 
   async create_label(args) {
     const { w, h, type } = sizeFromArgs(args as { width_mm?: number; height_mm?: number; use_loaded_roll?: boolean });
-    const t = await buildFromSpec(args as LabelSpec, w, h, type ?? 1);
+    const a = areaFor(w, h);
+    const t = await buildFromSpec(args as LabelSpec, w, h, type ?? 1, a.clipped ? a : undefined);
     const id = remember(t);
     const open = await maybeOpen(t, args.open_in_editor as boolean | undefined);
-    return { data: { ...info(id, t), ...open }, image: await preview(t) };
+    return { data: { ...info(id, t), ...(await areaReport(t)), ...open }, image: await preview(t) };
   },
 
   async create_from_template(args) {
@@ -206,19 +277,19 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
     t = { ...t, name: String(args.name ?? design.name) };
     const id = remember(t);
     const open = await maybeOpen(t, args.open_in_editor as boolean | undefined);
-    return { data: { ...info(id, t), ...open, sample_data_columns: design.sampleData?.columns }, image: await preview(t, design.sampleData ? Object.fromEntries(design.sampleData.columns.map((c, i) => [c, design.sampleData!.rows[0]?.[i] ?? ''])) : undefined) };
+    return { data: { ...info(id, t), ...(await areaReport(t)), ...open, sample_data_columns: design.sampleData?.columns }, image: await preview(t, design.sampleData ? Object.fromEntries(design.sampleData.columns.map((c, i) => [c, design.sampleData!.rows[0]?.[i] ?? ''])) : undefined) };
   },
 
   async edit_label_text(args) {
     const t = replaceText(await resolveLabel(String(args.label_id)), args.replace as { find: string; replace: string }[]);
     const id = remember(t);
     const open = await maybeOpen(t, args.open_in_editor as boolean | undefined);
-    return { data: { ...info(id, t), ...open }, image: await preview(t) };
+    return { data: { ...info(id, t), ...(await areaReport(t)), ...open }, image: await preview(t) };
   },
 
   async preview_label(args) {
     const t = await resolveLabel(String(args.label_id));
-    return { data: info(String(args.label_id), t), image: await preview(t, args.record as Record<string, string> | undefined) };
+    return { data: { ...info(String(args.label_id), t), ...(await areaReport(t)) }, image: await preview(t, args.record as Record<string, string> | undefined) };
   },
 
   async list_saved_labels() {
@@ -248,7 +319,8 @@ const TOOLS: Record<string, (args: Record<string, unknown>) => Promise<Result>> 
     if (labels > MAX_PRINT) throw new Error(`One request can print up to ${MAX_PRINT} labels.`);
     const missing = fields(t).filter((f) => !(args.records as Record<string, string>[] | undefined)?.some((r) => f in r));
     if (missing.length) throw new Error(`The label needs values for: ${missing.join(', ')}. Pass them in "records".`);
-    return { data: { labels, name: t.name, size: `${t.widthMm} × ${t.heightMm} mm`, model: model.name } };
+    const report = await areaReport(t);
+    return { data: { labels, name: t.name, size: `${t.widthMm} × ${t.heightMm} mm`, model: model.name, ...(report.warning ? { warning: report.warning } : {}) } };
   },
 
   async print_label(args) {
