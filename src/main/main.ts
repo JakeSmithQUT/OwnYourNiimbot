@@ -1,5 +1,6 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, session, shell, type MenuItemConstructorOptions } from 'electron';
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { readLimited } from './files';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -20,6 +21,8 @@ const APP_URL = pathToFileURL(join(__dirname, '../renderer/index.html')).href;
 const MAX_OPEN_BYTES = 50 * 1024 * 1024;
 /** Largest value that the store writes. */
 const MAX_STORE_BYTES = 25 * 1024 * 1024;
+/** Most files that the app reads from one library folder. */
+const MAX_STORE_FILES = 5000;
 const COLLECTIONS = new Set(['templates', 'history', 'settings', 'labels', 'rolls']);
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 // The page can write to the clipboard. It reads the clipboard only through the clipboard:readText call.
@@ -36,6 +39,19 @@ let mainWindow: BrowserWindow | null = null;
 let bluetoothCallback: ((deviceId: string) => void) | null = null;
 let serialCallback: ((portId: string) => void) | null = null;
 let lastSerialPorts: Electron.SerialPort[] = [];
+
+/**
+ * Reads a library file. Files that are larger than the store limit are skipped,
+ * because the app never writes them. Another program can put them there.
+ */
+async function readStoreFile(file: string): Promise<unknown> {
+  try {
+    const buffer = await readLimited(file, MAX_STORE_BYTES);
+    return buffer ? JSON.parse(buffer.toString('utf8')) : null;
+  } catch {
+    return null;
+  }
+}
 
 function libraryDir(...parts: string[]): string {
   return join(app.getPath('userData'), 'library', ...parts);
@@ -262,26 +278,18 @@ function registerIpc(): void {
   handle('store:list', async (_event, collection: unknown) => {
     const dir = libraryDir(checkCollection(collection));
     await mkdir(dir, { recursive: true });
-    const files = (await readdir(dir)).filter((f) => f.endsWith('.json'));
-    const items = await Promise.all(
-      files.map(async (f) => {
-        try {
-          return JSON.parse(await readFile(join(dir, f), 'utf8'));
-        } catch {
-          return null;
-        }
-      }),
-    );
-    return items.filter((i) => i !== null);
+    const files = (await readdir(dir)).filter((f) => f.endsWith('.json')).slice(0, MAX_STORE_FILES);
+    const items: unknown[] = [];
+    // One file at a time, so that the app never has many large files in memory at once.
+    for (const f of files) {
+      const item = await readStoreFile(join(dir, f));
+      if (item !== null) items.push(item);
+    }
+    return items;
   });
 
   handle('store:get', async (_event, collection: unknown, id: unknown) => {
-    const file = libraryDir(checkCollection(collection), `${checkId(id)}.json`);
-    try {
-      return JSON.parse(await readFile(file, 'utf8'));
-    } catch {
-      return null;
-    }
+    return readStoreFile(libraryDir(checkCollection(collection), `${checkId(id)}.json`));
   });
 
   handle('store:put', async (_event, collection: unknown, id: unknown, value: unknown) => {
@@ -309,9 +317,8 @@ function registerIpc(): void {
     });
     if (result.canceled || !result.filePaths[0]) return null;
     const path = result.filePaths[0];
-    const { size } = await stat(path);
-    if (size > MAX_OPEN_BYTES) throw new Error(`The file is larger than ${MAX_OPEN_BYTES / 1024 / 1024} MB.`);
-    const buffer = await readFile(path);
+    const buffer = await readLimited(path, MAX_OPEN_BYTES);
+    if (!buffer) throw new Error(`The file is larger than ${MAX_OPEN_BYTES / 1024 / 1024} MB.`);
     return {
       name: basename(path),
       data: opts?.binary ? buffer.toString('base64') : buffer.toString('utf8'),
