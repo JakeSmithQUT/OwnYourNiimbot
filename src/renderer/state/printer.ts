@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { NiimbotClient } from '../../printer/client';
 import { BluetoothTransport, SerialTransport } from '../../printer/transports';
-import { defaultVariant, findModelByName, guessModelFromDeviceName, type PrinterModel, type PrintVariant } from '../../printer/models';
-import { appStore } from './app';
+import { defaultVariant, findModelByName, guessModelFromDeviceName, modelToRemember, type PrinterModel, type PrintVariant } from '../../printer/models';
+import { appStore, updateSettings } from './app';
 
 export const printer = new NiimbotClient();
 
@@ -26,14 +26,26 @@ export async function connectBluetooth(): Promise<void> {
     const guess = guessModelFromDeviceName(transport.name);
     if (guess) printer.info.model = guess;
   }
+  rememberConnectedModel();
 }
 
 export async function connectSerial(): Promise<void> {
   const transport = await SerialTransport.request();
   await printer.connect(transport);
+  rememberConnectedModel();
 }
 
-/** The model to design and print for: the connected printer, or the one chosen in settings. */
+/**
+ * Keeps the model of the connected printer as the model for when no printer is
+ * connected. The print area, resolution and print width then stay the same
+ * after a restart, until another printer connects.
+ */
+function rememberConnectedModel(): void {
+  const name = modelToRemember(printer.info.model, appStore.get().settings.modelName);
+  if (name) updateSettings({ modelName: name });
+}
+
+/** The model to design and print for: the connected printer, or else the last connected printer or the one chosen in settings. */
 export function activeModel(): PrinterModel {
   return printer.info.model ?? findModelByName(appStore.get().settings.modelName) ?? findModelByName('B1')!;
 }

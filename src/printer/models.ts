@@ -2,6 +2,17 @@ import modelData from './models.json';
 
 export type PrinterProtocol = 'niimbot' | 'zicox' | 'daozhen' | 'snbc' | 'unknown';
 
+/**
+ * The model name to keep in the settings after a printer connects, so that
+ * the app designs for that printer after a restart until another printer
+ * connects. Undefined when there is nothing to change: no model, a model that
+ * this app cannot print to, or the model that the settings already have.
+ */
+export function modelToRemember(connected: { name: string; protocol: PrinterProtocol } | undefined, saved: string): string | undefined {
+  if (!connected || connected.protocol !== 'niimbot' || connected.name === saved) return undefined;
+  return connected.name;
+}
+
 export interface PrinterModel {
   name: string;
   ids: number[];

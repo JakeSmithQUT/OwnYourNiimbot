@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { outsideArea, printArea } from '../src/printer/printArea';
 import { fitToPrinthead, getPixel, rotateMono, type MonoImage } from '../src/printer/encoder';
-import { findModelByName, pixelsPerMm, printheadDots, type PrinterModel } from '../src/printer/models';
+import { findModelByName, modelToRemember, pixelsPerMm, printheadDots, type PrinterModel } from '../src/printer/models';
 
 /** A label image that is black inside the computed print area and white outside it. */
 function labelImage(widthMm: number, heightMm: number, model: PrinterModel, flip: boolean): { img: MonoImage; cols: number; rows: number } {
@@ -71,5 +71,14 @@ describe('print area', () => {
     expect(outsideArea({ x: 5, y: 0.5, width: 20, height: 5 }, a)).toBe(true);
     expect(outsideArea({ x: 5, y: 10, width: 20, height: 4.5 }, a)).toBe(true);
     expect(outsideArea({ x: 5, y: 0, width: 20, height: 15 }, printArea(30, 12, h1s))).toBe(false);
+  });
+});
+
+describe('the last connected printer', () => {
+  it('keeps the model of a connected NIIMBOT printer', () => {
+    expect(modelToRemember({ name: 'H1S', protocol: 'niimbot' }, 'B1')).toBe('H1S');
+    expect(modelToRemember({ name: 'H1S', protocol: 'niimbot' }, 'H1S')).toBeUndefined();
+    expect(modelToRemember(undefined, 'H1S')).toBeUndefined();
+    expect(modelToRemember({ name: 'Other', protocol: 'zicox' }, 'H1S')).toBeUndefined();
   });
 });

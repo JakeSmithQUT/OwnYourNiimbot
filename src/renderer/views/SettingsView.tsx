@@ -159,7 +159,10 @@ export function SettingsView() {
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h3>Printing</h3>
-        <Field label="Printer model when no printer is connected" hint="The design view uses this model for resolution and print width.">
+        <Field
+          label="Printer model when no printer is connected"
+          hint="The app sets this to the last printer that was connected. The design view uses this model for the resolution, the print width and the print area."
+        >
           <select value={settings.modelName} onChange={(e) => updateSettings({ modelName: e.target.value })}>
             {MODELS.filter((m) => m.protocol === 'niimbot').map((m) => (
               <option key={m.name} value={m.name}>
