@@ -15,6 +15,7 @@ import { useEditor } from '../views/DesignView';
 import { BARCODE_FORMATS, barcodeFormat, LabelBarcode, LabelTable } from '../editor/objects';
 import { oyn } from '../editor/render';
 import { listFonts } from '../editor/fonts';
+import { BUNDLED_FONTS } from '../editor/bundledFonts';
 import { DATE_FORMATS, formatDate, formatSerial, type SerialSettings } from '../editor/placeholders';
 import { DEFAULT_IMAGE_SETTINGS, type ImageMode, type ImageSettings } from '../editor/imageProcessing';
 import { mmToUnits, ptToUnits, unitsToMm, unitsToPt } from '../editor/units';
@@ -32,6 +33,32 @@ function useFonts(): string[] {
     void listFonts().then(setFonts);
   }, []);
   return fonts;
+}
+
+/** Font list with the fonts that ship with the app first. */
+function FontSelect(props: { value: string; fonts: string[]; onChange: (f: string) => void }) {
+  const bundled = BUNDLED_FONTS.map((f) => f.family);
+  const system = props.fonts.filter((f) => !bundled.includes(f));
+  const known = bundled.includes(props.value) || system.includes(props.value);
+  return (
+    <select value={props.value} onChange={(e) => props.onChange(e.target.value)}>
+      {!known && <option value={props.value}>{props.value}</option>}
+      <optgroup label="Included with the app">
+        {BUNDLED_FONTS.map((f) => (
+          <option key={f.family} value={f.family} style={{ fontFamily: `"${f.family}"` }}>
+            {f.family} · {f.style.toLowerCase()}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Fonts on this computer">
+        {system.map((f) => (
+          <option key={f} value={f}>
+            {f}
+          </option>
+        ))}
+      </optgroup>
+    </select>
+  );
 }
 
 function FieldInsert(props: { onInsert: (token: string) => void }) {
@@ -188,13 +215,7 @@ function TextProps({ obj }: { obj: Textbox }) {
         </>
       )}
       <Field label="Font">
-        <select value={obj.fontFamily} onChange={(e) => set({ fontFamily: e.target.value })}>
-          {[...new Set([obj.fontFamily ?? 'Arial', ...fonts])].map((f) => (
-            <option key={f} value={f} style={{ fontFamily: f }}>
-              {f}
-            </option>
-          ))}
-        </select>
+        <FontSelect value={obj.fontFamily ?? 'Arial'} fonts={fonts} onChange={(f) => set({ fontFamily: f })} />
       </Field>
       <div className="field-row">
         <Field label="Size">
@@ -447,13 +468,7 @@ function TableProps({ obj }: { obj: LabelTable }) {
         </div>
       </div>
       <Field label="Font">
-        <select value={obj.fontFamily} onChange={(e) => set({ fontFamily: e.target.value })}>
-          {[...new Set([obj.fontFamily, ...fonts])].map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
+        <FontSelect value={obj.fontFamily} fonts={fonts} onChange={(f) => set({ fontFamily: f })} />
       </Field>
       <div className="field-row">
         <Field label="Text size">

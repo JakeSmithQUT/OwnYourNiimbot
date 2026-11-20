@@ -6,6 +6,7 @@ import { UNITS_PER_MM } from './units';
 import { fitToPrinthead, rgbaToMono, rotateMono, type MonoImage } from '../../printer/encoder';
 import { pixelsPerMm, printheadDots, type PrinterModel } from '../../printer/models';
 import type { LabelTemplate } from './template';
+import { loadBundledFonts } from './bundledFonts';
 
 export interface OynData {
   kind?: 'text' | 'datetime' | 'serial' | 'image' | 'shape' | 'icon';
@@ -44,6 +45,7 @@ export function applyRecord(objects: FabricObject[], ctx: RecordContext): void {
 
 /** Renders a template at the given resolution (dots per millimetre). */
 export async function renderLabel(t: Pick<LabelTemplate, 'canvas' | 'widthMm' | 'heightMm'>, dotsPerMm: number, ctx?: RecordContext): Promise<HTMLCanvasElement> {
+  await loadBundledFonts();
   const el = document.createElement('canvas');
   const sc = new StaticCanvas(el, {
     width: t.widthMm * UNITS_PER_MM,
