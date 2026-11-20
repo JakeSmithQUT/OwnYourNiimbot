@@ -24,7 +24,7 @@ The app does not need an account or an internet connection. Labels, print histor
 - Printer status: battery level, cover, labels, firmware version and serial number.
 - Label roll data from the RFID tag on genuine rolls, with the number of labels that remain.
 - Printer settings: automatic power-off time, sounds and label position calibration.
-- Saved labels, label import and export, print history and reprint.
+- Saved labels, label import and export, print history and reprint. Change the name of a saved label and click **Save** to save a new label and keep the old one.
 - Light and dark themes.
 - Updates from the GitHub releases of this project. The Windows installer and the Linux AppImage show an update window with the download progress when the app starts, then install the update and open again.
 

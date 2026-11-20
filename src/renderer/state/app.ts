@@ -1,5 +1,6 @@
 import { api, newId } from '../api';
 import { createStore } from './store';
+import { savesAsNewLabel } from './saveRules';
 import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/template';
 import { editor } from '../editor/EditorController';
 import { LIMITS, validateTemplate } from '../editor/validate';
@@ -39,6 +40,8 @@ export interface AppState {
   view: View;
   template: LabelTemplate;
   dirty: boolean;
+  /** The name of the open label when it was opened or saved. Save with another name makes a new saved label. */
+  savedName?: string;
   dataset?: Dataset;
   settings: Settings;
   printOpen: boolean;
@@ -99,12 +102,21 @@ export function captureTemplate(): LabelTemplate {
   };
 }
 
+/**
+ * Saves the open label. A label with a new name is saved as a new label, and
+ * the label that was opened stays as it was.
+ */
 export async function saveTemplate(): Promise<LabelTemplate> {
   const t = captureTemplate();
+  const asNew = savesAsNewLabel(t.id, t.name, appStore.get().savedName);
+  if (asNew) {
+    t.id = newId();
+    t.createdAt = t.updatedAt;
+  }
   if (!t.id) t.id = newId();
   await api.store.put('templates', t.id, t);
-  appStore.set({ template: t, dirty: false });
-  toast(`Saved "${t.name}"`, 'success');
+  appStore.set({ template: t, dirty: false, savedName: t.name });
+  toast(asNew ? `Saved "${t.name}" as a new label` : `Saved "${t.name}"`, 'success');
   return t;
 }
 
@@ -117,14 +129,20 @@ export async function openTemplate(t: LabelTemplate): Promise<boolean> {
     toast(`This label cannot be opened. ${(err as Error).message}`, 'error');
     return false;
   }
-  appStore.set({ template: safe, dirty: false, dataset: safe.dataset ?? appStore.get().dataset, view: 'design' });
+  appStore.set({
+    template: safe,
+    dirty: false,
+    savedName: safe.id ? safe.name : undefined,
+    dataset: safe.dataset ?? appStore.get().dataset,
+    view: 'design',
+  });
   await editor.load(safe.canvas, safe.widthMm, safe.heightMm);
   return true;
 }
 
 export async function newTemplate(widthMm: number, heightMm: number, labelType?: number): Promise<void> {
   const t = emptyTemplate(widthMm, heightMm, labelType);
-  appStore.set({ template: t, dirty: false, view: 'design' });
+  appStore.set({ template: t, dirty: false, savedName: undefined, view: 'design' });
   await editor.load(t.canvas, widthMm, heightMm);
 }
 

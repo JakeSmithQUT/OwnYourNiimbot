@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { savesAsNewLabel } from '../src/renderer/state/saveRules';
 import { compatibleLabels, editorSize, findLabelByBarcode, hasConfirmedLabels, LABELS, physicalSize } from '../src/printer/labels';
 import { findModelByName, MODELS } from '../src/printer/models';
 
@@ -61,5 +62,18 @@ describe('label catalogue', () => {
     expect(editorSize(12, 40, model('D110'))).toEqual({ widthMm: 40, heightMm: 12 });
     expect(editorSize(50, 30, model('B1'))).toEqual({ widthMm: 50, heightMm: 30 });
     expect(physicalSize(40, 12, model('D110'))).toEqual({ widthMm: 12, lengthMm: 40 });
+  });
+});
+
+describe('saving a renamed label', () => {
+  it('saves a new label when the name of a saved label changed', () => {
+    expect(savesAsNewLabel('abc', 'Freezer v2', 'Freezer')).toBe(true);
+    expect(savesAsNewLabel('abc', 'Freezer', 'Freezer')).toBe(false);
+    expect(savesAsNewLabel('abc', ' Freezer ', 'Freezer')).toBe(false);
+  });
+
+  it('saves a label that was never saved with its own new id', () => {
+    expect(savesAsNewLabel('', 'Freezer', undefined)).toBe(false);
+    expect(savesAsNewLabel('', 'Freezer v2', 'Freezer')).toBe(false);
   });
 });
