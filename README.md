@@ -26,6 +26,7 @@ The app does not need an account or an internet connection. Labels, print histor
 - Printer settings: automatic power-off time, sounds and label position calibration.
 - Saved labels, label import and export, print history and reprint.
 - Light and dark themes.
+- Updates from the GitHub releases of this project. The Windows installer and the Linux AppImage install them when the app restarts.
 
 ## Supported printers
 
@@ -273,9 +274,26 @@ Security:
 - Labels from an assistant open in the editor only if the open label has no changes that are not saved.
 - To stop access, clear the setting or click **Make a new token**.
 
+## Updates
+
+When the app starts, it checks the [Releases](https://github.com/JakeSmithQUT/OwnYourNiimbot/releases) page of this project for a newer version. To turn off the check, go to **Settings**, **Updates**, and clear **Check for updates when the app starts**. **Check now** checks at any time.
+
+| Version of the app | Result of the update check |
+|---|---|
+| Windows installer | The app downloads the update and checks its SHA-512 checksum. A bar at the top of the window tells you when the update is ready. Click **Restart now**, or install the update the next time that you close the app. |
+| Linux AppImage | The same as the Windows installer. |
+| macOS | A bar shows a link to the new release. Download and install it as in [Download](#download). macOS does not let an app that is not code signed replace itself. |
+| Windows portable app, Linux .deb | A bar shows a link to the new release. |
+
+If the open label has changes that are not saved, **Save and restart** saves the label before the app restarts.
+
 ## Privacy
 
-The app does not connect to the internet. It does not use an account, a cloud service, analytics or automatic updates. The printer connects over Bluetooth or a serial port. If you turn on AI assistant access, the app also accepts local connections from this computer.
+The app does not need an internet connection or an account. It does not use a cloud service or analytics.
+
+The update check is the only internet connection. It asks GitHub for the latest release of this project. GitHub gets the app version and the IP address of your computer. The app does not send labels or other data. You can turn off the check in **Settings**.
+
+The printer connects over Bluetooth or a serial port. If you turn on AI assistant access, the app also accepts local connections from this computer.
 
 Labels, history and settings are stored in the app data folder. To open this folder, go to **Settings** and click **Open data folder**.
 

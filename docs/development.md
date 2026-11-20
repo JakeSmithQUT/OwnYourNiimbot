@@ -105,6 +105,16 @@ To test with data that is apart from your own app data, start a development buil
 
 To test the stdio bridge, run `ELECTRON_RUN_AS_NODE=1 npx electron dist/main/mcp-bridge.js --config <folder>/mcp.json` and send JSON-RPC messages on stdin.
 
+## Test the update check
+
+The installed app checks the GitHub releases. A development build checks only when `OYN_UPDATE_FEED` points to a test feed. The installed app ignores this variable.
+
+1. Make a folder with an installer and a `latest.yml` file for a higher version. `npm run dist` makes `latest.yml` in `release/`. Change its `version` value.
+2. Serve the folder, for example with `python -m http.server 8765 --bind 127.0.0.1`.
+3. Run `npm run build`, then start the app with `OYN_USER_DATA=<empty folder> OYN_UPDATE_FEED=http://127.0.0.1:8765/ npx electron .`.
+
+After about 5 seconds, the app downloads the installer and checks its SHA-512 checksum. A test download goes to the `ownyourniimbot-updater-test` folder in the local app data folder, not to the folder of the installed app.
+
 ## Release procedure
 
 1. Do an independent security review of the code. Fix the findings, or record why a finding is not an issue.
@@ -117,7 +127,9 @@ To test the stdio bridge, run `ELECTRON_RUN_AS_NODE=1 npx electron dist/main/mcp
    git push origin main --tags
    ```
 
-5. The `Release` workflow builds the installers on Windows, macOS and Linux. Then it creates a GitHub release with the installers and a `SHA256SUMS.txt` file.
+5. The `Release` workflow builds the installers on Windows, macOS and Linux. Then it creates a GitHub release with the installers, a `SHA256SUMS.txt` file and the update files (`latest.yml`, `latest-mac.yml`, `latest-linux.yml`, `latest-linux-arm64.yml` and the `.blockmap` files).
+
+CAUTION: The update check reads the `latest*.yml` files of the newest release. Do not remove them from a release. Do not publish a release as the latest release before the workflow has uploaded all the files.
 
 The installers are not code signed. To sign them, add the certificates as repository secrets and set the electron-builder signing variables in `.github/workflows/release.yml`.
 
