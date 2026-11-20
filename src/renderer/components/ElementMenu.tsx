@@ -27,7 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { editor, type ContextMenuRequest, type ElementKind } from '../editor/EditorController';
-import { ICONS, iconSvg } from '../editor/icons';
+import { iconSvg, searchIcons } from '../editor/icons';
 import { pickImage } from '../editor/pickImage';
 import { oyn } from '../editor/render';
 import { toast } from '../state/app';
@@ -97,6 +97,7 @@ function focusFirst(el: HTMLElement | null): void {
 export function ElementMenu() {
   const [req, setReq] = useState<ContextMenuRequest>();
   const [panel, setPanel] = useState<Panel>('none');
+  const [symbolQuery, setSymbolQuery] = useState('');
   const [pos, setPos] = useState<{ left: number; top: number }>();
   const [subPos, setSubPos] = useState<{ left: number; top: number }>();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -117,6 +118,7 @@ export function ElementMenu() {
     () =>
       editor.onContextMenu((r) => {
         restoreFocus.current = document.activeElement;
+        setSymbolQuery('');
         setPanel('none');
         setPos(undefined);
         setSubPos(undefined);
@@ -247,6 +249,14 @@ export function ElementMenu() {
 
   const onSubKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'Tab') e.stopPropagation();
+    // In the search field, the arrow keys move the text cursor. Only the down arrow goes to the symbols.
+    if (e.target instanceof HTMLInputElement) {
+      if (e.key === 'ArrowDown') {
+        e.currentTarget.querySelector<HTMLButtonElement>('.ctx-icons > [role=menuitem]')?.focus();
+        e.preventDefault();
+      }
+      return;
+    }
     if (moveFocus(e)) return;
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
@@ -276,8 +286,16 @@ export function ElementMenu() {
       <>
         <Item icon={ArrowLeft} label="Back" onClick={() => openPanel('replace', true)} />
         <div className="ctx-sep" />
+        <input
+          type="search"
+          className="ctx-search"
+          placeholder="Search symbols"
+          aria-label="Search symbols"
+          value={symbolQuery}
+          onChange={(e) => setSymbolQuery(e.target.value)}
+        />
         <div className="ctx-icons">
-          {ICONS.map(({ name, Icon }) => (
+          {searchIcons(symbolQuery).map(({ name, Icon }) => (
             <button key={name} type="button" role="menuitem" title={name} aria-label={name} onClick={run(() => editor.replace(target, 'symbol', { svg: iconSvg(Icon), name }))}>
               <Icon size={17} />
             </button>

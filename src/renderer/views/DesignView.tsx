@@ -38,7 +38,7 @@ import { useVersion } from '../state/store';
 import { appStore, toast, updateSettings } from '../state/app';
 import { activeModel, usePrinter } from '../state/printer';
 import { PropertiesPanel } from '../components/PropertiesPanel';
-import { ICONS, iconSvg } from '../editor/icons';
+import { COMMON_ICONS, ICON_GROUPS, ICONS, iconSvg, searchIcons, type SymbolEntry } from '../editor/icons';
 import { oyn } from '../editor/render';
 import { pickImage } from '../editor/pickImage';
 import { pixelsPerMm } from '../../printer/models';
@@ -52,6 +52,17 @@ export function useEditor(): number {
 
 function Sidebar() {
   const [showIcons, setShowIcons] = useState(false);
+  const [iconQuery, setIconQuery] = useState('');
+  const found = iconQuery.trim() ? searchIcons(iconQuery) : [];
+  const symbolGrid = (items: SymbolEntry[]) => (
+    <div className="icon-grid">
+      {items.map(({ name, Icon }) => (
+        <button key={name} title={name} aria-label={name} onClick={() => void editor.addSvg(iconSvg(Icon), name)}>
+          <Icon size={18} />
+        </button>
+      ))}
+    </div>
+  );
   const insertImage = async () => {
     try {
       const url = await pickImage();
@@ -91,13 +102,26 @@ function Sidebar() {
           {showIcons ? 'Less' : 'All'}
         </button>
       </div>
-      <div className="icon-grid">
-        {(showIcons ? ICONS : ICONS.slice(0, 24)).map(({ name, Icon }) => (
-          <button key={name} title={name} onClick={() => void editor.addSvg(iconSvg(Icon), name)}>
-            <Icon size={18} />
-          </button>
-        ))}
-      </div>
+      <input
+        type="search"
+        className="icon-search"
+        placeholder={`Search ${ICONS.length} symbols`}
+        aria-label="Search symbols"
+        value={iconQuery}
+        onChange={(e) => setIconQuery(e.target.value)}
+      />
+      {iconQuery.trim() ? (
+        found.length ? symbolGrid(found) : <div className="muted icon-none">No symbol has this name.</div>
+      ) : showIcons ? (
+        ICON_GROUPS.map((g) => (
+          <div key={g}>
+            <div className="icon-group">{g}</div>
+            {symbolGrid(ICONS.filter((i) => i.group === g))}
+          </div>
+        ))
+      ) : (
+        symbolGrid(COMMON_ICONS)
+      )}
     </aside>
   );
 }
