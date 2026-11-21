@@ -37,6 +37,14 @@ export function barcodeFormat(id: string): BarcodeFormat {
   return BARCODE_FORMATS.find((f) => f.id === id) ?? BARCODE_FORMATS[0];
 }
 
+/** bwip-js encoder names that differ from the format id. Saved labels and the assistant tools keep the format id. */
+const BWIP_NAMES = new Map([['codabar', 'rationalizedCodabar']]);
+
+/** Name of the bwip-js encoder for a barcode format id. */
+export function bwipName(format: string): string {
+  return BWIP_NAMES.get(format) ?? format;
+}
+
 interface BarsResult {
   canvas?: HTMLCanvasElement;
   /** Pixels of the canvas for each module along the width. */
@@ -90,7 +98,7 @@ export function renderBars(format: string, value: string, eclevel: string): Bars
       const canvas = document.createElement('canvas');
       const twoD = barcodeFormat(format).twoD;
       const opts: Record<string, unknown> = {
-        bcid: format,
+        bcid: bwipName(format),
         text: value,
         scale: 1,
         includetext: false,
