@@ -215,11 +215,12 @@ const PRINT_DOTS = 8;
  * The square for a 2D code in the box: the largest size that gives each
  * module a whole number of printer dots. A code that has more space is drawn
  * smaller, so a box of this size puts the code exactly where the layout
- * wants it. A serial number {{index:N}} counts as N digits.
+ * wants it. A serial number {{index:N}} counts as N digits. As at print
+ * time, N has one or two digits, so a value cannot ask for a huge sample.
  */
 function codeSquare(b: Box, format: string, value: string, align: 'start' | 'center' | 'end', eclevel = 'M'): Box {
   const s = square(b, align);
-  const sample = value.replace(/\{\{index(?::(\d+))?\}\}/g, (_, n: string | undefined) => '0'.repeat(Number(n ?? 1)));
+  const sample = value.replace(/\{\{index(?::(\d{1,2}))?\}\}/g, (_, n: string | undefined) => '0'.repeat(Number(n ?? 1)));
   const { canvas, unit = 1 } = renderBars(format, sample, eclevel);
   if (!canvas) return s;
   const modules = canvas.width / unit;
