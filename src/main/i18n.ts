@@ -17,6 +17,7 @@ import hi from '../i18n/locales/hi.json';
 import hr from '../i18n/locales/hr.json';
 import hu from '../i18n/locales/hu.json';
 import it from '../i18n/locales/it.json';
+import ja from '../i18n/locales/ja.json';
 import ko from '../i18n/locales/ko.json';
 import mr from '../i18n/locales/mr.json';
 import pl from '../i18n/locales/pl.json';
@@ -39,6 +40,7 @@ const CATALOGS: Partial<Record<LanguageCode, Catalog>> = {
   hr,
   hu,
   it,
+  ja,
   ko,
   mr,
   pl,

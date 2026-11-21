@@ -11,6 +11,7 @@ export const LANGUAGES = [
   { code: 'hi', name: 'हिन्दी', english: 'Hindi' },
   { code: 'hu', name: 'Magyar', english: 'Hungarian' },
   { code: 'it', name: 'Italiano', english: 'Italian' },
+  { code: 'ja', name: '日本語', english: 'Japanese' },
   { code: 'ko', name: '한국어', english: 'Korean' },
   { code: 'mr', name: 'मराठी', english: 'Marathi' },
   { code: 'pl', name: 'Polski', english: 'Polish' },

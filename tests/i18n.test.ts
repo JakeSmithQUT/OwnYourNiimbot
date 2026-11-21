@@ -64,7 +64,8 @@ describe('translation system', () => {
       'zh-Hans-HK': 'zh-CN',
       'de_DE.UTF-8': 'de',
       'sr@latin': undefined,
-      'ja-JP': undefined,
+      'ja-JP': 'ja',
+      'nl-NL': undefined,
       'C': undefined,
       '': undefined,
     };
@@ -77,7 +78,7 @@ describe('translation system', () => {
     expect(systemLanguage(['vi-VN', 'en-US'])).toBe('vi');
     expect(systemLanguage(['zh-Hant-TW'])).toBe('zh-TW');
     // A language lower in the list is not used.
-    expect(systemLanguage(['ja-JP', 'de-DE'])).toBe('en');
+    expect(systemLanguage(['nl-NL', 'de-DE'])).toBe('en');
     expect(systemLanguage([])).toBe('en');
   });
 

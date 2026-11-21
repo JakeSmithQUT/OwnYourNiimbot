@@ -180,6 +180,14 @@ input[type='checkbox'] {
   hyphens: auto;
 }
 
+/* Japanese can break between any two characters. Proportional kana keep a
+   word such as テンプレート on one line. */
+.rail > button:lang(ja) {
+  font-feature-settings: 'palt';
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
 .rail .lang {
   position: relative;
 }
@@ -1524,6 +1532,12 @@ kbd {
   font-weight: 600;
   display: flex;
   align-items: center;
+}
+
+/* Chinese, Japanese and Korean words can break between characters. */
+.library-meta .name .pill {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .library-meta .desc {
