@@ -9,13 +9,19 @@ import {
   cols,
   datamatrix,
   date,
+  extentY,
+  fitPt,
   hline,
   icon,
   inset,
+  onBaseline,
+  pack,
   qr,
   rect,
   rows,
   serial,
+  shift,
+  square,
   table,
   text,
   vline,
@@ -38,6 +44,9 @@ import {
   stack,
   white,
   withCode,
+  withIcon,
+  centreX,
+  pairs,
   type TemplateDesign,
 } from './kit';
 import { CREATIVE } from './creative';
@@ -81,17 +90,21 @@ function serverLabel(v: ServerValues, fit?: ServerValues) {
       );
     }
     const [main, foot] = rows(a, [h - 6.5, 4.5], 1);
-    return [
-      ...withCode(main, (sq) => qr(sq, v.qr), (rest) =>
-        stack(rest, [
-          { t: v.host, fit: fit?.host, weight: 1.6, bold: true },
-          { t: `IP  ${v.ip}`, fit: fit && `IP  ${fit.ip}` },
-          { t: `BMC ${v.bmc}`, fit: fit && `BMC ${fit.bmc}` },
-          { t: `S/N ${v.sn}`, fit: fit && `S/N ${fit.sn}` },
-        ]),
-      ),
-      ...text(foot, v.role, { invert: true, bold: true, align: 'center', maxPt: 9, spacing: 60, fitText: fit?.role }),
-    ];
+    return pack(
+      [
+        withCode(main, (sq) => qr(sq, v.qr), (rest) =>
+          stack(rest, [
+            { t: v.host, fit: fit?.host, weight: 1.6, bold: true },
+            { t: `IP  ${v.ip}`, fit: fit && `IP  ${fit.ip}` },
+            { t: `BMC ${v.bmc}`, fit: fit && `BMC ${fit.bmc}` },
+            { t: `S/N ${v.sn}`, fit: fit && `S/N ${fit.sn}` },
+          ]),
+        ),
+        text(foot, v.role, { invert: true, bold: true, align: 'center', maxPt: 9, spacing: 60, fitText: fit?.role }),
+      ],
+      a,
+      1,
+    );
   };
 }
 
@@ -144,7 +157,7 @@ const IT: TemplateDesign[] = [
         const [n, ip, u] = cols(a, [2.2, 2, 0.9], 1.2);
         return [...text(n, 'web-prod-01', { bold: true }), ...text(ip, '10.20.0.21'), ...text(u, 'U12', { invert: true, bold: true, align: 'center' })];
       }
-      return stack(a, [{ t: 'web-prod-01', weight: 1.3, bold: true }, { t: '10.20.0.21' }], 0.2);
+      return centreX(stack(a, [{ t: 'web-prod-01', weight: 1.3, bold: true }, { t: '10.20.0.21' }], 0.2), a);
     },
   },
   {
@@ -170,8 +183,11 @@ const IT: TemplateDesign[] = [
       if (narrow(h)) {
         return withCode(a, (sq) => datamatrix(sq, 'IT-00421'), (rest) => stack(rest, [{ t: 'PROPERTY OF IT', bold: true }, { t: 'IT-00421' }], 0.2), 'left');
       }
-      const [head, code] = rows(a, [1, 2.4], 0.8);
-      return [...text(head, 'PROPERTY OF YOUR COMPANY', { invert: true, bold: true, align: 'center', spacing: 40 }), ...barcode(code, 'IT-00421')];
+      // The bar is as high as its text, and the barcode gets the rest of the label.
+      const [head] = rows(a, [1, 2.4], 0.8);
+      const bar = text(head, 'PROPERTY OF YOUR COMPANY', { invert: true, hug: true, bold: true, align: 'center', spacing: 40 });
+      const [y0, y1] = extentY(bar) ?? [head.y, head.y + head.h];
+      return [...shift(bar, 0, a.y - y0), ...barcode(box(a.x, a.y + (y1 - y0) + 0.8, a.w, a.h - (y1 - y0) - 0.8), 'IT-00421')];
     },
   },
   {
@@ -238,7 +254,7 @@ const IT: TemplateDesign[] = [
       const a = area(w, h);
       if (narrow(h)) {
         const [n, ip] = cols(a, [1.2, 1], 1);
-        return [...text(n, 'sw-core-01', { bold: true }), ...text(ip, 'MGMT 10.0.0.2')];
+        return onBaseline([text(n, 'sw-core-01', { bold: true }), text(ip, 'MGMT 10.0.0.2')]);
       }
       return withCode(a, (sq) => qr(sq, 'sw-core-01 MGMT 10.0.0.2'), (rest) =>
         stack(rest, h <= 22
@@ -258,7 +274,7 @@ const IT: TemplateDesign[] = [
       const value = 'WIFI:T:WPA;S:Guest Network;P:change-me-please;;';
       if (w / h < 1.3) {
         const [code, info] = rows(a, [2.4, 1], 0.8);
-        return [...qr(code, value), ...stack(info, [{ t: 'Guest Network', bold: true, align: 'center' }, { t: 'Password: change-me-please', align: 'center' }], 0.2)];
+        return pack([qr(code, value), stack(info, [{ t: 'Guest Network', bold: true, align: 'center' }, { t: 'Password: change-me-please', align: 'center' }], 0.2)], a, 0.8);
       }
       return withCode(a, (sq) => qr(sq, value), (rest) =>
         stack(rest, [{ t: 'Wi-Fi', bold: true, weight: 1.6 }, { t: 'Guest Network', bold: true }, { t: 'Password' }, { t: 'change-me-please' }]),
@@ -273,8 +289,7 @@ const IT: TemplateDesign[] = [
     sizes: [...NARROW, ...SMALL, [50, 30]],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 5 : 3], 1);
-      return [...icon(i, ic('warning')), ...stack(t, narrow(h) ? [{ t: 'DO NOT UNPLUG', bold: true }] : [{ t: 'DO NOT UNPLUG', bold: true, weight: 1.4 }, { t: 'Call IT on ext. 1234' }])];
+      return withIcon(a, ic('warning'), w / h > 3 ? 5 : 3, (t) => stack(t, narrow(h) ? [{ t: 'DO NOT UNPLUG', bold: true }] : [{ t: 'DO NOT UNPLUG', bold: true, weight: 1.4 }, { t: 'Call IT on ext. 1234' }]));
     },
   },
   {
@@ -286,16 +301,18 @@ const IT: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [head, body] = rows(a, [1, 3], 0.8);
-      const [r1, r2, r3] = rows(body, [1, 1, 1], 0.3);
-      const [l1, v1] = cols(r1, [1, 1.4], 0.6);
-      const [l2, v2] = cols(r2, [1, 1.4], 0.6);
-      const [l3, v3] = cols(r3, [1, 1.4], 0.6);
-      return [
-        ...text(head, 'SERVICE RECORD', { invert: true, bold: true, align: 'center' }),
-        ...text(l1, 'Serviced'), ...date(v1, 'DD/MM/YYYY', 0, { bold: true }),
-        ...text(l2, 'Next due'), ...date(v2, 'DD/MM/YYYY', 182, { bold: true }),
-        ...text(l3, 'By'), hline(v3.x, v3.y + v3.h - 0.3, v3.w),
-      ];
+      return pack(
+        [
+          text(head, 'SERVICE RECORD', { invert: true, hug: true, bold: true, align: 'center' }),
+          ...pairs(body, [
+            ['Serviced', (v, maxPt) => date(v, 'DD/MM/YYYY', 0, { bold: true, maxPt }), '00/00/0000'],
+            ['Next due', (v, maxPt) => date(v, 'DD/MM/YYYY', 182, { bold: true, maxPt }), '00/00/0000'],
+            ['By', (v) => [hline(v.x, v.y + v.h - 0.3, v.w)]],
+          ], { gap: 0.3, ratio: 1.4 }),
+        ],
+        a,
+        0.8,
+      );
     },
   },
 ];
@@ -381,10 +398,14 @@ const NETWORK: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [head, body] = rows(a, [1, 4.5], 0.8);
-      return [
-        ...text(head, 'sw-core-01', { bold: true, align: 'center', invert: true }),
-        ...table(body, [['Port', 'Device'], ['1', 'Firewall'], ['2', 'web-prod-01'], ['3', 'web-prod-02'], ['4', 'NAS']], { colRatios: [1, 3] }),
-      ];
+      return pack(
+        [
+          text(head, 'sw-core-01', { bold: true, align: 'center', invert: true, hug: true, maxPt: 14 }),
+          table(body, [['Port', 'Device'], ['1', 'Firewall'], ['2', 'web-prod-01'], ['3', 'web-prod-02'], ['4', 'NAS']], { colRatios: [1, 3] }),
+        ],
+        a,
+        0.8,
+      );
     },
   },
 ];
@@ -401,7 +422,7 @@ const OFFICE: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [t, y] = cols(a, [3.2, 1], 1);
-      return [...text(t, 'Tax returns', { bold: true }), ...text(y, '2026', { align: 'right' })];
+      return onBaseline([text(t, 'Tax returns', { bold: true }), text(y, '2026', { align: 'right' })]);
     },
   },
   {
@@ -425,7 +446,7 @@ const OFFICE: TemplateDesign[] = [
     category: 'Office',
     description: 'Name and postal address in three lines.',
     sizes: [[50, 20], [40, 20], [50, 30], [40, 30], [50, 15]],
-    build: (w, h) => stack(area(w, h), [{ t: 'Alex Morgan', bold: true }, { t: '12 Example Street' }, { t: 'Brisbane QLD 4000' }], 0.3),
+    build: (w, h) => centreX(stack(area(w, h), [{ t: 'Alex Morgan', bold: true }, { t: '12 Example Street' }, { t: 'Brisbane QLD 4000' }], 0.3), area(w, h)),
   },
   {
     id: 'address',
@@ -436,10 +457,17 @@ const OFFICE: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [head, body] = rows(a, [1, 4], 1);
-      return [
-        ...text(head, 'TO', { bold: true, maxPt: 10 }),
-        ...stack(body, [{ t: 'Sam Lee', bold: true, weight: 1.3 }, { t: 'Unit 4, 88 Sample Road' }, { t: 'Melbourne VIC 3000' }, { t: 'Australia' }], 0.3),
-      ];
+      return centreX(
+        pack(
+          [
+            text(head, 'TO', { bold: true, maxPt: 10 }),
+            stack(body, [{ t: 'Sam Lee', bold: true, weight: 1.3 }, { t: 'Unit 4, 88 Sample Road' }, { t: 'Melbourne VIC 3000' }, { t: 'Australia' }], 0.3),
+          ],
+          a,
+          1,
+        ),
+        a,
+      );
     },
   },
   {
@@ -458,8 +486,8 @@ const OFFICE: TemplateDesign[] = [
     sizes: [...SMALL, [50, 30], [40, 30], ...NARROW],
     build: (w, h) => {
       const a = area(w, h);
-      if (narrow(h)) return stack(a, [{ t: 'IF FOUND, CALL', bold: true }, { t: '0400 000 000' }], 0.2);
-      return stack(a, [{ t: 'IF FOUND, PLEASE RETURN TO', bold: true, maxPt: 7 }, { t: 'Alex Morgan', bold: true, weight: 1.5 }, { t: '0400 000 000' }], 0.4);
+      if (narrow(h)) return centreX(stack(a, [{ t: 'IF FOUND, CALL', bold: true }, { t: '0400 000 000' }], 0.2), a);
+      return centreX(stack(a, [{ t: 'IF FOUND, PLEASE RETURN TO', bold: true, maxPt: 7 }, { t: 'Alex Morgan', bold: true, weight: 1.5 }, { t: '0400 000 000' }], 0.4), a);
     },
   },
   {
@@ -490,7 +518,7 @@ const HOME: TemplateDesign[] = [
       if (narrow(h)) return text(a, 'Rolled oats', { bold: true, align: 'center' });
       const [name, bb] = rows(a, [2.2, 1], 0.8);
       const [bl, bv] = cols(bb, [1.1, 1], 0.6);
-      return [...text(name, 'Rolled oats', { bold: true, align: 'center' }), ...text(bl, 'Best before', { align: 'right' }), ...date(bv, 'MMM YYYY', 180, { bold: true })];
+      return pack([text(name, 'Rolled oats', { bold: true, align: 'center' }), onBaseline([text(bl, 'Best before', { align: 'right' }), date(bv, 'MMM YYYY', 180, { bold: true })])], a, 0.8);
     },
   },
   {
@@ -510,12 +538,12 @@ const HOME: TemplateDesign[] = [
     sizes: [[50, 30], [40, 30], [50, 25], [50, 50], [60, 40]],
     build: (w, h) => {
       const a = area(w, h);
-      const [name, d1, d2, s] = rows(a, [1.8, 1, 1, 1], 0.4);
-      const pair = (b: Box, label: string, offset: number) => {
-        const [l, v] = cols(b, [1, 1.5], 0.6);
-        return [...text(l, label), ...date(v, 'DD/MM/YYYY', offset, { bold: true })];
-      };
-      return [...text(name, 'Beef lasagne', { bold: true }), ...pair(d1, 'Frozen', 0), ...pair(d2, 'Use by', 91), ...text(s, 'Serves  4')];
+      const [name, dates, s] = rows(a, [1.8, 2.4, 1], 0.4);
+      const list = pairs(dates, [
+        ['Frozen', (v, maxPt) => date(v, 'DD/MM/YYYY', 0, { bold: true, maxPt }), '00/00/0000'],
+        ['Use by', (v, maxPt) => date(v, 'DD/MM/YYYY', 91, { bold: true, maxPt }), '00/00/0000'],
+      ]);
+      return centreX(pack([text(name, 'Beef lasagne', { bold: true }), ...list, text(s, 'Serves  4', { maxPt: fitPt('Use by', cols(s, [1, 1.5], 0.6)[0]) })], a, 0.4), a);
     },
   },
   {
@@ -528,12 +556,19 @@ const HOME: TemplateDesign[] = [
       const a = area(w, h);
       if (narrow(h)) {
         const [l, v] = cols(a, [1, 1.6], 0.8);
-        return [...text(l, 'Eat by', { bold: true }), ...date(v, 'ddd D MMM', 3, { bold: true })];
+        return onBaseline([text(l, 'Eat by', { bold: true }), date(v, 'ddd D MMM', 3, { bold: true })]);
       }
-      const [r1, r2] = rows(a, [1, 1], 0.6);
-      const [l1, v1] = cols(r1, [1, 1.6], 0.6);
-      const [l2, v2] = cols(r2, [1, 1.6], 0.6);
-      return [...text(l1, 'Made'), ...date(v1, 'ddd D MMM', 0), ...text(l2, 'Eat by', { bold: true }), ...date(v2, 'ddd D MMM', 3, { bold: true })];
+      return centreX(
+        pack(
+          pairs(a, [
+            ['Made', (v, maxPt) => date(v, 'ddd D MMM', 0, { maxPt }), 'Wed 30 Sep'],
+            ['Eat by', (v, maxPt) => date(v, 'ddd D MMM', 3, { bold: true, maxPt }), 'Wed 30 Sep'],
+          ], { gap: 0.6, ratio: 1.6, caption: { bold: true } }),
+          a,
+          0.6,
+        ),
+        a,
+      );
     },
   },
   {
@@ -545,10 +580,14 @@ const HOME: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [head, body] = rows(a, [1, h > w ? 5 : 3], 1);
-      return [
-        ...text(head, 'CHRISTMAS DECORATIONS', { invert: true, bold: true, align: 'center' }),
-        ...stack(body, [{ t: '• Lights and extension lead' }, { t: '• Tree stand' }, { t: '• Baubles (fragile)' }, { t: '• Wreath' }], 0.3),
-      ];
+      return pack(
+        [
+          text(head, 'CHRISTMAS DECORATIONS', { invert: true, hug: true, bold: true, align: 'center', maxPt: 14 }),
+          stack(body, [{ t: '• Lights and extension lead' }, { t: '• Tree stand' }, { t: '• Baubles (fragile)' }, { t: '• Wreath' }], 0.3),
+        ],
+        a,
+        1,
+      );
     },
   },
   {
@@ -562,13 +601,22 @@ const HOME: TemplateDesign[] = [
       const [top, mid, bottom] = rows(a, [1.5, 2, 1], 1);
       const [room, num] = cols(top, [2.4, 1], 1);
       const [contents, frag] = cols(bottom, [3, 1.2], 1);
-      return [
-        ...text(room, 'KITCHEN', { invert: true, bold: true, align: 'center' }),
-        ...serial(num, { start: 1, step: 1, digits: 2, prefix: '#', suffix: '' }, { bold: true, align: 'center' }),
-        ...stack(mid, [{ t: 'Plates, glasses' }, { t: 'Kettle, toaster' }], 0.3),
-        ...text(contents, 'Open this end', { italic: true }),
-        ...icon(frag, ic('fragile'), 'end'),
-      ];
+      const foot = text(contents, 'Open this end', { italic: true });
+      const fragile = square(frag, 'end');
+      const [f0, f1] = extentY(foot) ?? [fragile.y, fragile.y + fragile.h];
+      return pack(
+        [
+          [
+            ...text(room, 'KITCHEN', { invert: true, hug: true, bold: true, align: 'center' }),
+            ...serial(num, { start: 1, step: 1, digits: 2, prefix: '#', suffix: '' }, { bold: true, align: 'center' }),
+          ],
+          stack(mid, [{ t: 'Plates, glasses' }, { t: 'Kettle, toaster' }], 0.3),
+          [...foot, ...icon(frag, ic('fragile'), 'end')],
+        ],
+        a,
+        1,
+        [undefined, undefined, [Math.min(f0, fragile.y), Math.max(f1, fragile.y + fragile.h)]],
+      );
     },
   },
   {
@@ -579,8 +627,7 @@ const HOME: TemplateDesign[] = [
     sizes: [...NARROW, ...SMALL],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 4.5 : 2.6], 1);
-      return [...icon(i, ic('star')), ...stack(t, narrow(h) ? [{ t: 'Charlie Morgan', bold: true }] : [{ t: 'Charlie Morgan', bold: true, weight: 1.5 }, { t: '0400 000 000' }], 0.2)];
+      return withIcon(a, ic('star'), w / h > 3 ? 4.5 : 2.6, (t) => stack(t, narrow(h) ? [{ t: 'Charlie Morgan', bold: true }] : [{ t: 'Charlie Morgan', bold: true, weight: 1.5 }, { t: '0400 000 000' }], 0.2));
     },
   },
   {
@@ -591,10 +638,11 @@ const HOME: TemplateDesign[] = [
     sizes: [...NARROW, ...SMALL],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 5 : 3], 1);
-      const [n, d] = rows(t, [1.4, 1], 0.2);
-      const [dl, dv] = cols(d, [1, 1.6], 0.6);
-      return [...icon(i, ic('leaf')), ...text(n, 'Cherry tomato', { bold: true }), ...text(dl, 'Sown'), ...date(dv, 'D MMM YY', 0)];
+      return withIcon(a, ic('leaf'), w / h > 3 ? 5 : 3, (t) => {
+        const [n, d] = rows(t, [1.4, 1], 0.2);
+        const [dl, dv] = cols(d, [1, 1.6], 0.6);
+        return pack([text(n, 'Cherry tomato', { bold: true }), onBaseline([text(dl, 'Sown'), date(dv, 'D MMM YY', 0)])], t, 0.2);
+      });
     },
   },
   {
@@ -605,8 +653,7 @@ const HOME: TemplateDesign[] = [
     sizes: [...NARROW, [40, 20]],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 5 : 3], 1);
-      return [...icon(i, ic('plug')), ...text(t, 'Laptop charger', { bold: true })];
+      return withIcon(a, ic('plug'), w / h > 3 ? 5 : 3, (t) => text(t, 'Laptop charger', { bold: true }));
     },
   },
   {
@@ -619,7 +666,7 @@ const HOME: TemplateDesign[] = [
     build: (w, h) => {
       const a = roundArea(w, h);
       const [n, d] = rows(a, [1.5, 1], 0.3);
-      return [circle(inset(box(0, 0, w, h), w * 0.06), { stroke: 0.3 }), ...text(n, 'Plum jam', { bold: true, align: 'center' }), ...date(d, 'MMM YY', 0, { align: 'center' })];
+      return [circle(inset(box(0, 0, w, h), w * 0.06), { stroke: 0.3 }), ...pack([text(n, 'Plum jam', { bold: true, align: 'center' }), date(d, 'MMM YY', 0, { align: 'center' })], a, 0.3)];
     },
   },
 ];
@@ -635,17 +682,19 @@ const FOOD: TemplateDesign[] = [
     sizes: [[50, 30], [40, 30], [50, 50], [60, 40]],
     build: (w, h) => {
       const a = area(w, h);
-      const [name, r1, r2, r3] = rows(a, [1.5, 1, 1, 1], 0.4);
-      const row = (b: Box, label: string, fill: (v: Box) => Part[]) => {
-        const [l, v] = cols(b, [1, 1.6], 0.6);
-        return [...text(l, label), ...fill(v)];
-      };
-      return [
-        ...text(name, 'Chicken stock', { bold: true }),
-        ...row(r1, 'Prepared', (v) => date(v, 'DD/MM HH:mm', 0)),
-        ...row(r2, 'Use by', (v) => date(v, 'ddd DD/MM', 2, { bold: true })),
-        ...row(r3, 'By', (v) => [hline(v.x, v.y + v.h - 0.3, v.w)]),
-      ];
+      const [name, body] = rows(a, [1.5, 3.4], 0.4);
+      return pack(
+        [
+          text(name, 'Chicken stock', { bold: true }),
+          ...pairs(body, [
+            ['Prepared', (v, maxPt) => date(v, 'DD/MM HH:mm', 0, { maxPt }), '00/00 00:00'],
+            ['Use by', (v, maxPt) => date(v, 'ddd DD/MM', 2, { bold: true, maxPt }), 'Wed 00/00'],
+            ['By', (v) => [hline(v.x, v.y + v.h - 0.3, v.w)]],
+          ], { ratio: 1.6 }),
+        ],
+        a,
+        0.4,
+      );
     },
   },
   {
@@ -660,7 +709,7 @@ const FOOD: TemplateDesign[] = [
       const items = ['Gluten', 'Crustacea', 'Egg', 'Fish', 'Milk', 'Peanut', 'Tree nuts', 'Sesame', 'Soy', 'Lupin', 'Sulphites', 'Mustard', 'Celery', 'Molluscs'];
       const half = Math.ceil(items.length / 2);
       const cells = Array.from({ length: half }, (_, i) => [`☐ ${items[i]}`, items[i + half] ? `☐ ${items[i + half]}` : '']);
-      return [...text(head, 'CONTAINS', { invert: true, bold: true, align: 'center' }), ...table(body, cells, { line: 0 })];
+      return pack([text(head, 'CONTAINS', { invert: true, hug: true, bold: true, align: 'center', maxPt: 14 }), table(body, cells, { line: 0 })], a, 1);
     },
   },
   {
@@ -676,8 +725,7 @@ const FOOD: TemplateDesign[] = [
       const [d, n] = rows(a, [2, 1], 0.3);
       return [
         ...(isRound ? [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 })] : []),
-        ...date(d, 'ddd', 0, { bold: true, align: 'center' }),
-        ...date(n, 'D MMM', 0, { align: 'center' }),
+        ...pack([date(d, 'ddd', 0, { bold: true, align: 'center' }), date(n, 'D MMM', 0, { align: 'center' })], a, 0.3),
       ];
     },
   },
@@ -691,14 +739,20 @@ const FOOD: TemplateDesign[] = [
       const a = area(w, h);
       const [name, ing, info, code] = rows(a, [1.4, 2.6, 1, 1.6], 0.6);
       const [wt, bb] = cols(info, [1, 1.4], 1);
-      return [
-        ...text(name, 'Lemon Curd', { bold: true }),
-        ...text(ing, 'Ingredients: sugar, lemon juice (30%), butter (milk), egg, lemon zest.', { minPt: 5, valign: 'top' }),
-        ...text(wt, 'Net 250 g'),
-        ...text(cols(bb, [1.3, 1], 0.5)[0], 'Best before', { align: 'right' }),
-        ...date(cols(bb, [1.3, 1], 0.5)[1], 'DD/MM/YY', 60, { bold: true, align: 'right' }),
-        ...barcode(code, '9300000000002', 'ean13'),
-      ];
+      return pack(
+        [
+          text(name, 'Lemon Curd', { bold: true }),
+          text(ing, 'Ingredients: sugar, lemon juice (30%), butter (milk), egg, lemon zest.', { minPt: 5, valign: 'top' }),
+          onBaseline([
+            text(wt, 'Net 250 g'),
+            text(cols(bb, [1.3, 1], 0.5)[0], 'Best before', { align: 'right' }),
+            date(cols(bb, [1.3, 1], 0.5)[1], 'DD/MM/YY', 60, { bold: true, align: 'right' }),
+          ]),
+          barcode(code, '9300000000002', 'ean13'),
+        ],
+        a,
+        0.6,
+      );
     },
   },
   {
@@ -710,7 +764,7 @@ const FOOD: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [l, n] = rows(a, [1, 3], 0.5);
-      return [...text(l, 'TABLE', { align: 'center', spacing: 200 }), ...text(n, '12', { bold: true, align: 'center' })];
+      return pack([text(l, 'TABLE', { align: 'center', spacing: 200 }), text(n, '12', { bold: true, align: 'center' })], a, 0.5);
     },
   },
 ];
@@ -731,7 +785,7 @@ const RETAIL: TemplateDesign[] = [
         return [...stack(left, [{ t: 'Ceramic mug', bold: true }, { t: '$12.95', bold: true, weight: 1.8 }], 0.3), ...barcode(right, '9300000000002', 'ean13', true, 5)];
       }
       const [name, price, code] = rows(a, [1, 1.8, 1.6], 0.5);
-      return [...text(name, 'Ceramic mug, 350 ml', { bold: true }), ...text(price, '$12.95', { bold: true }), ...barcode(code, '9300000000002', 'ean13')];
+      return pack([text(name, 'Ceramic mug, 350 ml', { bold: true }), text(price, '$12.95', { bold: true }), barcode(code, '9300000000002', 'ean13')], a, 0.5);
     },
   },
   {
@@ -743,7 +797,7 @@ const RETAIL: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [n, p] = cols(a, [2.2, 1], 1);
-      return [...text(n, 'Ceramic mug'), ...text(p, '$12.95', { bold: true, align: 'right' })];
+      return onBaseline([text(n, 'Ceramic mug'), text(p, '$12.95', { bold: true, align: 'right' })]);
     },
   },
   {
@@ -756,7 +810,7 @@ const RETAIL: TemplateDesign[] = [
     build: (w, h) => {
       const a = roundArea(w, h);
       const [s, d] = rows(a, [1, 1.3], 0.2);
-      return [circle(box(0, 0, w, h), { fill: true }), ...text(s, 'SALE', { bold: true, align: 'center' }).map(white), ...text(d, '30% OFF', { bold: true, align: 'center' }).map(white)];
+      return [circle(box(0, 0, w, h), { fill: true }), ...pack([text(s, 'SALE', { bold: true, align: 'center' }).map(white), text(d, '30% OFF', { bold: true, align: 'center' }).map(white)], a, 0.2)];
     },
   },
   {
@@ -772,9 +826,12 @@ const RETAIL: TemplateDesign[] = [
       const [i, t, s] = rows(a, [1, 1.3, 0.8], 0.3);
       return [
         ...(isRound ? [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 })] : []),
-        ...icon(i, ic('heart')),
-        ...text(t, 'Thank you', { bold: true, italic: true, align: 'center' }),
-        ...text(s, 'yourshop.example', { align: 'center' }),
+        ...pack(
+          [icon(i, ic('heart')), text(t, 'Thank you', { bold: true, italic: true, align: 'center' }), text(s, 'yourshop.example', { align: 'center' })],
+          a,
+          0.3,
+          [[square(i).y, square(i).y + square(i).h]],
+        ),
       ];
     },
   },
@@ -813,7 +870,7 @@ const RETAIL: TemplateDesign[] = [
       const a = area(w, h);
       const [t, code] = rows(a, [1, 1.5], 0.6);
       const [n, v] = cols(t, [2, 1], 1);
-      return [...text(n, 'Linen tote bag', { bold: true }), ...text(v, 'Natural', { align: 'right' }), ...barcode(code, 'TOTE-NAT-01')];
+      return pack([onBaseline([text(n, 'Linen tote bag', { bold: true }), text(v, 'Natural', { align: 'right' })]), barcode(code, 'TOTE-NAT-01')], a, 0.6);
     },
   },
 ];
@@ -831,12 +888,18 @@ const SHIPPING: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [from, to, code] = rows(a, [1, 2, 1.2], 2);
-      return [
-        ...stack(from, [{ t: 'FROM', bold: true, maxPt: 8 }, { t: 'Your Shop' }, { t: '12 Example Street' }, { t: 'Brisbane QLD 4000' }], 0.3),
-        rect(to, { stroke: 0.5, radius: 1.5 }),
-        ...stack(inset(to, 3), [{ t: 'TO', bold: true, maxPt: 9 }, { t: 'Sam Lee', bold: true, weight: 1.6 }, { t: 'Unit 4, 88 Sample Road' }, { t: 'Melbourne VIC 3000' }], 0.5),
-        ...barcode(code, 'ORDER-104221'),
-      ];
+      return pack(
+        [
+          stack(from, [{ t: 'FROM', bold: true, maxPt: 8 }, { t: 'Your Shop' }, { t: '12 Example Street' }, { t: 'Brisbane QLD 4000' }], 0.3),
+          [
+            rect(to, { stroke: 0.5, radius: 1.5 }),
+            ...stack(inset(to, 3), [{ t: 'TO', bold: true, maxPt: 9 }, { t: 'Sam Lee', bold: true, weight: 1.6 }, { t: 'Unit 4, 88 Sample Road' }, { t: 'Melbourne VIC 3000' }], 0.5),
+          ],
+          barcode(code, 'ORDER-104221'),
+        ],
+        a,
+        2,
+      );
     },
   },
   {
@@ -876,7 +939,8 @@ const SHIPPING: TemplateDesign[] = [
       const a = area(w, h);
       const [icons, words] = rows(a, [1.6, 1], 1);
       const [i1, i2] = cols(icons, [1, 1], 2);
-      return [...icon(i1, ic('fragile')), ...icon(i2, ic('this way up')), ...text(words, 'FRAGILE · THIS WAY UP', { bold: true, align: 'center' })];
+      const s = square(i1);
+      return pack([[...icon(i1, ic('fragile')), ...icon(i2, ic('this way up'))], text(words, 'FRAGILE · THIS WAY UP', { bold: true, align: 'center' })], a, 1, [[s.y, s.y + s.h]]);
     },
   },
   {
@@ -888,7 +952,7 @@ const SHIPPING: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [n, o] = rows(a, [1.6, 1], 0.6);
-      return [...serial(n, { start: 1, step: 1, digits: 1, prefix: 'BOX ', suffix: ' OF 6' }, { bold: true, align: 'center' }), ...text(o, 'Order 104221', { align: 'center' })];
+      return pack([serial(n, { start: 1, step: 1, digits: 1, prefix: 'BOX ', suffix: ' OF 6' }, { bold: true, align: 'center' }), text(o, 'Order 104221', { align: 'center' })], a, 0.6);
     },
   },
 ];
@@ -905,7 +969,7 @@ const WORKSHOP: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [n, t] = cols(a, [1, 3], 1);
-      return [...text(n, 'C12', { invert: true, bold: true, align: 'center' }), ...text(t, 'Kitchen power', { bold: true })];
+      return onBaseline([text(n, 'C12', { invert: true, bold: true, align: 'center' }), text(t, 'Kitchen power', { bold: true })]);
     },
   },
   {
@@ -919,10 +983,11 @@ const WORKSHOP: TemplateDesign[] = [
       const [head, body] = rows(a, [1, h > w ? 8 : 4.5], 1);
       const list = ['Lights, front', 'Lights, rear', 'Kitchen power', 'Oven', 'Hot water', 'Air conditioner', 'Laundry', 'Garage'];
       const n = h > w ? 8 : 6;
-      return [
-        ...text(head, 'CIRCUITS', { invert: true, bold: true, align: 'center' }),
-        ...table(body, list.slice(0, n).map((d, i) => [`C${i + 1}`, d]), { colRatios: [1, 4] }),
-      ];
+      return pack(
+        [text(head, 'CIRCUITS', { invert: true, hug: true, bold: true, align: 'center', maxPt: 14 }), table(body, list.slice(0, n).map((d, i) => [`C${i + 1}`, d]), { colRatios: [1, 4] })],
+        a,
+        1,
+      );
     },
   },
   {
@@ -933,8 +998,7 @@ const WORKSHOP: TemplateDesign[] = [
     sizes: [...NARROW, ...SMALL],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 5 : 3], 1);
-      return [...icon(i, ic('tools')), ...stack(t, [{ t: 'A. MORGAN', bold: true }, ...(narrow(h) && w < 40 ? [] : [{ t: '0400 000 000' }])], 0.2)];
+      return withIcon(a, ic('tools'), w / h > 3 ? 5 : 3, (t) => stack(t, [{ t: 'A. MORGAN', bold: true }, ...(narrow(h) && w < 40 ? [] : [{ t: '0400 000 000' }])], 0.2));
     },
   },
   {
@@ -945,17 +1009,19 @@ const WORKSHOP: TemplateDesign[] = [
     sizes: [[50, 30], [40, 30], [50, 50], [60, 40]],
     build: (w, h) => {
       const a = area(w, h);
-      const [head, r1, r2, r3] = rows(a, [1.2, 1, 1, 1], 0.5);
-      const pair = (b: Box, label: string, v: (x: Box) => Part[]) => {
-        const [l, x] = cols(b, [1, 1.5], 0.6);
-        return [...text(l, label), ...v(x)];
-      };
-      return [
-        ...text(head, 'INSPECTED', { invert: true, bold: true, align: 'center', spacing: 80 }),
-        ...pair(r1, 'Date', (x) => date(x, 'DD/MM/YYYY', 0, { bold: true })),
-        ...pair(r2, 'Next due', (x) => date(x, 'DD/MM/YYYY', 365, { bold: true })),
-        ...pair(r3, 'By', (x) => [hline(x.x, x.y + x.h - 0.3, x.w)]),
-      ];
+      const [head, body] = rows(a, [1.2, 3], 0.5);
+      return pack(
+        [
+          text(head, 'INSPECTED', { invert: true, hug: true, bold: true, align: 'center', spacing: 80 }),
+          ...pairs(body, [
+            ['Date', (x, maxPt) => date(x, 'DD/MM/YYYY', 0, { bold: true, maxPt }), '00/00/0000'],
+            ['Next due', (x, maxPt) => date(x, 'DD/MM/YYYY', 365, { bold: true, maxPt }), '00/00/0000'],
+            ['By', (x) => [hline(x.x, x.y + x.h - 0.3, x.w)]],
+          ], { gap: 0.5 }),
+        ],
+        a,
+        0.5,
+      );
     },
   },
   {
@@ -966,8 +1032,7 @@ const WORKSHOP: TemplateDesign[] = [
     sizes: [[50, 30], [40, 30], ...SMALL, [50, 50], ...NARROW],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 2.5 ? 4 : 2], 1);
-      return [...icon(i, ic('high voltage')), ...stack(t, narrow(h) ? [{ t: 'HIGH VOLTAGE', bold: true }] : [{ t: 'DANGER', bold: true, weight: 1.4 }, { t: 'High voltage' }], 0.3)];
+      return withIcon(a, ic('high voltage'), w / h > 2.5 ? 4 : 2, (t) => stack(t, narrow(h) ? [{ t: 'HIGH VOLTAGE', bold: true }] : [{ t: 'DANGER', bold: true, weight: 1.4 }, { t: 'High voltage' }], 0.3));
     },
   },
 ];
@@ -998,7 +1063,7 @@ const LAB: TemplateDesign[] = [
       const a = area(w, h);
       const [t, code] = rows(a, [1, 1.6], 0.6);
       const [n, d] = cols(t, [1.6, 1], 1);
-      return [...text(n, 'Soil sample, plot 4', { bold: true }), ...date(d, 'DD/MM/YY', 0, { align: 'right' }), ...barcode(code, 'SP-26-0412')];
+      return pack([onBaseline([text(n, 'Soil sample, plot 4', { bold: true }), date(d, 'DD/MM/YY', 0, { align: 'right' })]), barcode(code, 'SP-26-0412')], a, 0.6);
     },
   },
   {
@@ -1010,7 +1075,7 @@ const LAB: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [n, t] = rows(a, [1, 2], 0.8);
-      return [...text(n, 'Medicine name 10 mg', { bold: true }), ...table(t, [['Morning', 'Noon', 'Evening', 'Night'], ['1', '', '1', '']], { align: 'center' })];
+      return pack([text(n, 'Medicine name 10 mg', { bold: true }), table(t, [['Morning', 'Noon', 'Evening', 'Night'], ['1', '', '1', '']], { align: 'center' })], a, 0.8);
     },
   },
   {
@@ -1023,7 +1088,11 @@ const LAB: TemplateDesign[] = [
       const a = area(w, h);
       const [head, loc, chk] = rows(a, [1.4, 1, 1], 0.6);
       const [l, v] = cols(chk, [1, 1.5], 0.6);
-      return [...text(head, '+ FIRST AID', { invert: true, bold: true, align: 'center' }), ...text(loc, 'Kitchen, top cupboard', { align: 'center' }), ...text(l, 'Checked'), ...date(v, 'DD/MM/YYYY', 0, { bold: true })];
+      return pack(
+        [text(head, '+ FIRST AID', { invert: true, hug: true, bold: true, align: 'center' }), text(loc, 'Kitchen, top cupboard', { align: 'center' }), onBaseline([text(l, 'Checked'), date(v, 'DD/MM/YYYY', 0, { bold: true })])],
+        a,
+        0.6,
+      );
     },
   },
 ];
@@ -1041,7 +1110,10 @@ const SCHOOL: TemplateDesign[] = [
       const a = area(w, h);
       const [i, t] = w / h > 1.3 ? cols(a, [1, 2.2], 1.5) : rows(a, [1.4, 1.6], 1);
       const [l, n] = rows(t, [1, 1.2], 0.6);
-      return [...icon(i, ic('book')), ...text(l, 'This book belongs to', { italic: true, align: 'center' }), ...text(n, 'Charlie Morgan', { bold: true, align: 'center' })];
+      const words = [text(l, 'This book belongs to', { italic: true, align: 'center' }), text(n, 'Charlie Morgan', { bold: true, align: 'center' })];
+      if (w / h > 1.3) return [...icon(i, ic('book')), ...pack(words, t, 0.6)];
+      const s = square(i);
+      return pack([icon(i, ic('book')), ...words], a, 1, [[s.y, s.y + s.h]]);
     },
   },
   {
@@ -1060,8 +1132,7 @@ const SCHOOL: TemplateDesign[] = [
     sizes: [...NARROW, ...SMALL],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 5 : 3], 1);
-      return [...icon(i, ic('food')), ...stack(t, [{ t: 'Charlie Morgan', bold: true, weight: 1.3 }, { t: 'Class 3B' }], 0.2)];
+      return withIcon(a, ic('food'), w / h > 3 ? 5 : 3, (t) => stack(t, [{ t: 'Charlie Morgan', bold: true, weight: 1.3 }, { t: 'Class 3B' }], 0.2));
     },
   },
   {

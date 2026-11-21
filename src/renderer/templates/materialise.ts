@@ -38,7 +38,8 @@ export function thumbnail(design: TemplateDesign, w: number, h: number): Promise
   if (!p) {
     p = queue.then(async () => {
       const t = await buildTemplate(design, w, h);
-      const dots = Math.min(8, 240 / Math.max(w, h));
+      // The resolution of the printer, so that codes snap to whole dots as they do in print. The card scales the image down.
+      const dots = Math.min(8, 1200 / Math.max(w, h));
       const sample = design.sampleData;
       const row = sample ? Object.fromEntries(sample.columns.map((c, i) => [c, sample.rows[0]?.[i] ?? ''])) : undefined;
       const canvas = await renderLabel(t, dots, { index: 0, row });

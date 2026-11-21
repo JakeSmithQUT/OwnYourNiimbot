@@ -3,7 +3,9 @@
 
 import { ICONS, iconSvg } from '../editor/icons';
 import type { Dataset } from '../editor/template';
-import { box, cols, fitPt, inset, rows, text, type Box, type Part } from './layout';
+import { LabelBarcode } from '../editor/objects';
+import type { FabricObject } from 'fabric';
+import { box, cols, extentX, fitPt, icon, inset, onBaseline, pack, rows, shift, square, text, type Box, type Part, type TextOptions } from './layout';
 
 export type Category =
   | 'IT and servers'
@@ -111,7 +113,7 @@ export function stack(b: Box, lines: Line[], gap = 0.4): Part[] {
     const pt = fitPt(l.fit ?? l.t, parts[i], { bold: l.bold, italic: l.italic, maxPt: l.maxPt, font: l.font, spacing: l.spacing });
     shared.set(key(l), Math.min(shared.get(key(l)) ?? Infinity, pt));
   });
-  return lines.flatMap((l, i) =>
+  const drawn = lines.map((l, i) =>
     text(parts[i], l.t, {
       bold: l.bold,
       align: l.align,
@@ -123,6 +125,7 @@ export function stack(b: Box, lines: Line[], gap = 0.4): Part[] {
       maxPt: l.invert ? l.maxPt : shared.get(key(l)),
     }),
   );
+  return pack(drawn, b, gap);
 }
 
 /** Content on the left and a square code on the right. */
@@ -130,8 +133,57 @@ export function withCode(b: Box, code: (sq: Box) => Part[], body: (rest: Box) =>
   const s = Math.min(b.h, b.w * 0.45);
   const gap = Math.max(1, b.w * 0.03);
   const codeBox = side === 'right' ? box(b.x + b.w - s, b.y + (b.h - s) / 2, s, s) : box(b.x, b.y + (b.h - s) / 2, s, s);
-  const rest = side === 'right' ? box(b.x, b.y, b.w - s - gap, b.h) : box(b.x + s + gap, b.y, b.w - s - gap, b.h);
-  return [...code(codeBox), ...body(rest)];
+  const parts = code(codeBox);
+  // A 2D code gets a whole number of printer dots for each module, so it can be
+  // smaller than its box. It goes to the outer edge, and the text gets the rest.
+  const codes = parts.filter((p): p is LabelBarcode => p instanceof LabelBarcode);
+  const used = codes.length ? Math.max(...codes.map((p) => (p.width * p.scaleX) / 10)) : s;
+  const w = Math.min(s, used);
+  if (w < s) for (const p of codes) p.set({ left: (side === 'right' ? b.x + b.w - (p.width * p.scaleX) / 10 : b.x) * 10 });
+  const rest = side === 'right' ? box(b.x, b.y, b.w - w - gap, b.h) : box(b.x + w + gap, b.y, b.w - w - gap, b.h);
+  const text = body(rest);
+  if (side === 'left') {
+    // Short text beside a code on the left: the code and the text are centred as a group.
+    const x = extentX(text);
+    const dx = x ? (b.x + b.w - Math.max(x[1], b.x + w)) / 2 : 0;
+    if (dx > 0.2) return shift([...parts, ...text], dx, 0);
+  }
+  return [...parts, ...text];
+}
+
+/** Captions with values in rows. Captions share one font size and values share another, so that the rows line up. */
+export function pairs(b: Box, list: [string, (v: Box, maxPt: number) => Part[], string?][], o: { gap?: number; ratio?: number; caption?: TextOptions; valueText?: (i: number) => string } = {}): Part[][] {
+  const boxes = rows(b, list.map(() => 1), o.gap ?? 0.4);
+  const split = boxes.map((r) => cols(r, [1, o.ratio ?? 1.5], 0.6));
+  const capPt = Math.min(...list.map(([label], i) => fitPt(label, split[i][0], o.caption)));
+  const valPt = Math.min(...list.map(([, , sample], i) => (sample ? fitPt(sample, split[i][1], { bold: true }) : Infinity)));
+  return list.map(([label, value], i) => {
+    const caption = text(split[i][0], label, { ...o.caption, maxPt: capPt });
+    const v = value(split[i][1], valPt);
+    return v.every((p) => !(p instanceof Promise)) ? onBaseline([caption, v as FabricObject[]]) : [...caption, ...v];
+  });
+}
+
+/** Centres parts across the box by the space that they use, for a short block of text on a wide label. */
+export function centreX(parts: Part[], b: Box): Part[] {
+  const x = extentX(parts);
+  return x ? shift(parts, b.x + (b.w - (x[1] - x[0])) / 2 - x[0], 0) : parts;
+}
+
+/**
+ * A symbol at the left edge and content beside it. The symbol takes 1 part of
+ * the width and the content `share` parts. When the content is short, the
+ * symbol and the content are centred on the label as a group.
+ */
+export function withIcon(b: Box, svg: string, share: number, body: (rest: Box) => Part[], gap = 1): Part[] {
+  const [col] = cols(b, [1, share], gap);
+  const sq = square(col, 'start');
+  const rest = box(sq.x + sq.w + gap, b.y, b.x + b.w - (sq.x + sq.w + gap), b.h);
+  const parts = body(rest);
+  const x = extentX(parts);
+  const dx = x ? (b.x + b.w - Math.max(x[1], sq.x + sq.w)) / 2 : 0;
+  const all = [...icon(sq, svg), ...parts];
+  return dx > 0.2 ? shift(all, dx, 0) : all;
 }
 
 /** Repeats a design function across equal columns, for cable wraps and fold-over flags. */

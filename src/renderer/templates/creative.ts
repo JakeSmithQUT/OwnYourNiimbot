@@ -2,8 +2,9 @@
 // Designs keep to solid black and white, with lines of at least 0.3 mm,
 // so that they print cleanly on a 1-bit thermal head.
 
-import { art, barcode, box, cols, datamatrix, date, hline, icon, inset, qr, rect, rows, serial, text, vline, type Box, type Part } from './layout';
-import { area, ic, NARROW, narrow, pad, ROUND, roundArea, SMALL, stack, TALL, white, withCode, type TemplateDesign } from './kit';
+import type { FabricObject } from 'fabric';
+import { art, barcode, box, cols, datamatrix, date, extentX, hline, icon, inset, onBaseline, pack, qr, rect, rows, serial, shift, text, vline, type Box, type Part } from './layout';
+import { area, ic, NARROW, narrow, pad, ROUND, roundArea, SMALL, stack, TALL, white, withCode, withIcon, type TemplateDesign } from './kit';
 import * as orn from './ornaments';
 
 const F = {
@@ -31,11 +32,14 @@ const F = {
 const full = (w: number, h: number) => box(0, 0, w, h);
 const isRound = (w: number, h: number) => Math.abs(w - h) < 0.5 && w <= 51;
 const tall = (w: number, h: number) => h > w * 1.15;
+/** Top and bottom of a row that an ornament fills, for pack(). */
+const span = (b: Box): [number, number] => [b.y, b.y + b.h];
 
 /** A small caption and a value on one row, for example "Roasted" and a date. */
 function pair(b: Box, label: string, value: (v: Box) => Part[], font = F.sans, ratio = 1.1): Part[] {
   const [l, v] = cols(b, [ratio, 1.6], 0.6);
-  return [...text(l, label, { font }), ...value(v)];
+  const parts = value(v);
+  return parts.every((p) => !(p instanceof Promise)) ? onBaseline([text(l, label, { font }), parts as FabricObject[]]) : [...text(l, label, { font }), ...parts];
 }
 
 // ---------- Gifts and crafts ----------
@@ -57,10 +61,12 @@ const GIFTS: TemplateDesign[] = [
       };
       return [
         ...art(full(w, h), orn.frame(w, h, { stroke: 0.5, radius: 1.6, inner: 1.3, innerStroke: 0.25 })),
-        ...text(title, 'For you', { font: F.formal, align: 'center' }),
-        ...art(inset(rule, rule.w * 0.2, 0), orn.diamondRule(rule.w * 0.6, rule.h)),
-        ...line(to, 'To', 'Sam'),
-        ...line(from, 'From', 'Alex'),
+        ...pack(
+          [text(title, 'For you', { font: F.formal, align: 'center' }), art(inset(rule, rule.w * 0.2, 0), orn.diamondRule(rule.w * 0.6, rule.h)), line(to, 'To', 'Sam'), line(from, 'From', 'Alex')],
+          a,
+          0.4,
+          [undefined, span(rule)],
+        ),
       ];
     },
   },
@@ -78,11 +84,12 @@ const GIFTS: TemplateDesign[] = [
       const [no, num] = rows(stub, [1, 1.6], 0.4);
       return [
         ...art(full(w, h), orn.ticket(w, h, 0.55)),
-        ...text(top, 'ADMIT ONE', { font: F.bebas, align: 'center', spacing: 200 }),
-        ...text(mid, 'Happy Birthday', { font: F.retro, align: 'center' }),
-        ...text(bottom, 'love, Sam', { font: F.hand, bold: true, align: 'center' }),
-        ...text(no, 'NO.', { font: F.bebas, align: 'center', spacing: 100 }),
-        ...serial(num, { start: 1, step: 1, digits: 3, prefix: '', suffix: '' }, { font: F.bebas, align: 'center' }),
+        ...pack(
+          [text(top, 'ADMIT ONE', { font: F.bebas, align: 'center', spacing: 200 }), text(mid, 'Happy Birthday', { font: F.retro, align: 'center' }), text(bottom, 'love, Sam', { font: F.hand, bold: true, align: 'center' })],
+          main,
+          0.4,
+        ),
+        ...pack([text(no, 'NO.', { font: F.bebas, align: 'center', spacing: 100 }), serial(num, { start: 1, step: 1, digits: 3, prefix: '', suffix: '' }, { font: F.bebas, align: 'center' })], stub, 0.4),
       ];
     },
   },
@@ -99,8 +106,7 @@ const GIFTS: TemplateDesign[] = [
       const [t1, t2] = rows(a, [1.5, 0.8], 0.3);
       return [
         ...art(full(w, h), orn.seal(w, Math.round(w * 0.9))),
-        ...text(t1, 'handmade', { font: F.retro, align: 'center' }).map(white),
-        ...text(t2, 'WITH LOVE', { font: F.sans, bold: true, align: 'center', spacing: 160 }).map(white),
+        ...pack([text(t1, 'handmade', { font: F.retro, align: 'center' }).map(white), text(t2, 'WITH LOVE', { font: F.sans, bold: true, align: 'center', spacing: 160 }).map(white)], a, 0.3),
       ];
     },
   },
@@ -120,9 +126,12 @@ const GIFTS: TemplateDesign[] = [
       const [t, r, s] = rows(a, sub ? [2.2, 0.45, 0.8] : [2.2, 0.45, 0.01], 0.4);
       return [
         ...(roundLabel ? [rect(inset(full(w, h), w * 0.05), { stroke: 0.4, radius: w * 0.45 })] : []),
-        ...text(t, 'Thank you', { font: F.formal, align: 'center' }),
-        ...art(inset(r, r.w * 0.12, 0), orn.diamondRule(r.w * 0.76, r.h)),
-        ...(sub ? text(s, sub, { font: F.sans, bold: true, align: 'center', spacing: 120 }) : []),
+        ...pack(
+          [text(t, 'Thank you', { font: F.formal, align: 'center' }), art(inset(r, r.w * 0.12, 0), orn.diamondRule(r.w * 0.76, r.h)), ...(sub ? [text(s, sub, { font: F.sans, bold: true, align: 'center', spacing: 120 })] : [])],
+          a,
+          0.4,
+          [undefined, span(r)],
+        ),
       ];
     },
   },
@@ -140,9 +149,12 @@ const GIFTS: TemplateDesign[] = [
       const [n, s, d] = rows(a, [2, 0.7, 0.8], 0.4);
       return [
         ...(roundLabel ? [rect(inset(full(w, h), w * 0.04), { stroke: 0.35, radius: w * 0.46 })] : art(full(w, h), orn.frame(w, h, { stroke: 0.4, inner: 1.2, innerStroke: 0.25 }))),
-        ...text(n, 'A & J', { font: F.serif, italic: true, bold: true, align: 'center' }),
-        ...art(inset(s, s.w * 0.18, 0), orn.sprig(s.w * 0.64, s.h)),
-        ...text(d, '12 · 03 · 2027', { font: F.classic, align: 'center', spacing: 80 }),
+        ...pack(
+          [text(n, 'A & J', { font: F.serif, italic: true, bold: true, align: 'center' }), art(inset(s, s.w * 0.18, 0), orn.sprig(s.w * 0.64, s.h)), text(d, '12 · 03 · 2027', { font: F.classic, align: 'center', spacing: 80 })],
+          a,
+          0.4,
+          [undefined, span(s)],
+        ),
       ];
     },
   },
@@ -154,16 +166,14 @@ const GIFTS: TemplateDesign[] = [
     fonts: [F.retro, F.round],
     sizes: [[50, 30], [40, 30], [60, 40], [50, 50]],
     build: (w, h) => {
-      const a = inset(full(w, h), pad(w, h) + 0.5);
-      const [head, name, age] = rows(a, [1.4, 1.6, 0.8], 0.4);
       const s = Math.min(w, h) * 0.16;
+      const a = inset(full(w, h), Math.max(pad(w, h) + 0.5, s + 1.2), pad(w, h) + 0.5);
+      const [head, name, age] = rows(a, [1.4, 1.6, 0.8], 0.4);
       return [
         ...art(box(0.8, 0.8, s, s), orn.star(s, s)),
         ...art(box(w - s - 0.8, h - s - 0.8, s, s), orn.star(s, s)),
         ...art(box(w - s * 0.7 - 1.2, 1.2, s * 0.7, s * 0.7), orn.star(s * 0.7, s * 0.7, false)),
-        ...text(head, 'Happy Birthday', { font: F.retro, align: 'center' }),
-        ...text(name, 'Mia', { font: F.round, bold: true, align: 'center' }),
-        ...text(age, 'is turning seven', { font: F.round, align: 'center' }),
+        ...pack([text(head, 'Happy Birthday', { font: F.retro, align: 'center' }), text(name, 'Mia', { font: F.round, bold: true, align: 'center' }), text(age, 'is turning seven', { font: F.round, align: 'center' })], a, 0.4),
       ];
     },
   },
@@ -180,11 +190,22 @@ const GIFTS: TemplateDesign[] = [
       const [head, pic, rule, name, line] = parts;
       return [
         ...art(full(w, h), orn.frame(w, h, { stroke: 0.7, radius: 0.6, inner: 1.6, innerStroke: 0.3 })),
-        ...text(head, 'EX LIBRIS', { font: F.classic, bold: true, align: 'center', spacing: 200 }),
-        ...(pic.h > 2 ? icon(pic, ic('book')) : []),
-        ...art(inset(rule, rule.w * 0.15, 0), orn.diamondRule(rule.w * 0.7, rule.h)),
-        ...text(name, 'Charlotte Morgan', { font: F.serif, italic: true, align: 'center' }),
-        ...art(inset(line, line.w * 0.3, 0), orn.dots(line.w * 0.4, line.h)),
+        ...(() => {
+          const sq = box(pic.x + (pic.w - Math.min(pic.w, pic.h)) / 2, pic.y + (pic.h - Math.min(pic.w, pic.h)) / 2, Math.min(pic.w, pic.h), Math.min(pic.w, pic.h));
+          const withPic = pic.h > 2;
+          return pack(
+            [
+              text(head, 'EX LIBRIS', { font: F.classic, bold: true, align: 'center', spacing: 200 }),
+              ...(withPic ? [icon(pic, ic('book'))] : []),
+              art(inset(rule, rule.w * 0.15, 0), orn.diamondRule(rule.w * 0.7, rule.h)),
+              text(name, 'Charlotte Morgan', { font: F.serif, italic: true, align: 'center' }),
+              art(inset(line, line.w * 0.3, 0), orn.dots(line.w * 0.4, line.h)),
+            ],
+            a,
+            0.6,
+            withPic ? [undefined, span(sq), span(rule), undefined, span(line)] : [undefined, span(rule), undefined, span(line)],
+          );
+        })(),
       ];
     },
   },
@@ -200,10 +221,17 @@ const GIFTS: TemplateDesign[] = [
       const [brand, rule, scent, detail] = rows(a, [1, 0.45, tall(w, h) ? 2.2 : 1.5, 0.7], 0.6);
       return [
         ...art(full(w, h), orn.frame(w, h, { stroke: 0.45, radius: 1, inner: 1.2, innerStroke: 0.25 })),
-        ...text(brand, 'LUMEN & CO', { font: F.classic, bold: true, align: 'center', spacing: 220 }),
-        ...art(inset(rule, rule.w * 0.2, 0), orn.diamondRule(rule.w * 0.6, rule.h)),
-        ...text(scent, 'Fig & Cedar', { font: F.serif, italic: true, align: 'center' }),
-        ...text(detail, 'SOY WAX · 200 G · 40 HOURS', { font: F.sans, bold: true, align: 'center', spacing: 80 }),
+        ...pack(
+          [
+            text(brand, 'LUMEN & CO', { font: F.classic, bold: true, align: 'center', spacing: 220 }),
+            art(inset(rule, rule.w * 0.2, 0), orn.diamondRule(rule.w * 0.6, rule.h)),
+            text(scent, 'Fig & Cedar', { font: F.serif, italic: true, align: 'center' }),
+            text(detail, 'SOY WAX · 200 G · 40 HOURS', { font: F.sans, bold: true, align: 'center', spacing: 80 }),
+          ],
+          a,
+          0.6,
+          [undefined, span(rule)],
+        ),
       ];
     },
   },
@@ -218,10 +246,17 @@ const GIFTS: TemplateDesign[] = [
       const a = area(w, h);
       const [brand, wv, scent, detail] = rows(a, [1.4, 0.4, 1.2, 0.7], 0.5);
       return [
-        ...text(brand, 'Bramble Soap Co.', { font: F.retro, align: 'center' }),
-        ...art(inset(wv, wv.w * 0.15, 0), orn.wave(wv.w * 0.7, wv.h)),
-        ...text(scent, 'Lavender & Oat', { font: F.serif, bold: true, align: 'center' }),
-        ...text(detail, 'COLD PROCESS · 100 G', { font: F.sans, bold: true, align: 'center', spacing: 100 }),
+        ...pack(
+          [
+            text(brand, 'Bramble Soap Co.', { font: F.retro, align: 'center' }),
+            art(inset(wv, wv.w * 0.15, 0), orn.wave(wv.w * 0.7, wv.h)),
+            text(scent, 'Lavender & Oat', { font: F.serif, bold: true, align: 'center' }),
+            text(detail, 'COLD PROCESS · 100 G', { font: F.sans, bold: true, align: 'center', spacing: 100 }),
+          ],
+          a,
+          0.5,
+          [undefined, span(wv)],
+        ),
       ];
     },
   },
@@ -239,9 +274,7 @@ const GIFTS: TemplateDesign[] = [
       const [m, fruit, d] = rows(a, [0.9, 1.6, 0.7], 0.3);
       return [
         ...(roundLabel ? art(full(w, h), orn.seal(w, Math.round(w * 0.9), false)) : art(full(w, h), orn.dotFrame(w, h, 0.55, 1.5))),
-        ...text(m, 'homemade', { font: F.script, bold: true, align: 'center' }),
-        ...text(fruit, 'Strawberry', { font: F.fat, align: 'center' }),
-        ...date(d, 'MMM YYYY', 0, { font: F.sans, bold: true, align: 'center', spacing: 100 }),
+        ...pack([text(m, 'homemade', { font: F.script, bold: true, align: 'center' }), text(fruit, 'Strawberry', { font: F.fat, align: 'center' }), date(d, 'MMM YYYY', 0, { font: F.sans, bold: true, align: 'center', spacing: 100 })], a, 0.3),
       ];
     },
   },
@@ -255,15 +288,15 @@ const GIFTS: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       if (narrow(h)) {
-        const [l, t] = cols(a, [1, w / h > 3 ? 4.5 : 2.4], 1);
-        return [...icon(l, ic('leaf')), ...text(t, 'Basil', { font: F.hand, bold: true })];
+        return withIcon(a, ic('leaf'), w / h > 3 ? 4.5 : 2.4, (t) => text(t, 'Basil', { font: F.hand, bold: true }));
       }
       const [s, n, note] = rows(a, [0.6, 1.6, 0.8], 0.3);
-      return [
-        ...art(inset(s, s.w * 0.2, 0), orn.sprig(s.w * 0.6, s.h)),
-        ...text(n, 'Sweet basil', { font: F.hand, bold: true, align: 'center' }),
-        ...text(note, 'water every 2 days', { font: F.hand, align: 'center' }),
-      ];
+      return pack(
+        [art(inset(s, s.w * 0.2, 0), orn.sprig(s.w * 0.6, s.h)), text(n, 'Sweet basil', { font: F.hand, bold: true, align: 'center' }), text(note, 'water every 2 days', { font: F.hand, align: 'center' })],
+        a,
+        0.3,
+        [span(s)],
+      );
     },
   },
 ];
@@ -283,26 +316,30 @@ const BUSINESS: TemplateDesign[] = [
       if (tall(w, h) || w === h) {
         const [brand, origin, notes, rule, roast, info] = rows(a, [0.9, 1.6, 0.9, 0.35, 0.7, 0.7], 0.6);
         const [rd, wt] = cols(info, [1.6, 1], 1);
-        return [
-          ...text(brand, 'NORTHSIDE ROASTERS', { font: F.bebas, align: 'center', spacing: 160 }),
-          ...text(origin, 'Ethiopia', { font: F.fat, align: 'center' }),
-          ...text(notes, 'blueberry · cocoa · jasmine', { font: F.serif, italic: true, align: 'center' }),
-          ...art(inset(rule, rule.w * 0.1, 0), orn.dots(rule.w * 0.8, rule.h)),
-          ...text(roast, 'ROAST  ● ● ● ○ ○', { font: F.sans, bold: true, align: 'center', spacing: 40 }),
-          ...pair(rd, 'Roasted', (v) => date(v, 'DD/MM/YY', 0, { font: F.sans, bold: true })),
-          ...text(wt, '250 G', { font: F.bebas, align: 'right', spacing: 60 }),
-        ];
+        return pack(
+          [
+            text(brand, 'NORTHSIDE ROASTERS', { font: F.bebas, align: 'center', spacing: 160 }),
+            text(origin, 'Ethiopia', { font: F.fat, align: 'center' }),
+            text(notes, 'blueberry · cocoa · jasmine', { font: F.serif, italic: true, align: 'center' }),
+            art(inset(rule, rule.w * 0.1, 0), orn.dots(rule.w * 0.8, rule.h)),
+            text(roast, 'ROAST  ● ● ● ○ ○', { font: F.sans, bold: true, align: 'center', spacing: 40 }),
+            [...pair(rd, 'Roasted', (v) => date(v, 'DD/MM/YY', 0, { font: F.sans, bold: true })), ...text(wt, '250 G', { font: F.bebas, align: 'right', spacing: 60 })],
+          ],
+          a,
+          0.6,
+          [undefined, undefined, undefined, span(rule)],
+        );
       }
       const [left, right] = cols(a, [1.4, 1], 2);
       const [brand, origin, notes] = rows(left, [0.8, 1.5, 0.8], 0.5);
       const [roast, rd, wt] = rows(right, [1, 1, 1], 0.5);
       return [
-        ...text(brand, 'NORTHSIDE ROASTERS', { font: F.bebas, spacing: 120 }),
-        ...text(origin, 'Ethiopia', { font: F.fat }),
-        ...text(notes, 'blueberry · cocoa · jasmine', { font: F.serif, italic: true }),
-        ...text(roast, '● ● ● ○ ○', { font: F.sans, align: 'right' }),
-        ...pair(rd, 'Roasted', (v) => date(v, 'DD/MM', 0, { font: F.sans, bold: true, align: 'right' })),
-        ...text(wt, '250 G', { font: F.bebas, align: 'right', spacing: 60 }),
+        ...pack([text(brand, 'NORTHSIDE ROASTERS', { font: F.bebas, spacing: 120 }), text(origin, 'Ethiopia', { font: F.fat }), text(notes, 'blueberry · cocoa · jasmine', { font: F.serif, italic: true })], left, 0.5),
+        ...pack(
+          [text(roast, '● ● ● ○ ○', { font: F.sans, align: 'right' }), pair(rd, 'Roasted', (v) => date(v, 'DD/MM', 0, { font: F.sans, bold: true, align: 'right' })), text(wt, '250 G', { font: F.bebas, align: 'right', spacing: 60 })],
+          right,
+          0.5,
+        ),
       ];
     },
   },
@@ -317,11 +354,18 @@ const BUSINESS: TemplateDesign[] = [
       const a = area(w, h);
       const [brand, wv, item, baked, allergen] = rows(a, [1.3, 0.35, 1.3, 0.7, 0.6], 0.4);
       return [
-        ...text(brand, 'Crumb & Co.', { font: F.retro, align: 'center' }),
-        ...art(inset(wv, wv.w * 0.2, 0), orn.wave(wv.w * 0.6, wv.h)),
-        ...text(item, 'Sourdough loaf', { font: F.serif, bold: true, align: 'center' }),
-        ...pair(baked, 'Baked', (v) => date(v, 'ddd D MMM', 0, { font: F.sans, bold: true })),
-        ...text(allergen, 'Contains: wheat, rye', { font: F.sans, align: 'center', italic: true }),
+        ...pack(
+          [
+            text(brand, 'Crumb & Co.', { font: F.retro, align: 'center' }),
+            art(inset(wv, wv.w * 0.2, 0), orn.wave(wv.w * 0.6, wv.h)),
+            text(item, 'Sourdough loaf', { font: F.serif, bold: true, align: 'center' }),
+            pair(baked, 'Baked', (v) => date(v, 'ddd D MMM', 0, { font: F.sans, bold: true })),
+            text(allergen, 'Contains: wheat, rye', { font: F.sans, align: 'center', italic: true }),
+          ],
+          a,
+          0.4,
+          [undefined, span(wv)],
+        ),
       ];
     },
   },
@@ -338,8 +382,7 @@ const BUSINESS: TemplateDesign[] = [
       const [t1, t2] = rows(a, [1.6, 0.6], 0.2);
       return [
         ...art(full(w, h), orn.burst(w, h, Math.max(14, Math.round(w * 0.6)))),
-        ...text(t1, 'NEW', { font: F.heavy, align: 'center' }).map(white),
-        ...text(t2, 'FLAVOUR', { font: F.sans, bold: true, align: 'center', spacing: 160 }).map(white),
+        ...pack([text(t1, 'NEW', { font: F.heavy, align: 'center' }).map(white), text(t2, 'FLAVOUR', { font: F.sans, bold: true, align: 'center', spacing: 160 }).map(white)], a, 0.2),
       ];
     },
   },
@@ -357,18 +400,14 @@ const BUSINESS: TemplateDesign[] = [
         const [item, price, sku] = rows(a, [1, 1.4, 0.7], 0.3);
         return [
           hline(0, flag, w, { dash: true, width: 0.2 }),
-          ...text(item, 'Silver ring', { font: F.serif, italic: true, align: 'center' }),
-          ...text(price, '$49', { font: F.fat, align: 'center' }),
-          ...text(sku, 'RG-0142', { font: F.mono, align: 'center' }),
+          ...pack([text(item, 'Silver ring', { font: F.serif, italic: true, align: 'center' }), text(price, '$49', { font: F.fat, align: 'center' }), text(sku, 'RG-0142', { font: F.mono, align: 'center' })], a, 0.3),
         ];
       }
       const a = inset(full(w, h), pad(w, h) + 1.2);
       const [item, price, sku] = rows(a, [1, 1.6, 0.6], 0.3);
       return [
         ...art(full(w, h), orn.corners(w, h, Math.min(w, h) * 0.25, 0.5)),
-        ...text(item, 'Linen shirt', { font: F.serif, italic: true, align: 'center' }),
-        ...text(price, '$89', { font: F.fat, align: 'center' }),
-        ...text(sku, 'SKU LS-0412-M', { font: F.mono, align: 'center' }),
+        ...pack([text(item, 'Linen shirt', { font: F.serif, italic: true, align: 'center' }), text(price, '$89', { font: F.fat, align: 'center' }), text(sku, 'SKU LS-0412-M', { font: F.mono, align: 'center' })], a, 0.3),
       ];
     },
   },
@@ -384,11 +423,17 @@ const BUSINESS: TemplateDesign[] = [
       const body = (rest: Box) => {
         const [head, sub, stars] = rows(rest, [1.4, 1, 0.8], 0.4);
         const sw = Math.min(stars.h, stars.w / 6);
-        return [
-          ...text(head, 'Loved it?', { font: F.retro, align: 'center' }),
-          ...text(sub, rest.w < 24 ? 'Scan to review' : 'Scan to leave a review', { font: F.sans, bold: true, align: 'center' }),
-          ...Array.from({ length: 5 }, (_, i) => art(box(stars.x + (stars.w - sw * 5.6) / 2 + i * sw * 1.15, stars.y + (stars.h - sw) / 2, sw, sw), orn.star(sw, sw))).flat(),
-        ];
+        const sy = stars.y + (stars.h - sw) / 2;
+        return pack(
+          [
+            text(head, 'Loved it?', { font: F.retro, align: 'center' }),
+            text(sub, rest.w < 24 ? 'Scan to review' : 'Scan to leave a review', { font: F.sans, bold: true, align: 'center' }),
+            Array.from({ length: 5 }, (_, i) => art(box(stars.x + (stars.w - sw * 5.6) / 2 + i * sw * 1.15, sy, sw, sw), orn.star(sw, sw))).flat(),
+          ],
+          rest,
+          0.4,
+          [undefined, undefined, [sy, sy + sw]],
+        );
       };
       if (w === h) {
         const [code, rest] = rows(a, [1.4, 1], 1);
@@ -424,10 +469,7 @@ const BUSINESS: TemplateDesign[] = [
       const [t, n, d] = rows(r, [1.2, 1, 0.8], 0.3);
       return [
         ...art(box(l.x, l.y + (l.h - l.w) / 2, l.w, l.w * 0.9), orn.heart(l.w, l.w * 0.9)),
-        ...text(t, 'packed with care by', { font: F.hand, bold: true }),
-        ...text(n, 'Alex', { font: F.hand }),
-        hline(n.x, n.y + n.h, n.w * 0.8, { width: 0.25 }),
-        ...date(d, 'D MMM YYYY', 0, { font: F.sans }),
+        ...pack([text(t, 'packed with care by', { font: F.hand, bold: true }), [...text(n, 'Alex', { font: F.hand }), hline(n.x, n.y + n.h, n.w * 0.8, { width: 0.25 })], date(d, 'D MMM YYYY', 0, { font: F.sans })], r, 0.3),
       ];
     },
   },
@@ -444,11 +486,17 @@ const BUSINESS: TemplateDesign[] = [
       const ribbonBox = inset(rb, 0, 0);
       const inner = inset(box(ribbonBox.x, ribbonBox.y, ribbonBox.w, ribbonBox.h * 0.8), ribbonBox.w * 0.16, ribbonBox.h * 0.08);
       return [
-        ...art(ribbonBox, orn.ribbon(ribbonBox.w, ribbonBox.h)),
-        ...text(inner, 'HARBOUR BREWING', { font: F.bebas, align: 'center', spacing: 120 }).map(white),
-        ...text(name, 'Low Tide', { font: F.fat, align: 'center' }),
-        ...text(style, 'Hazy Pale Ale', { font: F.serif, italic: true, align: 'center' }),
-        ...text(info, '5.4% ALC/VOL · 375 ML', { font: F.condensed, bold: true, align: 'center', spacing: 60 }),
+        ...pack(
+          [
+            [...art(ribbonBox, orn.ribbon(ribbonBox.w, ribbonBox.h)), ...text(inner, 'HARBOUR BREWING', { font: F.bebas, align: 'center', spacing: 120 }).map(white)],
+            text(name, 'Low Tide', { font: F.fat, align: 'center' }),
+            text(style, 'Hazy Pale Ale', { font: F.serif, italic: true, align: 'center' }),
+            text(info, '5.4% ALC/VOL · 375 ML', { font: F.condensed, bold: true, align: 'center', spacing: 60 }),
+          ],
+          a,
+          0.6,
+          [span(ribbonBox)],
+        ),
       ];
     },
   },
@@ -464,11 +512,18 @@ const BUSINESS: TemplateDesign[] = [
       const [v, year, variety, s, info] = rows(a, [0.9, tall(w, h) ? 2 : 1.5, 1, 0.5, 0.6], 0.6);
       return [
         ...art(full(w, h), orn.frame(w, h, { stroke: 0.5, radius: 0.4, inner: 1.4, innerStroke: 0.25 })),
-        ...text(v, 'CHÂTEAU EXEMPLE', { font: F.classic, bold: true, align: 'center', spacing: 160 }),
-        ...text(year, '2024', { font: F.serif, bold: true, align: 'center' }),
-        ...text(variety, 'Shiraz', { font: F.serif, italic: true, align: 'center' }),
-        ...art(inset(s, s.w * 0.2, 0), orn.sprig(s.w * 0.6, s.h)),
-        ...text(info, '750 ML · 14.5% VOL', { font: F.sans, bold: true, align: 'center', spacing: 80 }),
+        ...pack(
+          [
+            text(v, 'CHÂTEAU EXEMPLE', { font: F.classic, bold: true, align: 'center', spacing: 160 }),
+            text(year, '2024', { font: F.serif, bold: true, align: 'center' }),
+            text(variety, 'Shiraz', { font: F.serif, italic: true, align: 'center' }),
+            art(inset(s, s.w * 0.2, 0), orn.sprig(s.w * 0.6, s.h)),
+            text(info, '750 ML · 14.5% VOL', { font: F.sans, bold: true, align: 'center', spacing: 80 }),
+          ],
+          a,
+          0.6,
+          [undefined, undefined, undefined, span(s)],
+        ),
       ];
     },
   },
@@ -484,9 +539,7 @@ const BUSINESS: TemplateDesign[] = [
       const [item, price, note] = rows(a, [1.3, 1.6, 0.8], 0.3);
       return [
         ...art(full(w, h), orn.dotFrame(w, h, 0.6, 1.7)),
-        ...text(item, 'Heirloom tomatoes', { font: F.amatic, bold: true, align: 'center' }),
-        ...text(price, '$6 / KG', { font: F.heavy, align: 'center' }),
-        ...text(note, 'spray-free · picked today', { font: F.hand, align: 'center' }),
+        ...pack([text(item, 'Heirloom tomatoes', { font: F.amatic, bold: true, align: 'center' }), text(price, '$6 / KG', { font: F.heavy, align: 'center' }), text(note, 'spray-free · picked today', { font: F.hand, align: 'center' })], a, 0.3),
       ];
     },
   },
@@ -506,11 +559,16 @@ const HOME: TemplateDesign[] = [
       const a = area(w, h);
       if (narrow(h)) return text(a, 'PASTA', { font: F.sans, bold: true, align: 'center', spacing: 300 });
       const [name, wv, bb] = rows(a, [1.8, 0.35, 0.8], 0.6);
-      return [
-        ...text(name, 'PASTA', { font: F.sans, bold: true, align: 'center', spacing: 300 }),
-        ...art(inset(wv, wv.w * 0.25, 0), orn.wave(wv.w * 0.5, wv.h)),
-        ...pair(bb, 'best before', (v) => date(v, 'MMM YYYY', 365, { font: F.sans, bold: true }), F.sans, 1.3),
-      ];
+      return pack(
+        [
+          text(name, 'PASTA', { font: F.sans, bold: true, align: 'center', spacing: 300 }),
+          art(inset(wv, wv.w * 0.25, 0), orn.wave(wv.w * 0.5, wv.h)),
+          pair(bb, 'best before', (v) => date(v, 'MMM YYYY', 365, { font: F.sans, bold: true }), F.sans, 1.3),
+        ],
+        a,
+        0.6,
+        [undefined, span(wv)],
+      );
     },
   },
   {
@@ -527,8 +585,7 @@ const HOME: TemplateDesign[] = [
       const [n, s] = rows(a, [2.4, 0.6], 0.3);
       return [
         ...(roundLabel ? [rect(inset(full(w, h), w * 0.05), { stroke: 0.35, radius: w * 0.45 })] : []),
-        ...text(n, 'Brown Sugar', { font: F.formal, align: 'center' }),
-        ...art(inset(s, s.w * 0.22, 0), orn.sprig(s.w * 0.56, s.h)),
+        ...pack([text(n, 'Brown Sugar', { font: F.formal, align: 'center' }), art(inset(s, s.w * 0.22, 0), orn.sprig(s.w * 0.56, s.h))], a, 0.3, [undefined, [s.y, s.y + s.h]]),
       ];
     },
   },
@@ -545,8 +602,7 @@ const HOME: TemplateDesign[] = [
       const [n, d] = rows(a, [1.6, 0.6], 0.2);
       return [
         ...art(full(w, h), orn.seal(w, Math.round(w * 0.9))),
-        ...text(n, 'CUMIN', { font: F.bebas, align: 'center', spacing: 80 }).map(white),
-        ...text(d, 'GROUND', { font: F.sans, bold: true, align: 'center', spacing: 200 }).map(white),
+        ...pack([text(n, 'CUMIN', { font: F.bebas, align: 'center', spacing: 80 }).map(white), text(d, 'GROUND', { font: F.sans, bold: true, align: 'center', spacing: 200 }).map(white)], a, 0.2),
       ];
     },
   },
@@ -564,8 +620,7 @@ const HOME: TemplateDesign[] = [
       return [
         ...art(box(0, 0, w, band), orn.stripes(w, band)),
         ...art(box(0, h - band, w, band), orn.stripes(w, band)),
-        ...text(t, 'CABLES', { font: F.heavy, align: 'center' }),
-        ...text(s, '& POWER ADAPTERS', { font: F.sans, bold: true, align: 'center', spacing: 120 }),
+        ...pack([text(t, 'CABLES', { font: F.heavy, align: 'center' }), text(s, '& POWER ADAPTERS', { font: F.sans, bold: true, align: 'center', spacing: 120 })], a, 0.4),
       ];
     },
   },
@@ -580,13 +635,17 @@ const HOME: TemplateDesign[] = [
       const a = area(w, h);
       const [top, name, d1, d2] = rows(a, [1, 1.4, 0.8, 0.8], 0.4);
       const [i, t] = cols(top, [1, 4], 1);
-      return [
-        ...icon(i, ic('frozen'), 'start'),
-        ...text(t, 'FROM THE FREEZER', { font: F.bebas, spacing: 100 }),
-        ...text(name, 'Chicken curry', { font: F.condensed, bold: true }),
-        ...pair(d1, 'Frozen', (v) => date(v, 'DD/MM/YY', 0, { font: F.condensed }), F.condensed),
-        ...pair(d2, 'Use by', (v) => date(v, 'DD/MM/YY', 91, { font: F.condensed, bold: true }), F.condensed),
-      ];
+      return pack(
+        [
+          [...icon(i, ic('frozen'), 'start'), ...text(t, 'FROM THE FREEZER', { font: F.bebas, spacing: 100 })],
+          text(name, 'Chicken curry', { font: F.condensed, bold: true }),
+          pair(d1, 'Frozen', (v) => date(v, 'DD/MM/YY', 0, { font: F.condensed }), F.condensed),
+          pair(d2, 'Use by', (v) => date(v, 'DD/MM/YY', 91, { font: F.condensed, bold: true }), F.condensed),
+        ],
+        a,
+        0.4,
+        [span(top)],
+      );
     },
   },
   {
@@ -598,8 +657,7 @@ const HOME: TemplateDesign[] = [
     sizes: [...NARROW, ...SMALL, [50, 30]],
     build: (w, h) => {
       const a = area(w, h);
-      const [i, t] = cols(a, [1, w / h > 3 ? 4.5 : 2.6], 1);
-      return [...icon(i, ic('liquid')), ...text(t, 'Laundry powder', { font: F.amatic, bold: true })];
+      return withIcon(a, ic('liquid'), w / h > 3 ? 4.5 : 2.6, (t) => text(t, 'Laundry powder', { font: F.amatic, bold: true }));
     },
   },
   {
@@ -613,7 +671,11 @@ const HOME: TemplateDesign[] = [
       const a = area(w, h);
       const s = Math.min(a.h, a.w * 0.2);
       const [l, t] = cols(a, [s, a.w - s], 1);
-      return [...art(box(l.x, l.y + (l.h - s) / 2, s, s), orn.star(s, s)), ...text(t, 'Charlie M.', { font: F.round, bold: true })];
+      const words = text(t, 'Charlie M.', { font: F.round, bold: true });
+      // A short name and the star are centred on the label as a group.
+      const x = extentX(words);
+      const dx = x ? (a.x + a.w - x[1]) / 2 : 0;
+      return shift([...art(box(l.x, l.y + (l.h - s) / 2, s, s), orn.star(s, s)), ...words], dx > 0.2 ? dx : 0, 0);
     },
   },
   {
@@ -632,9 +694,7 @@ const HOME: TemplateDesign[] = [
       };
       return [
         rect(inset(full(w, h), 0.3), { stroke: 0.6, radius: 2.4 }),
-        ...text(subject, 'Mathematics', { font: F.round, bold: true, align: 'center' }),
-        ...line(n, 'Name', 'Charlie'),
-        ...line(c, 'Class', '5B'),
+        ...pack([text(subject, 'Mathematics', { font: F.round, bold: true, align: 'center' }), line(n, 'Name', 'Charlie'), line(c, 'Class', '5B')], a, 0.5),
       ];
     },
   },
@@ -656,9 +716,15 @@ const OFFICE: TemplateDesign[] = [
       const [first, last, role] = rows(a, [1.8, 1, 0.8], 0.5);
       return [
         rect(box(0, 0, bar, h), { fill: true }),
-        ...text(first, 'Alex', { font: F.heavy }),
-        ...text(last, 'Morgan', { font: F.sans, bold: true }),
-        ...text(box(role.x, role.y, role.w * 0.7, role.h), 'OPERATIONS', { font: F.sans, bold: true, invert: true, align: 'center', spacing: 120 }),
+        ...pack(
+          [
+            text(first, 'Alex', { font: F.heavy }),
+            text(last, 'Morgan', { font: F.sans, bold: true }),
+            text(box(role.x, role.y, role.w * 0.7, role.h), 'OPERATIONS', { font: F.sans, bold: true, invert: true, hug: true, align: 'center', spacing: 120 }),
+          ],
+          a,
+          0.5,
+        ),
       ];
     },
   },
@@ -672,9 +738,10 @@ const OFFICE: TemplateDesign[] = [
     build: (w, h) => {
       const p = pad(w, h);
       const [top, mid, band] = rows(box(0, 0, w, h), [1, 2.6, 0.9], 0);
-      const inner = inset(top, w * 0.14, top.h * 0.12);
+      const rb = inset(top, p, p * 0.5);
+      const inner = inset(box(rb.x, rb.y, rb.w, rb.h * 0.8), rb.w * 0.14, rb.h * 0.08);
       return [
-        ...art(inset(top, p, p * 0.5), orn.ribbon(w - 2 * p, top.h - p)),
+        ...art(rb, orn.ribbon(w - 2 * p, top.h - p)),
         ...text(inset(inner, 0, 0), 'BUILD DAY 2026', { font: F.bebas, align: 'center', spacing: 160 }).map(white),
         ...withCode(inset(mid, p + 0.5, 0.8), (sq) => qr(sq, 'BEGIN:VCARD\nVERSION:3.0\nFN:Alex Morgan\nORG:Example Pty Ltd\nEND:VCARD'), (rest) =>
           stack(rest, [{ t: 'Alex Morgan', font: F.sans, bold: true, weight: 1.5 }, { t: 'Example Pty Ltd', font: F.serif, italic: true }], 0.4),
@@ -695,13 +762,16 @@ const OFFICE: TemplateDesign[] = [
       const a = area(w, h);
       if (narrow(h)) {
         const [n, t] = cols(a, [1.5, 1], 1.5);
-        return [...text(n, 'Alex Morgan', { font: F.serif, bold: true }), ...text(t, 'OPERATIONS', { font: F.sans, bold: true, align: 'right', spacing: 120 })];
+        return onBaseline([text(n, 'Alex Morgan', { font: F.serif, bold: true }), text(t, 'OPERATIONS', { font: F.sans, bold: true, align: 'right', spacing: 120 })]);
       }
       const [n, r, t] = rows(a, [1.6, 0.4, 0.8], 0.5);
       return [
-        ...text(n, 'Alex Morgan', { font: F.serif, bold: true, align: 'center' }),
-        ...art(inset(r, r.w * 0.25, 0), orn.diamondRule(r.w * 0.5, r.h)),
-        ...text(t, 'OPERATIONS MANAGER', { font: F.sans, bold: true, align: 'center', spacing: 160 }),
+        ...pack(
+          [text(n, 'Alex Morgan', { font: F.serif, bold: true, align: 'center' }), art(inset(r, r.w * 0.25, 0), orn.diamondRule(r.w * 0.5, r.h)), text(t, 'OPERATIONS MANAGER', { font: F.sans, bold: true, align: 'center', spacing: 160 })],
+          a,
+          0.5,
+          [undefined, span(r)],
+        ),
       ];
     },
   },
@@ -735,15 +805,18 @@ const TECH: TemplateDesign[] = [
         ...withCode(a, (sq) => qr(sq, 'web-prod-01 10.20.0.21 S/N 7XK2M93'), (rest) => {
           const [top, l1, , l3] = rows(rest, [1.5, 0.8, 0.8, 0.8], 0.35);
           const [host, u] = cols(top, [3, 1], 0.8);
-          return [
-            ...text(host, 'WEB-PROD-01', { font: F.bebas, spacing: 40 }),
-            ...text(u, 'U12', { font: F.bebas, invert: true, align: 'center' }),
-            ...stack(box(l1.x, l1.y, l1.w, l3.y + l3.h - l1.y), [
-              { t: 'IP   10.20.0.21', font: F.mono },
-              { t: 'BMC  10.20.99.21', font: F.mono },
-              { t: 'S/N  7XK2M93', font: F.mono },
-            ], 0.35),
-          ];
+          return pack(
+            [
+              [...text(host, 'WEB-PROD-01', { font: F.bebas, spacing: 40 }), ...text(u, 'U12', { font: F.bebas, invert: true, align: 'center' })],
+              stack(box(l1.x, l1.y, l1.w, l3.y + l3.h - l1.y), [
+                { t: 'IP   10.20.0.21', font: F.mono },
+                { t: 'BMC  10.20.99.21', font: F.mono },
+                { t: 'S/N  7XK2M93', font: F.mono },
+              ], 0.35),
+            ],
+            rest,
+            0.35,
+          );
         }),
       ];
     },
@@ -764,8 +837,7 @@ const TECH: TemplateDesign[] = [
         rect(box(0, 0, w, bar), { fill: true, radius: 1 }),
         ...art(box(1.2, (bar - d) / 2, d * 3.6, d), orn.windowDots(d * 3.6, d)),
         ...text(inset(box(1.2 + d * 5, 0, w - 2.4 - d * 5, bar), 0.4, bar * 0.18), '~/homelab', { font: F.space, align: 'right' }).map(white),
-        ...text(host, 'pihole', { font: F.righteous }),
-        ...text(cmd, '$ ssh pi@10.0.0.5', { font: F.mono }),
+        ...pack([text(host, 'pihole', { font: F.righteous }), text(cmd, '$ ssh pi@10.0.0.5', { font: F.mono })], a, 0.5),
       ];
     },
   },
@@ -790,7 +862,7 @@ const TECH: TemplateDesign[] = [
         ...(w === h
           ? (() => {
               const [code, rest] = rows(a, [1.3, 1], 0.8);
-              return [...qr(code, value), ...details(rest)];
+              return pack([qr(code, value), details(rest)], a, 0.8);
             })()
           : withCode(a, (sq) => qr(sq, value), details, 'left')),
       ];
@@ -833,8 +905,7 @@ const TECH: TemplateDesign[] = [
       return [
         ...art(box(0, 0, w, band), orn.stripes(w, band)),
         ...art(box(0, h - band, w, band), orn.stripes(w, band)),
-        ...text(t, 'CAUTION', { font: F.heavy, align: 'center', spacing: 80 }),
-        ...text(s, 'HOT SURFACE', { font: F.sans, bold: true, align: 'center', spacing: 160 }),
+        ...pack([text(t, 'CAUTION', { font: F.heavy, align: 'center', spacing: 80 }), text(s, 'HOT SURFACE', { font: F.sans, bold: true, align: 'center', spacing: 160 })], a, 0.4),
       ];
     },
   },
@@ -852,7 +923,7 @@ const TECH: TemplateDesign[] = [
           ? serial(rest, { start: 1, step: 1, digits: 5, prefix: 'IT-', suffix: '' }, { font: F.mono, bold: true })
           : (() => {
               const [t, n] = rows(rest, [1, 1.3], 0.4);
-              return [...text(t, 'IT ASSET', { font: F.bebas, spacing: 160 }), ...serial(n, { start: 1, step: 1, digits: 5, prefix: 'IT-', suffix: '' }, { font: F.mono, bold: true })];
+              return pack([text(t, 'IT ASSET', { font: F.bebas, spacing: 160 }), serial(n, { start: 1, step: 1, digits: 5, prefix: 'IT-', suffix: '' }, { font: F.mono, bold: true })], rest, 0.4);
             })(),
       'left');
     },
@@ -867,12 +938,16 @@ const TECH: TemplateDesign[] = [
     build: (w, h) => {
       const a = area(w, h);
       const [brand, name, size, code] = rows(a, [0.7, 1.3, 0.6, 1.5], 0.4);
-      return [
-        ...text(brand, 'NORTH & PINE', { font: F.sans, bold: true, align: 'center', spacing: 260 }),
-        ...text(name, 'Hand cream', { font: F.serif, italic: true, align: 'center' }),
-        ...text(size, '75 ML', { font: F.sans, align: 'center', spacing: 120 }),
-        ...barcode(code, '9300000000002', 'ean13'),
-      ];
+      return pack(
+        [
+          text(brand, 'NORTH & PINE', { font: F.sans, bold: true, align: 'center', spacing: 260 }),
+          text(name, 'Hand cream', { font: F.serif, italic: true, align: 'center' }),
+          text(size, '75 ML', { font: F.sans, align: 'center', spacing: 120 }),
+          barcode(code, '9300000000002', 'ean13'),
+        ],
+        a,
+        0.4,
+      );
     },
   },
 ];

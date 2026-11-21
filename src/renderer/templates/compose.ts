@@ -5,8 +5,8 @@
 
 import type { SerialSettings } from '../editor/placeholders';
 import type { Dataset } from '../editor/template';
-import { art, barcode, box, circle, cols, datamatrix, date, fitPt, hline, icon, inset, qr, rect, rows, serial, square, table, text, type Box, type Part, type TextOptions } from './layout';
-import { ic, narrow, pad, ROUND, white, type Category, type Size, type TemplateDesign } from './kit';
+import { art, barcode, box, circle, cols, datamatrix, date, extentX, extentY, fitPt, hline, icon, inset, pack, qr, rect, rows, serial, shift, square, table, text, type Box, type Part, type TextOptions } from './layout';
+import { centreX, ic, narrow, pad, ROUND, white, type Category, type Size, type TemplateDesign } from './kit';
 import * as orn from './ornaments';
 import * as mo from './motifs';
 
@@ -150,6 +150,8 @@ interface Ctx {
   /** Largest font size for the text rows that are not the main row. */
   minor: number;
   mainWeight: number;
+  /** Alignment of the main text row. A symbol on its own row follows it. */
+  mainAlign: 'left' | 'center' | 'right';
 }
 
 const DEFAULT_SERIAL: SerialSettings = { start: 1, step: 1, digits: 3, prefix: '', suffix: '' };
@@ -215,14 +217,17 @@ function shareSizes(list: Row[], boxes: Box[], c: Ctx): void {
   // A detail line must not be larger than the main line, even when it is short.
   const plain = list.filter((r): r is Extract<Row, { t: string }> => 't' in r && !r.invert);
   c.mainWeight = Math.max(0, ...plain.map(weightOf));
-  const main = plain.filter((r) => weightOf(r) === c.mainWeight).map((r) => c.shared.get(shareKey(r, c)) ?? Infinity);
+  const mainRows = plain.filter((r) => weightOf(r) === c.mainWeight);
+  const main = mainRows.map((r) => c.shared.get(shareKey(r, c)) ?? Infinity);
   if (main.length && plain.some((r) => weightOf(r) < c.mainWeight)) c.minor = Math.min(...main) * 0.8;
+  c.mainAlign = mainRows[0]?.align ?? c.align;
 }
 
 function drawRow(b: Box, r: Row, c: Ctx, top: boolean): Part[] {
   if ('t' in r) {
     const o = textOptions(r, c);
-    if (top && !r.invert) o.maxPt = Math.min(o.maxPt ?? Infinity, c.shared.get(shareKey(r, c)) ?? Infinity, weightOf(r) < c.mainWeight ? c.minor : Infinity);
+    if (r.invert) return text(b, r.t, { ...o, hug: true });
+    if (top) o.maxPt = Math.min(o.maxPt ?? Infinity, c.shared.get(shareKey(r, c)) ?? Infinity, weightOf(r) < c.mainWeight ? c.minor : Infinity);
     return paint(text(b, r.t, o), c, r.invert);
   }
   if ('kv' in r) {
@@ -242,7 +247,7 @@ function drawRow(b: Box, r: Row, c: Ctx, top: boolean): Part[] {
     const s = square(b);
     return art(s, ink(PICTURES[r.pic](s.w, s.h), c));
   }
-  if ('icon' in r) return icon(b, iconInk(r.icon, c), c.align === 'left' ? 'start' : 'center');
+  if ('icon' in r) return icon(b, iconInk(r.icon, c), c.mainAlign === 'left' ? 'start' : 'center');
   if ('code' in r) {
     if (r.code === 'qr') return qr(b, r.value);
     if (r.code === 'datamatrix') return datamatrix(b, r.value);
@@ -383,15 +388,15 @@ function shapeArea(name: ShapeName, w: number, h: number): Box {
   }
 }
 
-function sideParts(b: Box, s: Side, c: Ctx): Part[] {
+function sideParts(b: Box, s: Side, c: Ctx, align: 'start' | 'center' | 'end' = 'center'): Part[] {
   if (s.block !== undefined) return text(b, s.block, { invert: true, bold: true, align: 'center', lineHeight: 1, font: s.font ?? c.font });
-  if (s.code === 'qr') return qr(b, s.value ?? '');
-  if (s.code === 'datamatrix') return datamatrix(b, s.value ?? '');
+  if (s.code === 'qr') return qr(b, s.value ?? '', align);
+  if (s.code === 'datamatrix') return datamatrix(b, s.value ?? '', align);
   if (s.pic) {
     const sq = square(b);
     return art(sq, ink(PICTURES[s.pic](sq.w, sq.h), c));
   }
-  return icon(b, iconInk(s.icon ?? 'warning', c));
+  return icon(b, iconInk(s.icon ?? 'warning', c), align);
 }
 
 /** Builds the label parts for one description and one label size. */
@@ -406,6 +411,7 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
     kv: kvWidths(spec.rows),
     minor: Infinity,
     mainWeight: 0,
+    mainAlign: spec.align ?? (spec.side ? 'left' : 'center'),
   };
 
   let a: Box;
@@ -445,12 +451,18 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
     a = inset(a, s * 0.55, s * 0.3);
   }
 
+  // The side panel and the rows are placed at the end, so that they can be centred as a group.
+  const whole = a;
+  let lead: { parts: Part[]; span: [number, number] } | undefined;
+  let beside: { parts: Part[]; x: [number, number]; right: boolean } | undefined;
   if (spec.side) {
     const s = spec.side;
     const stacked = h > w * 1.15 || (round && !s.block);
     if (stacked) {
       const [top, rest] = rows(a, [1, 1.5], Math.max(0.8, h * 0.02));
-      parts.push(...sideParts(top, s, c));
+      const sq = s.block !== undefined ? top : square(top);
+      const sp = sideParts(sq, s, c);
+      lead = { parts: sp, span: (s.code && extentY(sp)) || [sq.y, sq.y + sq.h] };
       a = rest;
       c.align = spec.align ?? 'center';
     } else {
@@ -458,15 +470,55 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
       const gap = Math.max(1, a.w * 0.03);
       const right = s.at === 'right';
       const sb = box(right ? a.x + a.w - sw : a.x, a.y, sw, a.h);
-      parts.push(...sideParts(s.block !== undefined ? sb : square(sb), s, c));
-      a = box(right ? a.x : a.x + sw + gap, a.y, a.w - sw - gap, a.h);
+      // The panel goes to the outer edge. A code can be smaller than its square, and the text gets the space that the panel does not use.
+      const sq = s.block !== undefined ? sb : square(sb, right ? 'end' : 'start');
+      const sp = sideParts(sq, s, c, right ? 'end' : 'start');
+      const x: [number, number] = (s.code && extentX(sp)) || [sq.x, sq.x + sq.w];
+      beside = { parts: sp, x, right };
+      a = right ? box(a.x, a.y, x[0] - gap - a.x, a.h) : box(x[1] + gap, a.y, a.x + a.w - x[1] - gap, a.h);
     }
   }
 
-  const boxes = rows(a, spec.rows.map(weightOf), spec.gap ?? Math.max(0.3, Math.min(0.8, h * 0.018)));
+  const gap = spec.gap ?? Math.max(0.3, Math.min(0.8, h * 0.018));
+  const boxes = rows(a, spec.rows.map(weightOf), gap);
   shareSizes(spec.rows, boxes, c);
-  spec.rows.forEach((r, i) => parts.push(...drawRow(boxes[i], r, c, true)));
+  const drawn = spec.rows.map((r, i) => drawRow(boxes[i], r, c, true));
+  const spans = spec.rows.map((r, i) => rowSpan(r, boxes[i]));
+  let body = lead ? pack([lead.parts, ...drawn], whole, gap, [lead.span, ...spans]) : pack(drawn, a, gap, spans);
+
+  // Short text beside a symbol: the symbol and the text are centred on the label as a group.
+  if (beside && !beside.right && c.align === 'left' && spec.rows.every(isTextRow)) {
+    const tx = extentX(body);
+    if (tx) {
+      const dx = (whole.x + whole.w - Math.max(beside.x[1], tx[1]) - (beside.x[0] - whole.x)) / 2;
+      if (dx > 0.2) {
+        beside.parts = shift(beside.parts, dx, 0);
+        body = shift(body, dx, 0);
+      }
+    }
+  }
+  // A block of left-aligned text, for example captions with values, is centred across the label.
+  if (!spec.side && c.align === 'left' && spec.rows.every((r) => (isTextRow(r) || 'ticks' in r) && !('align' in r && r.align && r.align !== 'left'))) {
+    body = centreX(body, a);
+  }
+  parts.push(...(beside?.parts ?? []), ...body);
   return parts;
+}
+
+const isTextRow = (r: Row): boolean => ('t' in r && !r.invert) || 'kv' in r || 'date' in r || 'serial' in r;
+
+/** Top and bottom of a row that is a picture or that fills its box. Undefined for rows that are measured from their parts. */
+function rowSpan(r: Row, b: Box): [number, number] | undefined {
+  if ('icon' in r || 'pic' in r) {
+    const s = square(b);
+    return [s.y, s.y + s.h];
+  }
+  if ('cols' in r) return r.cols.every(isTextRow) ? undefined : [b.y, b.y + b.h];
+  // A plain rule is one line in the middle of its box.
+  if ('band' in r && r.band === 'rule') return [b.y + b.h * 0.3, b.y + b.h * 0.7];
+  if ('band' in r || 'table' in r || 'space' in r) return [b.y, b.y + b.h];
+  if ('code' in r && r.code !== 'qr' && r.code !== 'datamatrix') return [b.y, b.y + b.h];
+  return undefined;
 }
 
 // ---------- designs ----------

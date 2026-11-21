@@ -70,6 +70,10 @@ A template that sets a font shows in the **Decorative** filter.
 
 Text gets the largest font size that fits its row. Text rows with the same weight and font get the same size. If the sample text is long, the font is small on the smallest sizes. Remove those sizes from the list, or give a shorter description for them.
 
+Rows are kept together. When the width makes text smaller than its row, `pack()` in `layout.ts` gives the free height back, puts an even gap between the rows and centres the group on its letters. A symbol, a code or a block of left-aligned text that is shorter than the label is centred across it with the text beside it. QR and Data Matrix codes get a whole number of 203 dpi printer dots for each module and go to the outer edge of their space. Symbols are placed by their lines, not by the square of the icon. A black bar with `hug` is as high as its text.
+
+In a template with its own layout code, use the same helpers: `pack()` for rows, `withIcon()` and `withCode()` for a symbol or a code beside text, `pairs()` for captions with values, `onBaseline()` for texts side by side on one line, and `centreX()` for a short block of text.
+
 After a change, start `npm run dev`, open the **Templates** page and look at each size of the new template. Make sure that no text is smaller than 5 points and that no text wraps to a second line.
 
 To add a symbol, add an entry to a group in `src/renderer/editor/icons.tsx`. The cute animals are in `src/renderer/editor/cuteAnimals.ts`. An animal with a face there gets four symbols: plain, happy, sleepy and in love. Draw the head and the ears as one outline, make the eyes and the nose solid, and give the animal one feature that identifies it. Look at each new drawing at 5 mm and at full size before you add it. Symbol names are lower case and must not change after a release, because saved labels and the assistant tools use them.

@@ -39,12 +39,44 @@ export function barcodeFormat(id: string): BarcodeFormat {
 
 interface BarsResult {
   canvas?: HTMLCanvasElement;
+  /** Pixels of the canvas for each module along the width. */
+  unit?: number;
   error?: string;
 }
 
 const barsCache = new Map<string, BarsResult>();
 
-/** Renders the symbol with one pixel per module. Results are cached by content. */
+const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
+
+/**
+ * Pixels for each module along the width of a symbol: the largest number that
+ * divides every run of dark or light pixels. bwip-js draws 1D codes with one
+ * pixel per module and most 2D codes with two.
+ */
+function moduleUnit(canvas: HTMLCanvasElement): number {
+  const { width, height } = canvas;
+  const data = canvas.getContext('2d')?.getImageData(0, 0, width, height).data;
+  if (!data) return 1;
+  let unit = 0;
+  for (const y of new Set([0, Math.floor(height / 3), Math.floor(height / 2), height - 1])) {
+    let run = 0;
+    let prev = false;
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const dark = data[i + 3] > 127 && data[i] < 128;
+      if (x > 0 && dark !== prev) {
+        unit = gcd(unit, run);
+        run = 0;
+      }
+      prev = dark;
+      run++;
+    }
+    unit = gcd(unit, run);
+  }
+  return Math.max(1, unit);
+}
+
+/** Renders the symbol at the smallest scale of bwip-js. Results are cached by content. */
 export function renderBars(format: string, value: string, eclevel: string): BarsResult {
   // The error text is in the language of the app, so the language is part of the key.
   const key = `${currentLanguage()}\u0000${format}\u0000${eclevel}\u0000${value}`;
@@ -69,7 +101,7 @@ export function renderBars(format: string, value: string, eclevel: string): Bars
       if (format === 'qrcode') opts.eclevel = eclevel || 'M';
       if (format === 'gs1-128') opts.parse = true;
       toCanvas(canvas, opts as never);
-      result = { canvas };
+      result = { canvas, unit: moduleUnit(canvas) };
     } catch (err) {
       const msg = String((err as Error)?.message ?? err).replace(/^bwip-js:\s*/i, '');
       result = { error: msg.split(':').pop()?.trim() || t('editor.barcode.invalidValue') };
@@ -131,7 +163,7 @@ export class LabelBarcode extends FabricObject {
   _render(ctx: CanvasRenderingContext2D): void {
     const w = this.width;
     const h = this.height;
-    const { canvas: bars, error } = renderBars(this.format, this.value, this.eclevel);
+    const { canvas: bars, unit = 1, error } = renderBars(this.format, this.value, this.eclevel);
     ctx.save();
     if (!bars) {
       ctx.strokeStyle = '#d33';
@@ -149,19 +181,19 @@ export class LabelBarcode extends FabricObject {
     const [sx, sy] = contextScale(ctx);
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#000';
+    // Device pixels for each pixel of the bars canvas, made smaller so that each module gets a whole number of device pixels.
+    const snap = (fit: number) => (fit * unit >= 1 ? Math.floor(fit * unit + 1e-6) / unit : fit);
 
     if (this.isTwoD) {
-      const fitPx = Math.min((w * sx) / bars.width, (h * sy) / bars.height);
-      const modulePx = fitPx >= 1 ? Math.floor(fitPx) : fitPx;
-      const dw = (bars.width * modulePx) / sx;
-      const dh = (bars.height * modulePx) / sy;
+      const scale = snap(Math.min((w * sx) / bars.width, (h * sy) / bars.height));
+      const dw = (bars.width * scale) / sx;
+      const dh = (bars.height * scale) / sy;
       ctx.drawImage(bars, -dw / 2, -dh / 2, dw, dh);
     } else {
       const textH = this.showText ? this.textSize * 1.25 : 0;
       const barH = Math.max(1, h - textH);
-      const fitPx = (w * sx) / bars.width;
-      const modulePx = fitPx >= 1 ? Math.floor(fitPx) : fitPx;
-      const dw = (bars.width * modulePx) / sx;
+      const scale = snap((w * sx) / bars.width);
+      const dw = (bars.width * scale) / sx;
       ctx.drawImage(bars, 0, 0, bars.width, 1, -dw / 2, -h / 2, dw, barH);
       if (this.showText) {
         ctx.font = `${this.textSize}px "Segoe UI", Arial, sans-serif`;
