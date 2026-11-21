@@ -8,7 +8,7 @@ A free desktop app to design and print labels on NIIMBOT label printers (also se
 
 ## Features
 
-- **Label editor**: text, barcodes, QR codes, Data Matrix, PDF417, Aztec, images, shapes, lines, tables and 445 symbols. Right-click an element to replace it with a different type.
+- **Label editor**: text, barcodes, QR codes, Data Matrix, PDF417, Aztec, images, shapes, lines, tables and 571 symbols, which include 126 cute animals (koala, wombat, quokka, kangaroo, platypus and others, each with four expressions). Right-click an element to replace it with a different type.
 - **Template library**: 529 ready-made designs for IT, cables, the kitchen, retail, shipping, the workshop, school, events and more, filtered to the printer and the roll that you use.
 - **Batch printing**: one label for each row of an Excel, CSV or TSV file, or of a table that you paste.
 - **Serial numbers and dates**: count up on each label, and calculate best-before or expiry dates.

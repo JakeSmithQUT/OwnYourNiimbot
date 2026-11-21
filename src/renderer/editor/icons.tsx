@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as L from 'lucide-react';
-import { createLucideIcon, type IconNode, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { CUTE_ANIMALS, customIcon as custom, type Shape } from './cuteAnimals';
 
 export interface SymbolEntry {
   name: string;
@@ -9,10 +10,6 @@ export interface SymbolEntry {
 }
 
 // ---------- symbols that the icon set does not have ----------
-
-type Shape = [tag: string, attrs: Record<string, string | number>];
-const custom = (id: string, shapes: Shape[]): LucideIcon =>
-  createLucideIcon(id, shapes.map(([tag, attrs], i) => [tag, { ...attrs, key: `${id}${i}` }]) as IconNode);
 
 const TUB = 'M3 7l2.5 12h13L21 7';
 const TUB_WATER = 'M4.2 11c1.9-1.3 3.8 1.3 5.7 0s3.8 1.3 5.7 0 2.7-.5 4.2 0';
@@ -461,6 +458,7 @@ export const ICONS: SymbolEntry[] = [
     ['worm', L.Worm],
     ['bone', L.Bone],
   ]),
+  ...group('Cute animals', CUTE_ANIMALS),
   ...group('Travel and vehicles', [
     ['car', L.Car],
     ['bike', L.Bike],

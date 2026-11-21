@@ -31,6 +31,15 @@ describe('symbol library', () => {
     expect(searchIcons('no such symbol')).toHaveLength(0);
   });
 
+  it('has a group of cute animals with four expressions for each face', () => {
+    const cute = ICONS.filter((i) => i.group === 'Cute animals').map((i) => i.name);
+    expect(cute.length).toBeGreaterThan(100);
+    for (const animal of ['cat', 'dog', 'bunny', 'koala', 'wombat', 'quokka', 'kangaroo', 'platypus', 'tasmanian devil']) {
+      for (const name of [`cute ${animal}`, `happy ${animal}`, `sleepy ${animal}`, `${animal} with heart`]) expect(cute).toContain(name);
+    }
+    for (const name of ['joey in pouch', 'emu', 'echidna', 'kookaburra']) expect(cute).toContain(name);
+  });
+
   it('draws each symbol as an SVG image', () => {
     for (const { name, Icon } of ICONS) {
       const svg = iconSvg(Icon);
