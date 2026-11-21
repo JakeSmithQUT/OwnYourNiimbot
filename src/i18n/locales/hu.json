@@ -362,6 +362,7 @@
   "labels.import": "Importálás",
   "labels.newLabel": "Új címke",
   "labels.empty": "Még nincsenek mentett címkék. Hozzon létre egy címkét, vagy induljon ki egy példából.",
+  "labels.untitled": "Névtelen címke",
   "labels.noPreview": "Nincs előnézet",
   "labels.duplicate": "Kettőzés",
   "labels.export": "Exportálás",

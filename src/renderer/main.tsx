@@ -1,7 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { api } from './api';
-import { setLanguage } from './i18n';
+import { setLanguage, t } from './i18n';
+import { appStore } from './state/app';
 import { loadBundledFonts } from './editor/bundledFonts';
 import './styles.css';
 
@@ -9,6 +10,9 @@ import './styles.css';
 async function loadLanguage(): Promise<void> {
   const saved = await api.store.get<{ language?: string }>('settings', 'app').catch(() => null);
   await setLanguage(saved?.language);
+  // The first empty label was made before the language loaded, so it has the English default name.
+  const { template, dirty } = appStore.get();
+  if (!template.id && !dirty) appStore.set({ template: { ...template, name: t('labels.untitled') } });
 }
 
 // Load the bundled fonts before the first label is drawn, so text sizes are

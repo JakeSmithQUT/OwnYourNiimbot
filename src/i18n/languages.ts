@@ -20,6 +20,7 @@ export const LANGUAGES = [
   { code: 'sv', name: 'Svenska', english: 'Swedish' },
   { code: 'tr', name: 'Türkçe', english: 'Turkish' },
   { code: 'uk', name: 'Українська', english: 'Ukrainian' },
+  { code: 'vi', name: 'Tiếng Việt', english: 'Vietnamese' },
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]['code'];

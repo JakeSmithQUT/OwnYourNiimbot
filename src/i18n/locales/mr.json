@@ -362,6 +362,7 @@
   "labels.import": "आयात करा",
   "labels.newLabel": "नवीन लेबल",
   "labels.empty": "अद्याप जतन केलेली लेबले नाहीत. नवीन लेबल तयार करा किंवा उदाहरणापासून सुरुवात करा.",
+  "labels.untitled": "नाव नसलेले लेबल",
   "labels.noPreview": "पूर्वावलोकन नाही",
   "labels.duplicate": "डुप्लिकेट करा",
   "labels.export": "निर्यात करा",

@@ -15,7 +15,7 @@ A free desktop app to design and print labels on NIIMBOT label printers (also se
 - **Exact preview**: the print preview shows the dots that the printer receives.
 - **Photos and logos**: conversion to black and white with dithering, threshold, brightness and contrast.
 - **Printer status and settings**: battery, roll, labels left on genuine rolls, power-off time, sounds and calibration.
-- **20 languages**: change the language with the globe button at the bottom of the side bar.
+- **21 languages**: change the language with the globe button at the bottom of the side bar.
 - **AI assistants**: an optional local MCP server lets an assistant such as Claude make, preview and print labels.
 - **Automatic updates** with a progress window, on Windows and Linux.
 
@@ -99,7 +99,7 @@ Tips:
 
 ## Change the language
 
-Click the globe button (for example **EN**) at the bottom of the side bar and select a language. The app has English, Bulgarian, Chinese (Simplified and Traditional), Croatian, Czech, French, German, Hindi, Hungarian, Italian, Korean, Marathi, Polish, Portuguese (Brazil), Russian, Spanish, Swedish, Turkish and Ukrainian. You can also change it in **Settings**. Templates and symbol names stay in English.
+Click the globe button (for example **EN**) at the bottom of the side bar and select a language. The app has English, Bulgarian, Chinese (Simplified and Traditional), Croatian, Czech, French, German, Hindi, Hungarian, Italian, Korean, Marathi, Polish, Portuguese (Brazil), Russian, Spanish, Swedish, Turkish, Ukrainian and Vietnamese. You can also change it in **Settings**. Templates and symbol names stay in English.
 
 ## Label size detection
 

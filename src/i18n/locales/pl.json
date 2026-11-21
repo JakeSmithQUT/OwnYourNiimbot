@@ -376,6 +376,7 @@
   "labels.import": "Importuj",
   "labels.newLabel": "Nowa etykieta",
   "labels.empty": "Brak zapisanych etykiet. Utwórz etykietę lub zacznij od przykładu.",
+  "labels.untitled": "Etykieta bez nazwy",
   "labels.noPreview": "Brak podglądu",
   "labels.duplicate": "Duplikuj",
   "labels.export": "Eksportuj",

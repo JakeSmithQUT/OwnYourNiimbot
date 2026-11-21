@@ -1,4 +1,5 @@
 import { LabelType } from '../../printer/protocol';
+import { t } from '../i18n';
 
 export interface Dataset {
   name: string;
@@ -97,7 +98,7 @@ export function emptyTemplate(widthMm = 50, heightMm = 30, labelType: number = L
   const now = Date.now();
   return {
     id: '',
-    name: 'Untitled label',
+    name: t('labels.untitled'),
     widthMm,
     heightMm,
     cornerRadiusMm: 1.5,

@@ -376,6 +376,7 @@
   "labels.import": "Importovat",
   "labels.newLabel": "Nový štítek",
   "labels.empty": "Zatím nemáte žádné uložené štítky. Vytvořte štítek nebo začněte z příkladu.",
+  "labels.untitled": "Štítek bez názvu",
   "labels.noPreview": "Bez náhledu",
   "labels.duplicate": "Duplikovat",
   "labels.export": "Exportovat",

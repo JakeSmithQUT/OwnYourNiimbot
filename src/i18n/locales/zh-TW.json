@@ -355,6 +355,7 @@
   "labels.import": "匯入",
   "labels.newLabel": "新增標籤",
   "labels.empty": "尚無已儲存的標籤。請建立標籤，或從範例開始。",
+  "labels.untitled": "未命名標籤",
   "labels.noPreview": "無預覽",
   "labels.duplicate": "建立複本",
   "labels.export": "匯出",

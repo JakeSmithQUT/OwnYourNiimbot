@@ -7,6 +7,7 @@ export const views = {
   'labels.import': 'Import',
   'labels.newLabel': 'New label',
   'labels.empty': 'No saved labels yet. Create a label or start from an example.',
+  'labels.untitled': 'Untitled label',
   'labels.noPreview': 'No preview',
   'labels.duplicate': 'Duplicate',
   'labels.export': 'Export',

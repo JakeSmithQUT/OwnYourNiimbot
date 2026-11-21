@@ -362,6 +362,7 @@
   "labels.import": "Импортирай",
   "labels.newLabel": "Нов етикет",
   "labels.empty": "Все още няма записани етикети. Създайте етикет или започнете от пример.",
+  "labels.untitled": "Етикет без име",
   "labels.noPreview": "Няма визуализация",
   "labels.duplicate": "Дублирай",
   "labels.export": "Експортирай",

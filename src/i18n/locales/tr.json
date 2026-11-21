@@ -362,6 +362,7 @@
   "labels.import": "İçeri aktar",
   "labels.newLabel": "Yeni etiket",
   "labels.empty": "Henüz kayıtlı etiket yok. Bir etiket oluşturun veya bir örnekle başlayın.",
+  "labels.untitled": "Adsız etiket",
   "labels.noPreview": "Önizleme yok",
   "labels.duplicate": "Çoğalt",
   "labels.export": "Dışarı aktar",

@@ -362,6 +362,7 @@
   "labels.import": "Importera",
   "labels.newLabel": "Ny etikett",
   "labels.empty": "Inga sparade etiketter än. Skapa en etikett eller börja från ett exempel.",
+  "labels.untitled": "Namnlös etikett",
   "labels.noPreview": "Ingen förhandsgranskning",
   "labels.duplicate": "Duplicera",
   "labels.export": "Exportera",

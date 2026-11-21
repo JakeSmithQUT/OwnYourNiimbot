@@ -355,6 +355,7 @@
   "labels.import": "导入",
   "labels.newLabel": "新建标签",
   "labels.empty": "还没有已保存的标签。请新建标签，或从示例开始。",
+  "labels.untitled": "未命名标签",
   "labels.noPreview": "无预览",
   "labels.duplicate": "创建副本",
   "labels.export": "导出",

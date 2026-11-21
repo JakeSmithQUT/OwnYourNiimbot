@@ -369,6 +369,7 @@
   "labels.import": "Uvezi",
   "labels.newLabel": "Nova naljepnica",
   "labels.empty": "Još nema spremljenih naljepnica. Izradite naljepnicu ili započnite od primjera.",
+  "labels.untitled": "Naljepnica bez naslova",
   "labels.noPreview": "Nema pretpregleda",
   "labels.duplicate": "Dupliciraj",
   "labels.export": "Izvezi",

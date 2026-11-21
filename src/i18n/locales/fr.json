@@ -369,6 +369,7 @@
   "labels.import": "Importer",
   "labels.newLabel": "Nouvelle étiquette",
   "labels.empty": "Aucune étiquette enregistrée pour l’instant. Créez une étiquette ou partez d’un exemple.",
+  "labels.untitled": "Étiquette sans titre",
   "labels.noPreview": "Aucun aperçu",
   "labels.duplicate": "Dupliquer",
   "labels.export": "Exporter",

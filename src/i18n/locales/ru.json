@@ -376,6 +376,7 @@
   "labels.import": "Импорт",
   "labels.newLabel": "Новая этикетка",
   "labels.empty": "Сохраненных этикеток пока нет. Создайте этикетку или начните с примера.",
+  "labels.untitled": "Этикетка без названия",
   "labels.noPreview": "Нет эскиза",
   "labels.duplicate": "Дублировать",
   "labels.export": "Экспорт",

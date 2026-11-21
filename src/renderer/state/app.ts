@@ -89,7 +89,11 @@ export function updateSettings(patch: Partial<Settings>): void {
 
 /** Changes the language of the app and keeps it for the next start. */
 export async function chooseLanguage(language: LanguageCode): Promise<void> {
+  const untitled = t('labels.untitled');
   await setLanguage(language);
+  // A new label that still has the default name gets the default name of the new language.
+  const { template } = appStore.get();
+  if (!template.id && template.name === untitled) appStore.set({ template: { ...template, name: t('labels.untitled') } });
   updateSettings({ language });
   await api.app.setLanguage(language).catch(() => undefined);
 }

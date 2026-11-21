@@ -23,6 +23,7 @@ import ru from '../i18n/locales/ru.json';
 import sv from '../i18n/locales/sv.json';
 import tr from '../i18n/locales/tr.json';
 import uk from '../i18n/locales/uk.json';
+import vi from '../i18n/locales/vi.json';
 import zhCN from '../i18n/locales/zh-CN.json';
 import zhTW from '../i18n/locales/zh-TW.json';
 
@@ -44,6 +45,7 @@ const CATALOGS: Partial<Record<LanguageCode, Catalog>> = {
   sv,
   tr,
   uk,
+  vi,
   'zh-CN': zhCN,
   'zh-TW': zhTW,
 };

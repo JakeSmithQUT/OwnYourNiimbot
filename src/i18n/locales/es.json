@@ -369,6 +369,7 @@
   "labels.import": "Importar",
   "labels.newLabel": "Nueva etiqueta",
   "labels.empty": "Todavía no hay etiquetas guardadas. Crea una etiqueta o empieza con un ejemplo.",
+  "labels.untitled": "Etiqueta sin título",
   "labels.noPreview": "Sin vista previa",
   "labels.duplicate": "Duplicar",
   "labels.export": "Exportar",
