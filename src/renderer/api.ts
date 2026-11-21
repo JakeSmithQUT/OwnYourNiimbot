@@ -1,4 +1,5 @@
 import type { DesktopApi } from '../main/preload';
+import { systemLanguage } from '../i18n/languages';
 
 declare global {
   interface Window {
@@ -86,6 +87,7 @@ function browserApi(): DesktopApi {
     app: {
       info: async () => ({ version: 'dev', platform: 'browser', arch: '', electron: '', chrome: '' }),
       openDataFolder: async () => undefined,
+      getLanguage: async () => systemLanguage(navigator.languages),
       setLanguage: async () => undefined,
       openExternal: async (url: string) => {
         window.open(url, '_blank', 'noopener');

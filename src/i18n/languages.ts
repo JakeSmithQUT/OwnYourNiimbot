@@ -27,9 +27,42 @@ export type LanguageCode = (typeof LANGUAGES)[number]['code'];
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'en';
 
+/** True if the code is one of the languages of the app. */
+export function isLanguage(code: unknown): code is LanguageCode {
+  return LANGUAGES.some((l) => l.code === code);
+}
+
 /** The language code if it is one of the languages of the app, else English. */
 export function checkLanguage(code: unknown): LanguageCode {
-  return LANGUAGES.some((l) => l.code === code) ? (code as LanguageCode) : DEFAULT_LANGUAGE;
+  return isLanguage(code) ? code : DEFAULT_LANGUAGE;
+}
+
+/**
+ * The language of the app for a system language tag, for example "de-AT",
+ * "zh-Hant-TW", "pt_PT.UTF-8" or "es-419". Undefined if the app does not have
+ * the language. Chinese is Traditional for Taiwan, Hong Kong and Macao, and
+ * Portuguese is always Brazilian Portuguese, because the app has only that.
+ */
+export function matchLanguage(tag: unknown): LanguageCode | undefined {
+  if (typeof tag !== 'string') return undefined;
+  const parts = tag.split(/[.@]/)[0].replace(/_/g, '-').toLowerCase().split('-');
+  const language = parts[0];
+  if (language === 'zh') {
+    if (parts.includes('hans')) return 'zh-CN';
+    return parts.some((p) => p === 'hant' || p === 'tw' || p === 'hk' || p === 'mo') ? 'zh-TW' : 'zh-CN';
+  }
+  if (language === 'pt') return 'pt-BR';
+  return LANGUAGES.find((l) => l.code === language)?.code;
+}
+
+/**
+ * The language for a new installation: the first preferred language of the
+ * system if the app has it, else English. The other languages in the list are
+ * not used, so that the app does not start in a language that the system does
+ * not show.
+ */
+export function systemLanguage(preferred: readonly string[]): LanguageCode {
+  return matchLanguage(preferred[0]) ?? DEFAULT_LANGUAGE;
 }
 
 /** A short label for the language button, for example "EN" or "PT". */

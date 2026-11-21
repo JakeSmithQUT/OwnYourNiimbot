@@ -1,8 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { en } from '../src/i18n/en';
-import { LANGUAGES, checkLanguage, shortCode } from '../src/i18n/languages';
+import { LANGUAGES, checkLanguage, matchLanguage, shortCode, systemLanguage } from '../src/i18n/languages';
+import { loadMainLanguage } from '../src/main/i18n';
 import { createTranslator, fill, placeholders, tags, type Catalog } from '../src/i18n/translate';
 
 const ENGLISH = en as Record<string, string>;
@@ -39,6 +41,64 @@ describe('translation system', () => {
     expect(checkLanguage('xx')).toBe('en');
     expect(checkLanguage('../../evil')).toBe('en');
     expect(shortCode('pt-BR')).toBe('PT');
+  });
+
+  it('finds the language of the app for a system language', () => {
+    const cases: Record<string, string | undefined> = {
+      'en-AU': 'en',
+      'de-AT': 'de',
+      'fr-CA': 'fr',
+      'es-419': 'es',
+      'vi-VN': 'vi',
+      'uk': 'uk',
+      'sv-FI': 'sv',
+      'pt-BR': 'pt-BR',
+      'pt-PT': 'pt-BR',
+      'zh-Hans-CN': 'zh-CN',
+      'zh-CN': 'zh-CN',
+      'zh-SG': 'zh-CN',
+      'zh': 'zh-CN',
+      'zh-Hant-TW': 'zh-TW',
+      'zh-TW': 'zh-TW',
+      'zh-HK': 'zh-TW',
+      'zh-Hans-HK': 'zh-CN',
+      'de_DE.UTF-8': 'de',
+      'sr@latin': undefined,
+      'ja-JP': undefined,
+      'C': undefined,
+      '': undefined,
+    };
+    for (const [tag, code] of Object.entries(cases)) expect(matchLanguage(tag), tag).toBe(code);
+    expect(matchLanguage(undefined)).toBeUndefined();
+    expect(matchLanguage(42)).toBeUndefined();
+  });
+
+  it('starts in the first system language if the app has it, else in English', () => {
+    expect(systemLanguage(['vi-VN', 'en-US'])).toBe('vi');
+    expect(systemLanguage(['zh-Hant-TW'])).toBe('zh-TW');
+    // A language lower in the list is not used.
+    expect(systemLanguage(['ja-JP', 'de-DE'])).toBe('en');
+    expect(systemLanguage([])).toBe('en');
+  });
+
+  it('uses the saved language, else the system language', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'oyn-lang-'));
+    try {
+      const file = join(dir, 'app.json');
+      expect(await loadMainLanguage(join(dir, 'missing.json'), 'vi')).toBe('vi');
+      writeFileSync(file, JSON.stringify({ theme: 'dark' }));
+      expect(await loadMainLanguage(file, 'de')).toBe('de');
+      writeFileSync(file, JSON.stringify({ language: 'fr' }));
+      expect(await loadMainLanguage(file, 'de')).toBe('fr');
+      writeFileSync(file, JSON.stringify({ language: 'en' }));
+      expect(await loadMainLanguage(file, 'de')).toBe('en');
+      writeFileSync(file, JSON.stringify({ language: 'xx' }));
+      expect(await loadMainLanguage(file, 'de')).toBe('de');
+      writeFileSync(file, '{ not json');
+      expect(await loadMainLanguage(file, 'ko')).toBe('ko');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('has an "other" form for each English plural text', () => {

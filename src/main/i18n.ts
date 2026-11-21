@@ -1,10 +1,12 @@
 // The language of the main process: menus, system dialogs and update
 // messages. The renderer tells it the language when the user changes it, and
 // at start-up the main process reads it from the settings file, because the
-// update window opens before the main window.
+// update window opens before the main window. Until the user chooses a
+// language, the app uses the language of the system if it has it.
+// The renderer gets the language from here at start-up.
 
 import { readFile } from 'node:fs/promises';
-import { checkLanguage, DEFAULT_LANGUAGE, type LanguageCode } from '../i18n/languages';
+import { checkLanguage, DEFAULT_LANGUAGE, isLanguage, type LanguageCode } from '../i18n/languages';
 import { createTranslator, type Catalog, type MessageKey, type PluralKey, type Translator, type Vars } from '../i18n/translate';
 import bg from '../i18n/locales/bg.json';
 import cs from '../i18n/locales/cs.json';
@@ -72,13 +74,18 @@ export function tmn(key: PluralKey, count: number, vars?: Vars): string {
   return current.tn(key, count, vars);
 }
 
-/** Reads the language from the settings file of the renderer. English if the file or the value is missing. */
-export async function loadMainLanguage(settingsFile: string): Promise<LanguageCode> {
+/**
+ * Reads the language that the user chose from the settings file of the
+ * renderer. If the user did not choose a language, or the file or the value is
+ * not correct, the app uses `fallback`, the language of the system.
+ */
+export async function loadMainLanguage(settingsFile: string, fallback: LanguageCode): Promise<LanguageCode> {
+  let chosen: unknown;
   try {
     const raw = await readFile(settingsFile, 'utf8');
-    if (raw.length > 1024 * 1024) return setMainLanguage(DEFAULT_LANGUAGE);
-    return setMainLanguage((JSON.parse(raw) as { language?: unknown }).language);
+    if (raw.length <= 1024 * 1024) chosen = (JSON.parse(raw) as { language?: unknown }).language;
   } catch {
-    return setMainLanguage(DEFAULT_LANGUAGE);
+    chosen = undefined;
   }
+  return setMainLanguage(isLanguage(chosen) ? chosen : fallback);
 }

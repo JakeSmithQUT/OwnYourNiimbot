@@ -11,6 +11,7 @@ import type { ToolBridge, WindowResult } from './mcp/tools';
 import { isAllowedExternal } from './links';
 import { releaseUrl } from './updateRules';
 import { loadMainLanguage, mainLanguage, setMainLanguage, tm } from './i18n';
+import { systemLanguage } from '../i18n/languages';
 import {
   canInstallAtLaunch,
   checkAtLaunch,
@@ -385,6 +386,8 @@ function registerIpc(): void {
     chrome: process.versions.chrome,
   }));
 
+  handle('app:getLanguage', () => mainLanguage());
+
   handle('app:setLanguage', (_event, code: unknown) => {
     setMainLanguage(code);
     buildMenu();
@@ -683,7 +686,7 @@ if (isFirstInstance) {
     registerIpc();
     registerMcpIpc();
     registerUpdateIpc();
-    await loadMainLanguage(libraryDir('settings', 'app.json'));
+    await loadMainLanguage(libraryDir('settings', 'app.json'), systemLanguage(app.getPreferredSystemLanguages()));
     buildMenu();
     await startUpdates(sendUpdateStatus).catch((err) => console.error(`The update check did not start: ${String(err)}`));
     if (await updateBeforeStart().catch(() => false)) return; // The app closes to install the update.

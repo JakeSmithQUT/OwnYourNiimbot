@@ -8,8 +8,8 @@ import { appStore, updateSettings, type Settings } from '../state/app';
 import { MODELS, PRINT_VARIANTS, type PrintVariant } from '../../printer/models';
 import { Check, Field, Modal, Segmented } from '../components/ui';
 import { UpdateSettings } from '../components/Updates';
-import { t } from '../i18n';
-import { LANGUAGES } from '../../i18n/languages';
+import { t, useLanguage } from '../i18n';
+import { LANGUAGES, type LanguageCode } from '../../i18n/languages';
 import { chooseLanguage } from '../state/app';
 
 /**
@@ -132,6 +132,7 @@ function AssistantSettings() {
 
 export function SettingsView() {
   const { settings } = appStore.use();
+  const language = useLanguage();
   const [info, setInfo] = useState<{ version: string; platform: string; arch: string; electron: string; chrome: string }>();
   const [showLicences, setShowLicences] = useState(false);
 
@@ -144,7 +145,7 @@ export function SettingsView() {
       <div className="card" style={{ marginBottom: 16 }}>
         <h3>{t('settings.appearance')}</h3>
         <Field label={t('settings.language')} hint={t('settings.languageHint')}>
-          <select value={settings.language} onChange={(e) => void chooseLanguage(e.target.value as Settings['language'])}>
+          <select value={language} onChange={(e) => void chooseLanguage(e.target.value as LanguageCode)}>
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code} lang={l.code}>
                 {l.name}

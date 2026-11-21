@@ -97,6 +97,8 @@ const api = {
   app: {
     info: (): Promise<{ version: string; platform: string; arch: string; electron: string; chrome: string }> => ipcRenderer.invoke('app:info'),
     openDataFolder: (): Promise<void> => ipcRenderer.invoke('app:openDataFolder'),
+    /** The language that the user chose, else the language of the system if the app has it, else English. */
+    getLanguage: (): Promise<string> => ipcRenderer.invoke('app:getLanguage'),
     /** Tells the main process the language for menus and system dialogs. */
     setLanguage: (code: string): Promise<void> => ipcRenderer.invoke('app:setLanguage', code),
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke('app:openExternal', url),

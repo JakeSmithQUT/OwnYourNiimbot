@@ -5,7 +5,7 @@ import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/templ
 import { editor } from '../editor/EditorController';
 import { LIMITS, validateTemplate } from '../editor/validate';
 import type { PrintVariant } from '../../printer/models';
-import { DEFAULT_LANGUAGE, type LanguageCode } from '../../i18n/languages';
+import type { LanguageCode } from '../../i18n/languages';
 import { setLanguage, t } from '../i18n';
 
 export type View = 'design' | 'library' | 'templates' | 'data' | 'printer' | 'history' | 'settings';
@@ -23,8 +23,11 @@ export interface Settings {
   autoLabelSize: boolean;
   /** Shade the parts of the label that the print head cannot reach. */
   printArea: boolean;
-  /** The language of the app. */
-  language: LanguageCode;
+  /**
+   * The language that the user chose. Until the user chooses one, the app uses
+   * the language of the system if it has it, else English.
+   */
+  language?: LanguageCode;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -38,7 +41,6 @@ export const DEFAULT_SETTINGS: Settings = {
   densityByModel: {},
   autoLabelSize: true,
   printArea: true,
-  language: DEFAULT_LANGUAGE,
 };
 
 export interface AppState {

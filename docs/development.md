@@ -82,6 +82,8 @@ The interface text is in `src/i18n`. English is the source and the fallback.
 - `src/i18n/locales/<code>.json`: one file for each other language, with the same keys.
 - `src/i18n/languages.ts`: the list of languages, with the name of each language in that language.
 
+Until the user chooses a language, the app uses the first preferred language of the system (`app.getPreferredSystemLanguages()`) if it has that language, else English. `matchLanguage()` in `languages.ts` changes a system tag such as `de-AT` or `zh-Hant-TW` to a language of the app. The main process decides the language at start-up (`loadMainLanguage()`), and the renderer gets it with `api.app.getLanguage()`. The settings file has `language` only after the user chooses a language.
+
 To show a text, call `t('area.name')` in the renderer (`src/renderer/i18n.tsx`) or `tm('area.name')` in the main process (`src/main/i18n.ts`). Rules:
 
 - Use one key for a full sentence. Do not join translated parts, because the word order changes between languages.
