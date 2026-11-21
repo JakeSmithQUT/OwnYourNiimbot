@@ -535,5 +535,6 @@ export function searchIcons(query: string): SymbolEntry[] {
 }
 
 export function iconSvg(Icon: LucideIcon): string {
-  return renderToStaticMarkup(<Icon size={96} color="#000000" strokeWidth={2} />);
+  // Solid parts of a symbol take the text colour on the screen. A label has no text colour, so they are black there.
+  return renderToStaticMarkup(<Icon size={96} color="#000000" strokeWidth={2} />).replace(/currentColor/g, '#000000');
 }

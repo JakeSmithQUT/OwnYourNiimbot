@@ -35,7 +35,7 @@ describe('symbol library', () => {
     const cute = ICONS.filter((i) => i.group === 'Cute animals').map((i) => i.name);
     expect(cute.length).toBeGreaterThan(100);
     for (const animal of ['cat', 'dog', 'bunny', 'koala', 'wombat', 'quokka', 'kangaroo', 'platypus', 'tasmanian devil']) {
-      for (const name of [`cute ${animal}`, `happy ${animal}`, `sleepy ${animal}`, `${animal} with heart`]) expect(cute).toContain(name);
+      for (const name of [`cute ${animal}`, `happy ${animal}`, `sleepy ${animal}`, `${animal} in love`]) expect(cute).toContain(name);
     }
     for (const name of ['joey in pouch', 'emu', 'echidna', 'kookaburra']) expect(cute).toContain(name);
   });

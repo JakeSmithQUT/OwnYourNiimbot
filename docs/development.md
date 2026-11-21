@@ -72,7 +72,7 @@ Text gets the largest font size that fits its row. Text rows with the same weigh
 
 After a change, start `npm run dev`, open the **Templates** page and look at each size of the new template. Make sure that no text is smaller than 5 points and that no text wraps to a second line.
 
-To add a symbol, add an entry to a group in `src/renderer/editor/icons.tsx`. The cute animals are in `src/renderer/editor/cuteAnimals.ts`. An animal with a face there gets four symbols: plain, happy, sleepy and with a heart. Symbol names are lower case and must not change after a release, because saved labels and the assistant tools use them.
+To add a symbol, add an entry to a group in `src/renderer/editor/icons.tsx`. The cute animals are in `src/renderer/editor/cuteAnimals.ts`. An animal with a face there gets four symbols: plain, happy, sleepy and in love. Draw the head and the ears as one outline, make the eyes and the nose solid, and give the animal one feature that identifies it. Look at each new drawing at 5 mm and at full size before you add it. Symbol names are lower case and must not change after a release, because saved labels and the assistant tools use them.
 
 ## Translations
 
