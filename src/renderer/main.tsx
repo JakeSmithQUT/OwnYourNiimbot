@@ -9,10 +9,12 @@ import './styles.css';
 /** Loads the saved language before the first render, so that no English text shows first. */
 async function loadLanguage(): Promise<void> {
   const saved = await api.store.get<{ language?: string }>('settings', 'app').catch(() => null);
+  const untitled = t('labels.untitled');
   await setLanguage(saved?.language);
   // The first empty label was made before the language loaded, so it has the English default name.
+  // Change only that name, not the name of a label that the user opened in the meantime.
   const { template, dirty } = appStore.get();
-  if (!template.id && !dirty) appStore.set({ template: { ...template, name: t('labels.untitled') } });
+  if (!template.id && !dirty && template.name === untitled) appStore.set({ template: { ...template, name: t('labels.untitled') } });
 }
 
 // Load the bundled fonts before the first label is drawn, so text sizes are
