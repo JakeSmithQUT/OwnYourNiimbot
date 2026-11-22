@@ -148,14 +148,36 @@ function bar(b: Box, value: string, o: TextOptions): Box {
   return box(b.x, b.y + (b.h - bh) / 2, b.w, bh);
 }
 
+/** Width of the longest word in canvas units, with the letter spacing, at this font size. */
+function longestWord(value: string, o: TextOptions, fontSize: number): number {
+  measureCtx ??= document.createElement('canvas').getContext('2d')!;
+  measureCtx.font = `${o.italic ? 'italic ' : ''}${o.bold ? 'bold ' : ''}${fontSize}px "${o.font ?? 'Arial'}"`;
+  let widest = 0;
+  for (const word of value.split(/\s+/)) {
+    if (!word) continue;
+    const m = measureCtx.measureText(word);
+    widest = Math.max(widest, Math.max(m.width, m.actualBoundingBoxRight) + ((o.spacing ?? 0) / 1000) * fontSize * word.length);
+  }
+  return widest;
+}
+
 export function text(box_: Box, value: string, o: TextOptions = {}): FabricObject[] {
   const b = o.invert && o.hug ? bar(box_, o.fitText ?? value, o) : box_;
   const pt = fitPt(o.fitText ?? value, o.invert ? inset(b, 0.6, 0.2) : b, o);
-  const fontSize = ptToUnits(pt);
+  const inner = o.invert ? inset(b, 0.6, 0) : b;
+  // A text with a smallest size (minPt) wraps at its spaces at that size. Other text is one line
+  // in a row sized for one line, so it gets a smaller font rather than a second line. A word
+  // wider than the box would make the text box grow past its space, so the font gets smaller there too.
+  let fontSize = ptToUnits(pt);
+  const sample = o.fitText ?? value;
+  const oneLine = o.minPt === undefined && !sample.includes('\n');
+  const widest = oneLine
+    ? measure(sample, `${o.italic ? 'italic ' : ''}${o.bold ? 'bold ' : ''}${fontSize}px "${o.font ?? 'Arial'}"`) + ((o.spacing ?? 0) / 1000) * fontSize * sample.length
+    : longestWord(sample, o, fontSize);
+  if (widest > u(inner.w)) fontSize *= (u(inner.w) * 0.98) / widest;
   const lh = o.lineHeight ?? LINE_HEIGHT;
   const lines = Math.max(1, value.split('\n').length);
   const textH = fontSize * lh * lines;
-  const inner = o.invert ? inset(b, 0.6, 0) : b;
   const font = o.font ?? 'Arial';
   let top = u(inner.y);
   if (o.valign === 'bottom') top += u(inner.h) - textH;

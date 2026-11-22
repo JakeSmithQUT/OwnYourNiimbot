@@ -72,6 +72,8 @@ Text gets the largest font size that fits its row. Rows of plain text, dates, se
 
 On a round label, text stays inside a circle: each row is as wide as the circle where the row ends up. `packInCircle()` in `layout.ts` does this for templates with their own layout code.
 
+A text row is one line. When the row is too narrow for the text at the smallest size, the font gets smaller and the text does not wrap. Only a text with `minPt` wraps at its spaces, for example a list of ingredients. If a small size makes a line hard to read, leave that line out at that size, as the Thank you sticker does for its web address under 30 mm.
+
 Rows are kept together. When the width makes text smaller than its row, `pack()` in `layout.ts` gives the free height back, puts an even gap between the rows and centres the group on its letters. A symbol, a code or a block of left-aligned text that is shorter than the label is centred across it with the text beside it. QR and Data Matrix codes get a whole number of 203 dpi printer dots for each module and go to the outer edge of their space. Symbols are placed by their lines, not by the square of the icon. A black bar with `hug` is as high as its text.
 
 In a template with its own layout code, use the same helpers: `pack()` for rows, `withIcon()` and `withCode()` for a symbol or a code beside text, `pairs()` for captions with values, `onBaseline()` for texts side by side on one line, and `centreX()` for a short block of text.

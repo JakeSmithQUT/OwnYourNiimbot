@@ -40,7 +40,7 @@ const PRODUCE: TemplateDesign[] = [
   }),
   d('pickles', 'Pickles and preserves', B, 'Marker name in a dotted frame, with the batch month.', [...PRODUCT, ...ROUND], {
     base: { frame: 'dots', rows: [{ t: 'Dill Pickles', font: F.marker, weight: 1.5 }, { t: 'crunchy · small batch', font: F.hand, bold: true }, { date: 'MMM YYYY', font: F.sans, bold: true, spacing: 120, weight: 0.65 }] },
-    round: { frame: 'line', rows: [{ t: 'Dill', font: F.marker }, { t: 'Pickles', font: F.marker }, { date: 'MMM YYYY', font: F.sans, bold: true, spacing: 80, weight: 0.6 }] },
+    round: { frame: 'line', rows: [{ t: 'Dill', font: F.marker }, { t: 'Pickles', font: F.marker }, { date: 'MMM YY', font: F.sans, bold: true, spacing: 80, weight: 0.6 }] },
   }),
   d('kombucha', 'Kombucha and soda', B, 'Retro script flavour, spaced capitals and the date brewed.', PRODUCT_TALL, {
     base: { rows: [{ t: 'Ginger Lemon', font: F.retro, weight: 1.5 }, { t: 'KOMBUCHA', font: F.bebas, spacing: 300 }, { band: 'wave', span: 0.6 }, { cols: [caps('BREWED', 80), { date: 'DD/MM/YY', font: F.sans, bold: true }, caps('330 ML', 80)], weight: 0.7 }] },

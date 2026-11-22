@@ -829,10 +829,16 @@ const RETAIL: TemplateDesign[] = [
     sizes: [...ROUND, [40, 30], [50, 30]],
     roundSizes: ROUND,
     build: (w, h) => {
-      const draw = ([i, t, s]: Box[]) => [icon(i, ic('heart')), text(t, 'Thank you', { bold: true, italic: true, align: 'center' }), text(s, 'yourshop.example', { align: 'center' })];
+      const draw = ([i, t, s]: Box[]) => [
+        icon(i, ic('heart')),
+        text(t, 'Thank you', { bold: true, italic: true, align: 'center' }),
+        ...(s ? [text(s, 'yourshop.example', { align: 'center' })] : []),
+      ];
       const heart = ([i]: Box[]): [number, number][] => [[square(i).y, square(i).y + square(i).h]];
       if (Math.abs(w - h) < 0.5) {
-        return [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 }), ...packInCircle(insideCircle(w, h, w * 0.45 - 0.2), [1, 1.3, 0.8], 0.3, draw, heart)];
+        // Small round stickers have no room for the web address.
+        const ratios = w >= 30 ? [1, 1.3, 0.8] : [1, 1.3];
+        return [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 }), ...packInCircle(insideCircle(w, h, w * 0.45 - 0.2), ratios, 0.3, draw, heart)];
       }
       const a = area(w, h);
       const boxes = rows(a, [1, 1.3, 0.8], 0.3);
