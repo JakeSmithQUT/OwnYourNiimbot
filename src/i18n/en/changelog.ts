@@ -3,6 +3,9 @@
 // versions and their notes. The release workflow puts the English notes of a
 // version on its GitHub release.
 export const changelog = {
+  'changelog.1.10.0.whatsnew': "What's new shows the release notes in the app, in your language.",
+  'changelog.1.10.0.settings': "Open What's new at any time from Updates in Settings.",
+  'changelog.1.10.0.round': 'Text on small round labels stays inside the circle, and long words in templates no longer run past their space.',
   'changelog.1.9.2.round': 'Text on round labels follows the circle, so long lines are larger and stay inside the edge.',
   'changelog.1.9.2.sizes': 'Lines that belong together, for example captions and their values, have the same font size.',
   'changelog.1.9.1.layout': 'The templates are tidier: rows stay together, groups are centred and black bars fit their text.',

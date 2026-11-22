@@ -12,6 +12,7 @@ export interface Release {
 }
 
 export const RELEASES: Release[] = [
+  { version: '1.10.0', date: '2026-11-22', notes: ['changelog.1.10.0.whatsnew', 'changelog.1.10.0.settings', 'changelog.1.10.0.round'] },
   { version: '1.9.2', date: '2026-11-22', notes: ['changelog.1.9.2.round', 'changelog.1.9.2.sizes'] },
   { version: '1.9.1', date: '2026-11-22', notes: ['changelog.1.9.1.layout', 'changelog.1.9.1.codes', 'changelog.1.9.1.codabar'] },
   { version: '1.9.0', date: '2026-11-21', notes: ['changelog.1.9.0.animals', 'changelog.1.9.0.japanese'] },
