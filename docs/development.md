@@ -68,7 +68,9 @@ To add a template, add a `design(...)` entry to `practical.ts` (plain text), `ma
 
 A template that sets a font shows in the **Decorative** filter.
 
-Text gets the largest font size that fits its row. Text rows with the same weight and font get the same size. If the sample text is long, the font is small on the smallest sizes. Remove those sizes from the list, or give a shorter description for them.
+Text gets the largest font size that fits its row. Rows of plain text, dates, serial numbers, captions with values, tick boxes and the text in a row of columns share one size when they have the same weight and font. A bold line is not made smaller to match captions of the same weight. A row with less weight is never larger than a row with more weight, and detail lines are at most 0.8 times the size of the main line. If the sample text is long, the font is small on the smallest sizes. Remove those sizes from the list, or give a shorter description for them.
+
+On a round label, text stays inside a circle: each row is as wide as the circle where the row ends up. `packInCircle()` in `layout.ts` does this for templates with their own layout code.
 
 Rows are kept together. When the width makes text smaller than its row, `pack()` in `layout.ts` gives the free height back, puts an even gap between the rows and centres the group on its letters. A symbol, a code or a block of left-aligned text that is shorter than the label is centred across it with the text beside it. QR and Data Matrix codes get a whole number of 203 dpi printer dots for each module and go to the outer edge of their space. Symbols are placed by their lines, not by the square of the icon. A black bar with `hug` is as high as its text.
 

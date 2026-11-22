@@ -14,8 +14,11 @@ import {
   hline,
   icon,
   inset,
+  insideCircle,
   onBaseline,
   pack,
+  packInCircle,
+  ptOf,
   qr,
   rect,
   rows,
@@ -39,7 +42,6 @@ import {
   pad,
   repeatCols,
   ROUND,
-  roundArea,
   SMALL,
   stack,
   white,
@@ -528,7 +530,10 @@ const HOME: TemplateDesign[] = [
     description: 'Round label with the spice name in the middle.',
     sizes: ROUND,
     round: true,
-    build: (w, h) => [circle(inset(box(0, 0, w, h), w * 0.06), { stroke: 0.3 }), ...text(roundArea(w, h), 'Smoked\npaprika', { bold: true, align: 'center' })],
+    build: (w, h) => [
+      circle(inset(box(0, 0, w, h), w * 0.06), { stroke: 0.3 }),
+      ...packInCircle(insideCircle(w, h, w * 0.44 - 0.15), [1], 0, ([b]) => [text(b, 'Smoked\npaprika', { bold: true, align: 'center' })]),
+    ],
   },
   {
     id: 'freezer',
@@ -538,12 +543,12 @@ const HOME: TemplateDesign[] = [
     sizes: [[50, 30], [40, 30], [50, 25], [50, 50], [60, 40]],
     build: (w, h) => {
       const a = area(w, h);
-      const [name, dates, s] = rows(a, [1.8, 2.4, 1], 0.4);
+      const [name, dates, s] = rows(a, [1.8, 2.4, 1.2], 0.4);
       const list = pairs(dates, [
         ['Frozen', (v, maxPt) => date(v, 'DD/MM/YYYY', 0, { bold: true, maxPt }), '00/00/0000'],
         ['Use by', (v, maxPt) => date(v, 'DD/MM/YYYY', 91, { bold: true, maxPt }), '00/00/0000'],
       ]);
-      return centreX(pack([text(name, 'Beef lasagne', { bold: true }), ...list, text(s, 'Serves  4', { maxPt: fitPt('Use by', cols(s, [1, 1.5], 0.6)[0]) })], a, 0.4), a);
+      return centreX(pack([text(name, 'Beef lasagne', { bold: true }), ...list, text(s, 'Serves  4', { maxPt: ptOf(list[0]) })], a, 0.4), a);
     },
   },
   {
@@ -664,9 +669,14 @@ const HOME: TemplateDesign[] = [
     sizes: ROUND,
     round: true,
     build: (w, h) => {
-      const a = roundArea(w, h);
-      const [n, d] = rows(a, [1.5, 1], 0.3);
-      return [circle(inset(box(0, 0, w, h), w * 0.06), { stroke: 0.3 }), ...pack([text(n, 'Plum jam', { bold: true, align: 'center' }), date(d, 'MMM YY', 0, { align: 'center' })], a, 0.3)];
+      return [
+        circle(inset(box(0, 0, w, h), w * 0.06), { stroke: 0.3 }),
+        ...packInCircle(insideCircle(w, h, w * 0.44 - 0.15), [1.5, 1], 0.3, ([n, d]) => {
+          // The date is a detail, so it stays smaller than the name.
+          const name = text(n, 'Plum jam', { bold: true, align: 'center' });
+          return [name, date(d, 'MMM YY', 0, { align: 'center', maxPt: ptOf(name) * 0.8 })];
+        }),
+      ];
     },
   },
 ];
@@ -720,13 +730,10 @@ const FOOD: TemplateDesign[] = [
     sizes: [...ROUND, [40, 20], [30, 20]],
     roundSizes: ROUND,
     build: (w, h) => {
-      const isRound = Math.abs(w - h) < 0.5;
-      const a = isRound ? roundArea(w, h) : area(w, h);
-      const [d, n] = rows(a, [2, 1], 0.3);
-      return [
-        ...(isRound ? [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 })] : []),
-        ...pack([date(d, 'ddd', 0, { bold: true, align: 'center' }), date(n, 'D MMM', 0, { align: 'center' })], a, 0.3),
-      ];
+      const draw = ([d, n]: Box[]) => [date(d, 'ddd', 0, { bold: true, align: 'center' }), date(n, 'D MMM', 0, { align: 'center' })];
+      if (Math.abs(w - h) < 0.5) return [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 }), ...packInCircle(insideCircle(w, h, w * 0.45 - 0.2), [2, 1], 0.3, draw)];
+      const a = area(w, h);
+      return pack(draw(rows(a, [2, 1], 0.3)), a, 0.3);
     },
   },
   {
@@ -743,11 +750,11 @@ const FOOD: TemplateDesign[] = [
         [
           text(name, 'Lemon Curd', { bold: true }),
           text(ing, 'Ingredients: sugar, lemon juice (30%), butter (milk), egg, lemon zest.', { minPt: 5, valign: 'top' }),
-          onBaseline([
-            text(wt, 'Net 250 g'),
-            text(cols(bb, [1.3, 1], 0.5)[0], 'Best before', { align: 'right' }),
-            date(cols(bb, [1.3, 1], 0.5)[1], 'DD/MM/YY', 60, { bold: true, align: 'right' }),
-          ]),
+          (() => {
+            const [bl, bv] = cols(bb, [1.3, 1], 0.5);
+            const maxPt = Math.min(fitPt('Net 250 g', wt), fitPt('Best before', bl), fitPt('00/00/00', bv, { bold: true }));
+            return onBaseline([text(wt, 'Net 250 g', { maxPt }), text(bl, 'Best before', { align: 'right', maxPt }), date(bv, 'DD/MM/YY', 60, { bold: true, align: 'right', maxPt })]);
+          })(),
           barcode(code, '9300000000002', 'ean13'),
         ],
         a,
@@ -808,9 +815,10 @@ const RETAIL: TemplateDesign[] = [
     sizes: ROUND,
     round: true,
     build: (w, h) => {
-      const a = roundArea(w, h);
-      const [s, d] = rows(a, [1, 1.3], 0.2);
-      return [circle(box(0, 0, w, h), { fill: true }), ...pack([text(s, 'SALE', { bold: true, align: 'center' }).map(white), text(d, '30% OFF', { bold: true, align: 'center' }).map(white)], a, 0.2)];
+      return [
+        circle(box(0, 0, w, h), { fill: true }),
+        ...packInCircle(insideCircle(w, h, w * 0.5), [1, 1.3], 0.2, ([s, d]) => [text(s, 'SALE', { bold: true, align: 'center' }).map(white), text(d, '30% OFF', { bold: true, align: 'center' }).map(white)]),
+      ];
     },
   },
   {
@@ -821,18 +829,14 @@ const RETAIL: TemplateDesign[] = [
     sizes: [...ROUND, [40, 30], [50, 30]],
     roundSizes: ROUND,
     build: (w, h) => {
-      const isRound = Math.abs(w - h) < 0.5;
-      const a = isRound ? roundArea(w, h) : area(w, h);
-      const [i, t, s] = rows(a, [1, 1.3, 0.8], 0.3);
-      return [
-        ...(isRound ? [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 })] : []),
-        ...pack(
-          [icon(i, ic('heart')), text(t, 'Thank you', { bold: true, italic: true, align: 'center' }), text(s, 'yourshop.example', { align: 'center' })],
-          a,
-          0.3,
-          [[square(i).y, square(i).y + square(i).h]],
-        ),
-      ];
+      const draw = ([i, t, s]: Box[]) => [icon(i, ic('heart')), text(t, 'Thank you', { bold: true, italic: true, align: 'center' }), text(s, 'yourshop.example', { align: 'center' })];
+      const heart = ([i]: Box[]): [number, number][] => [[square(i).y, square(i).y + square(i).h]];
+      if (Math.abs(w - h) < 0.5) {
+        return [circle(inset(box(0, 0, w, h), w * 0.05), { stroke: 0.4 }), ...packInCircle(insideCircle(w, h, w * 0.45 - 0.2), [1, 1.3, 0.8], 0.3, draw, heart)];
+      }
+      const a = area(w, h);
+      const boxes = rows(a, [1, 1.3, 0.8], 0.3);
+      return pack(draw(boxes), a, 0.3, heart(boxes));
     },
   },
   {
@@ -893,7 +897,7 @@ const SHIPPING: TemplateDesign[] = [
           stack(from, [{ t: 'FROM', bold: true, maxPt: 8 }, { t: 'Your Shop' }, { t: '12 Example Street' }, { t: 'Brisbane QLD 4000' }], 0.3),
           [
             rect(to, { stroke: 0.5, radius: 1.5 }),
-            ...stack(inset(to, 3), [{ t: 'TO', bold: true, maxPt: 9 }, { t: 'Sam Lee', bold: true, weight: 1.6 }, { t: 'Unit 4, 88 Sample Road' }, { t: 'Melbourne VIC 3000' }], 0.5),
+            ...stack(inset(to, 3), [{ t: 'TO', bold: true, maxPt: 8 }, { t: 'Sam Lee', bold: true, weight: 1.6 }, { t: 'Unit 4, 88 Sample Road' }, { t: 'Melbourne VIC 3000' }], 0.5),
           ],
           barcode(code, 'ORDER-104221'),
         ],
@@ -1050,7 +1054,8 @@ const LAB: TemplateDesign[] = [
       const a = inset(box(0, 0, w, h), 0.8, 0.6);
       const [id, rest] = cols(a, [1.4, 1], 0.6);
       const [who, when] = rows(rest, [1, 1], 0);
-      return [...serial(id, { start: 1, step: 1, digits: 3, prefix: 'S-', suffix: '' }, { bold: true }), ...text(who, 'AM', { align: 'right' }), ...date(when, 'DD/MM/YY', 0, { align: 'right' })];
+      const maxPt = Math.min(fitPt('AM', who), fitPt('00/00/00', when));
+      return [...serial(id, { start: 1, step: 1, digits: 3, prefix: 'S-', suffix: '' }, { bold: true }), ...text(who, 'AM', { align: 'right', maxPt }), ...date(when, 'DD/MM/YY', 0, { align: 'right', maxPt })];
     },
   },
   {

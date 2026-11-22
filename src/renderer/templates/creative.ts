@@ -3,7 +3,7 @@
 // so that they print cleanly on a 1-bit thermal head.
 
 import type { FabricObject } from 'fabric';
-import { art, barcode, box, cols, datamatrix, date, extentX, hline, icon, inset, onBaseline, pack, qr, rect, rows, serial, shift, text, vline, type Box, type Part } from './layout';
+import { art, barcode, box, cols, datamatrix, date, extentX, fitPt, hline, icon, inset, insideCircle, onBaseline, pack, packInCircle, ptOf, qr, rect, rows, serial, shift, text, vline, type Box, type Part } from './layout';
 import { area, ic, NARROW, narrow, pad, ROUND, roundArea, SMALL, stack, TALL, white, withCode, withIcon, type TemplateDesign } from './kit';
 import * as orn from './ornaments';
 
@@ -55,9 +55,16 @@ const GIFTS: TemplateDesign[] = [
     build: (w, h) => {
       const a = inset(full(w, h), Math.max(2.4, pad(w, h) + 1.4));
       const [title, rule, to, from] = rows(a, [1.8, 0.5, 1, 1], 0.4);
+      const cells = [to, from].map((b) => cols(b, [1, 3.2], 0.8));
+      const labelPt = Math.min(fitPt('To', cells[0][0], { font: F.serif, italic: true }), fitPt('From', cells[1][0], { font: F.serif, italic: true }));
+      const namePt = Math.min(fitPt('Sam', cells[0][1], { font: F.script, bold: true }), fitPt('Alex', cells[1][1], { font: F.script, bold: true }));
       const line = (b: Box, label: string, name: string) => {
         const [l, v] = cols(b, [1, 3.2], 0.8);
-        return [...text(l, label, { font: F.serif, italic: true, valign: 'bottom' }), ...text(v, name, { font: F.script, bold: true, valign: 'bottom' }), hline(v.x, v.y + v.h - 0.2, v.w, { width: 0.25 })];
+        return [
+          ...text(l, label, { font: F.serif, italic: true, valign: 'bottom', maxPt: labelPt }),
+          ...text(v, name, { font: F.script, bold: true, valign: 'bottom', maxPt: namePt }),
+          hline(v.x, v.y + v.h - 0.2, v.w, { width: 0.25 }),
+        ];
       };
       return [
         ...art(full(w, h), orn.frame(w, h, { stroke: 0.5, radius: 1.6, inner: 1.3, innerStroke: 0.25 })),
@@ -84,12 +91,17 @@ const GIFTS: TemplateDesign[] = [
       const [no, num] = rows(stub, [1, 1.6], 0.4);
       return [
         ...art(full(w, h), orn.ticket(w, h, 0.55)),
-        ...pack(
-          [text(top, 'ADMIT ONE', { font: F.bebas, align: 'center', spacing: 200 }), text(mid, 'Happy Birthday', { font: F.retro, align: 'center' }), text(bottom, 'love, Sam', { font: F.hand, bold: true, align: 'center' })],
-          main,
-          0.4,
-        ),
-        ...pack([text(no, 'NO.', { font: F.bebas, align: 'center', spacing: 100 }), serial(num, { start: 1, step: 1, digits: 3, prefix: '', suffix: '' }, { font: F.bebas, align: 'center' })], stub, 0.4),
+        ...(() => {
+          const admit = text(top, 'ADMIT ONE', { font: F.bebas, align: 'center', spacing: 200 });
+          return [
+            ...pack([admit, text(mid, 'Happy Birthday', { font: F.retro, align: 'center' }), text(bottom, 'love, Sam', { font: F.hand, bold: true, align: 'center' })], main, 0.4),
+            ...pack(
+              [text(no, 'NO.', { font: F.bebas, align: 'center', spacing: 100, maxPt: ptOf(admit) }), serial(num, { start: 1, step: 1, digits: 3, prefix: '', suffix: '' }, { font: F.bebas, align: 'center' })],
+              stub,
+              0.4,
+            ),
+          ];
+        })(),
       ];
     },
   },
@@ -102,11 +114,12 @@ const GIFTS: TemplateDesign[] = [
     sizes: ROUND,
     round: true,
     build: (w, h) => {
-      const a = roundArea(w, h);
-      const [t1, t2] = rows(a, [1.5, 0.8], 0.3);
       return [
         ...art(full(w, h), orn.seal(w, Math.round(w * 0.9))),
-        ...pack([text(t1, 'handmade', { font: F.retro, align: 'center' }).map(white), text(t2, 'WITH LOVE', { font: F.sans, bold: true, align: 'center', spacing: 160 }).map(white)], a, 0.3),
+        ...packInCircle(insideCircle(w, h, w * 0.43), [1.5, 0.8], 0.3, ([t1, t2]) => [
+          text(t1, 'handmade', { font: F.retro, align: 'center' }).map(white),
+          text(t2, 'WITH LOVE', { font: F.sans, bold: true, align: 'center', spacing: 160 }).map(white),
+        ]),
       ];
     },
   },
@@ -123,16 +136,16 @@ const GIFTS: TemplateDesign[] = [
       const a = roundLabel ? roundArea(w, h) : area(w, h);
       // Round stickers have less room, so the small line is shorter or left out.
       const sub = roundLabel ? (w >= 30 ? 'FOR YOUR ORDER' : '') : 'FOR SUPPORTING SMALL BUSINESS';
-      const [t, r, s] = rows(a, sub ? [2.2, 0.45, 0.8] : [2.2, 0.45, 0.01], 0.4);
-      return [
-        ...(roundLabel ? [rect(inset(full(w, h), w * 0.05), { stroke: 0.4, radius: w * 0.45 })] : []),
-        ...pack(
-          [text(t, 'Thank you', { font: F.formal, align: 'center' }), art(inset(r, r.w * 0.12, 0), orn.diamondRule(r.w * 0.76, r.h)), ...(sub ? [text(s, sub, { font: F.sans, bold: true, align: 'center', spacing: 120 })] : [])],
-          a,
-          0.4,
-          [undefined, span(r)],
-        ),
+      const ratios = sub ? [2.2, 0.45, 0.8] : [2.2, 0.45];
+      const draw = ([t, r, s]: Box[]) => [
+        text(t, 'Thank you', { font: F.formal, align: 'center' }),
+        art(inset(r, r.w * 0.12, 0), orn.diamondRule(r.w * 0.76, r.h)),
+        ...(sub ? [text(s, sub, { font: F.sans, bold: true, align: 'center', spacing: 120 })] : []),
       ];
+      const rule = (bx: Box[]) => [undefined, span(bx[1])];
+      if (roundLabel) return [rect(inset(full(w, h), w * 0.05), { stroke: 0.4, radius: w * 0.45 }), ...packInCircle(insideCircle(w, h, w * 0.45 - 0.2), ratios, 0.4, draw, rule)];
+      const boxes = rows(a, ratios, 0.4);
+      return pack(draw(boxes), a, 0.4, rule(boxes));
     },
   },
   {
@@ -146,16 +159,15 @@ const GIFTS: TemplateDesign[] = [
     build: (w, h) => {
       const roundLabel = isRound(w, h);
       const a = roundLabel ? roundArea(w, h) : inset(full(w, h), pad(w, h) + 1.5);
-      const [n, s, d] = rows(a, [2, 0.7, 0.8], 0.4);
-      return [
-        ...(roundLabel ? [rect(inset(full(w, h), w * 0.04), { stroke: 0.35, radius: w * 0.46 })] : art(full(w, h), orn.frame(w, h, { stroke: 0.4, inner: 1.2, innerStroke: 0.25 }))),
-        ...pack(
-          [text(n, 'A & J', { font: F.serif, italic: true, bold: true, align: 'center' }), art(inset(s, s.w * 0.18, 0), orn.sprig(s.w * 0.64, s.h)), text(d, '12 · 03 · 2027', { font: F.classic, align: 'center', spacing: 80 })],
-          a,
-          0.4,
-          [undefined, span(s)],
-        ),
+      const draw = ([n, s, d]: Box[]) => [
+        text(n, 'A & J', { font: F.serif, italic: true, bold: true, align: 'center' }),
+        art(inset(s, s.w * 0.18, 0), orn.sprig(s.w * 0.64, s.h)),
+        text(d, '12 · 03 · 2027', { font: F.classic, align: 'center', spacing: 80 }),
       ];
+      const sprig = (bx: Box[]) => [undefined, span(bx[1])];
+      if (roundLabel) return [rect(inset(full(w, h), w * 0.04), { stroke: 0.35, radius: w * 0.46 }), ...packInCircle(insideCircle(w, h, w * 0.46 - 0.18), [2, 0.7, 0.8], 0.4, draw, sprig)];
+      const boxes = rows(a, [2, 0.7, 0.8], 0.4);
+      return [...art(full(w, h), orn.frame(w, h, { stroke: 0.4, inner: 1.2, innerStroke: 0.25 })), ...pack(draw(boxes), a, 0.4, sprig(boxes))];
     },
   },
   {
@@ -271,11 +283,14 @@ const GIFTS: TemplateDesign[] = [
     build: (w, h) => {
       const roundLabel = isRound(w, h);
       const a = roundLabel ? roundArea(w, h) : inset(full(w, h), pad(w, h) + 1.5);
-      const [m, fruit, d] = rows(a, [0.9, 1.6, 0.7], 0.3);
-      return [
-        ...(roundLabel ? art(full(w, h), orn.seal(w, Math.round(w * 0.9), false)) : art(full(w, h), orn.dotFrame(w, h, 0.55, 1.5))),
-        ...pack([text(m, 'homemade', { font: F.script, bold: true, align: 'center' }), text(fruit, 'Strawberry', { font: F.fat, align: 'center' }), date(d, 'MMM YYYY', 0, { font: F.sans, bold: true, align: 'center', spacing: 100 })], a, 0.3),
-      ];
+      const draw = ([m, f, d]: Box[]) => {
+        // The fruit is the main line: the other lines stay smaller.
+        const fruit = text(f, 'Strawberry', { font: F.fat, align: 'center' });
+        const cap = ptOf(fruit) * 0.8;
+        return [text(m, 'homemade', { font: F.script, bold: true, align: 'center', maxPt: cap }), fruit, date(d, 'MMM YYYY', 0, { font: F.sans, bold: true, align: 'center', spacing: 100, maxPt: cap })];
+      };
+      if (roundLabel) return [...art(full(w, h), orn.seal(w, Math.round(w * 0.9), false)), ...packInCircle(insideCircle(w, h, w * 0.41), [0.9, 1.6, 0.7], 0.3, draw)];
+      return [...art(full(w, h), orn.dotFrame(w, h, 0.55, 1.5)), ...pack(draw(rows(a, [0.9, 1.6, 0.7], 0.3)), a, 0.3)];
     },
   },
   {
@@ -582,11 +597,11 @@ const HOME: TemplateDesign[] = [
     build: (w, h) => {
       const roundLabel = isRound(w, h);
       const a = roundLabel ? roundArea(w, h) : area(w, h);
-      const [n, s] = rows(a, [2.4, 0.6], 0.3);
-      return [
-        ...(roundLabel ? [rect(inset(full(w, h), w * 0.05), { stroke: 0.35, radius: w * 0.45 })] : []),
-        ...pack([text(n, 'Brown Sugar', { font: F.formal, align: 'center' }), art(inset(s, s.w * 0.22, 0), orn.sprig(s.w * 0.56, s.h))], a, 0.3, [undefined, [s.y, s.y + s.h]]),
-      ];
+      const draw = ([n, s]: Box[]) => [text(n, 'Brown Sugar', { font: F.formal, align: 'center' }), art(inset(s, s.w * 0.22, 0), orn.sprig(s.w * 0.56, s.h))];
+      const sprig = (bx: Box[]) => [undefined, span(bx[1])];
+      if (roundLabel) return [rect(inset(full(w, h), w * 0.05), { stroke: 0.35, radius: w * 0.45 }), ...packInCircle(insideCircle(w, h, w * 0.45 - 0.18), [2.4, 0.6], 0.3, draw, sprig)];
+      const boxes = rows(a, [2.4, 0.6], 0.3);
+      return pack(draw(boxes), a, 0.3, sprig(boxes));
     },
   },
   {
@@ -598,11 +613,12 @@ const HOME: TemplateDesign[] = [
     sizes: ROUND,
     round: true,
     build: (w, h) => {
-      const a = roundArea(w, h);
-      const [n, d] = rows(a, [1.6, 0.6], 0.2);
       return [
         ...art(full(w, h), orn.seal(w, Math.round(w * 0.9))),
-        ...pack([text(n, 'CUMIN', { font: F.bebas, align: 'center', spacing: 80 }).map(white), text(d, 'GROUND', { font: F.sans, bold: true, align: 'center', spacing: 200 }).map(white)], a, 0.2),
+        ...packInCircle(insideCircle(w, h, w * 0.43), [1.6, 0.6], 0.2, ([n, d]) => [
+          text(n, 'CUMIN', { font: F.bebas, align: 'center', spacing: 80 }).map(white),
+          text(d, 'GROUND', { font: F.sans, bold: true, align: 'center', spacing: 200 }).map(white),
+        ]),
       ];
     },
   },
@@ -688,9 +704,16 @@ const HOME: TemplateDesign[] = [
     build: (w, h) => {
       const a = inset(full(w, h), pad(w, h) + 1);
       const [subject, n, c] = rows(a, [1.6, 1, 1], 0.5);
+      const cells = [n, c].map((b) => cols(b, [1, 3], 0.8));
+      const labelPt = Math.min(fitPt('Name', cells[0][0], { font: F.round }), fitPt('Class', cells[1][0], { font: F.round }));
+      const valuePt = Math.min(fitPt('Charlie', cells[0][1], { font: F.hand, bold: true }), fitPt('5B', cells[1][1], { font: F.hand, bold: true }));
       const line = (b: Box, label: string, value: string) => {
         const [l, v] = cols(b, [1, 3], 0.8);
-        return [...text(l, label, { font: F.round, valign: 'bottom' }), ...text(v, value, { font: F.hand, bold: true, valign: 'bottom' }), hline(v.x, v.y + v.h - 0.2, v.w, { width: 0.25 })];
+        return [
+          ...text(l, label, { font: F.round, valign: 'bottom', maxPt: labelPt }),
+          ...text(v, value, { font: F.hand, bold: true, valign: 'bottom', maxPt: valuePt }),
+          hline(v.x, v.y + v.h - 0.2, v.w, { width: 0.25 }),
+        ];
       };
       return [
         rect(inset(full(w, h), 0.3), { stroke: 0.6, radius: 2.4 }),

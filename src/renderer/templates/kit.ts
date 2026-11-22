@@ -151,15 +151,15 @@ export function withCode(b: Box, code: (sq: Box) => Part[], body: (rest: Box) =>
   return [...parts, ...text];
 }
 
-/** Captions with values in rows. Captions share one font size and values share another, so that the rows line up. */
-export function pairs(b: Box, list: [string, (v: Box, maxPt: number) => Part[], string?][], o: { gap?: number; ratio?: number; caption?: TextOptions; valueText?: (i: number) => string } = {}): Part[][] {
+/** Captions with values in rows, all at one font size so that the rows line up. */
+export function pairs(b: Box, list: [string, (v: Box, maxPt: number) => Part[], string?][], o: { gap?: number; ratio?: number; caption?: TextOptions } = {}): Part[][] {
   const boxes = rows(b, list.map(() => 1), o.gap ?? 0.4);
   const split = boxes.map((r) => cols(r, [1, o.ratio ?? 1.5], 0.6));
-  const capPt = Math.min(...list.map(([label], i) => fitPt(label, split[i][0], o.caption)));
-  const valPt = Math.min(...list.map(([, , sample], i) => (sample ? fitPt(sample, split[i][1], { bold: true }) : Infinity)));
+  // Captions and values share one size: the largest that fits every caption and every sample value.
+  const pt = Math.min(...list.map(([label], i) => fitPt(label, split[i][0], o.caption)), ...list.map(([, , sample], i) => (sample ? fitPt(sample, split[i][1], { bold: true }) : Infinity)));
   return list.map(([label, value], i) => {
-    const caption = text(split[i][0], label, { ...o.caption, maxPt: capPt });
-    const v = value(split[i][1], valPt);
+    const caption = text(split[i][0], label, { ...o.caption, maxPt: pt });
+    const v = value(split[i][1], pt);
     return v.every((p) => !(p instanceof Promise)) ? onBaseline([caption, v as FabricObject[]]) : [...caption, ...v];
   });
 }

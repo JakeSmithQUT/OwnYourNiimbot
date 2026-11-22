@@ -5,7 +5,9 @@
 
 import type { SerialSettings } from '../editor/placeholders';
 import type { Dataset } from '../editor/template';
-import { art, barcode, box, circle, cols, datamatrix, date, extentX, extentY, fitPt, hline, icon, inset, pack, qr, rect, rows, serial, shift, square, table, text, type Box, type Part, type TextOptions } from './layout';
+import type { FabricObject } from 'fabric';
+import { formatDate, formatSerial } from '../editor/placeholders';
+import { art, barcode, box, chord, circle, circleArea, cols, datamatrix, date, extentX, extentY, fitPt, hline, icon, inset, onBaseline, pack, packMoves, qr, rect, rows, serial, shift, square, table, text, type Box, type Circle, type Part, type TextOptions } from './layout';
 import { centreX, ic, narrow, pad, ROUND, white, type Category, type Size, type TemplateDesign } from './kit';
 import * as orn from './ornaments';
 import * as mo from './motifs';
@@ -186,7 +188,24 @@ function valueParts(b: Box, v: Value, o: TextOptions, c: Ctx): Part[] {
 }
 
 const sampleOf = (v: Value): string => (typeof v === 'string' ? v : 'date' in v ? v.date : `${v.serial.prefix ?? ''}${'0'.repeat(v.serial.digits ?? 3)}${v.serial.suffix ?? ''}`);
-const shareKey = (r: Row, c: Ctx) => `${'kv' in r ? 'kv' : 't'}|${weightOf(r)}|${('font' in r && r.font) || c.font || ''}`;
+const shareKey = (r: Row, c: Ctx) => `${'kv' in r ? 'kv' : 'ticks' in r ? 'ticks' : 't'}|${weightOf(r)}|${('font' in r && r.font) || c.font || ''}`;
+
+/** Font size that fits the text of each column of a row of columns. Infinity for a column without text. */
+function colFits(b: Box, r: Extract<Row, { cols: Row[] }>, c: Ctx): number[] {
+  const cells = cols(b, r.ratios ?? r.cols.map(() => 1), r.gap ?? 1);
+  return r.cols.map((child, i) => {
+    const sample = rowText(child);
+    return sample === undefined ? Infinity : fitPt(sample, cells[i], textOptions(child as Style, c));
+  });
+}
+
+/** Font size for each label of a row of tick boxes: the largest that fits every cell. */
+function tickPt(b: Box, r: Extract<Row, { ticks: string[] }>, c: Ctx): number {
+  const o = { ...textOptions(r, c), align: 'left' as const };
+  const cells = cols(b, r.ticks.map(() => 1), 1);
+  const s = Math.min(b.h * 0.72, cells[0].w * 0.28, 4);
+  return Math.min(...r.ticks.map((label, i) => fitPt(label, box(cells[i].x + s + 0.8, b.y, cells[i].w - s - 0.8, b.h), o)));
+}
 
 /** Splits rows with a caption by the longest caption and the longest value, so that short captions do not waste space. */
 function kvWidths(list: Row[]): number[] {
@@ -202,42 +221,80 @@ function kvWidths(list: Row[]): number[] {
 }
 
 /** Rows of plain text with the same weight and font get one font size, so that detail lines line up. */
+/** The text that a row of plain text, a date or a serial number shows, for sizing. Undefined for other rows. */
+function rowText(r: Row): string | undefined {
+  if ('t' in r) return r.invert ? undefined : (r.fit ?? r.t);
+  if ('date' in r) return r.fit ?? formatDate(new Date(Date.now() + (r.offset ?? 0) * 86400000), r.date);
+  if ('serial' in r) return r.fit ?? formatSerial(fullSerial(r.serial), 0);
+  return undefined;
+}
+
 function shareSizes(list: Row[], boxes: Box[], c: Ctx): void {
   list.forEach((r, i) => {
     const b = boxes[i];
     let pt: number | undefined;
-    if ('t' in r && !r.invert) pt = fitPt(r.fit ?? r.t, b, textOptions(r, c));
+    const sample = rowText(r);
+    if (sample !== undefined) pt = fitPt(sample, b, textOptions(r as Style, c));
     if ('kv' in r) {
       const [l, v] = cols(b, c.kv, 0.8);
       const o = textOptions(r, c);
       pt = Math.min(fitPt(r.kv[0], l, o), fitPt(r.fit ?? (sampleOf(r.kv[1]) || 'x'), v, { ...o, bold: true }));
     }
+    if ('ticks' in r) pt = tickPt(b, r, c);
+    if ('cols' in r && r.cols.some((x) => rowText(x) !== undefined)) pt = Math.min(...colFits(b, r, c));
     if (pt !== undefined) c.shared.set(shareKey(r, c), Math.min(c.shared.get(shareKey(r, c)) ?? Infinity, pt));
   });
-  // A detail line must not be larger than the main line, even when it is short.
-  const plain = list.filter((r): r is Extract<Row, { t: string }> => 't' in r && !r.invert);
+  // Captions with values, tick boxes and plain lines of the same weight and font get one size.
+  // Plain lines join only when no bold line of that weight is a heading.
+  const families = new Map<string, Set<string>>();
+  for (const r of list) {
+    const key = shareKey(r, c);
+    if (!c.shared.has(key)) continue;
+    const kind = key.slice(0, key.indexOf('|'));
+    if (kind === 't' && list.some((x) => shareKey(x, c) === key && 'bold' in x && x.bold)) continue;
+    const rest = key.slice(kind.length);
+    if (!families.has(rest)) families.set(rest, new Set());
+    families.get(rest)!.add(key);
+  }
+  for (const keys of families.values()) {
+    if (keys.size < 2) continue;
+    const pt = Math.min(...[...keys].map((k) => c.shared.get(k) ?? Infinity));
+    for (const k of keys) c.shared.set(k, pt);
+  }
+  // A line with less weight is not larger than a line with more weight.
+  const sized = list.filter((r) => c.shared.has(shareKey(r, c))).sort((x, y) => weightOf(y) - weightOf(x));
+  sized.forEach((r, i) => {
+    const above = sized.slice(0, i).filter((x) => weightOf(x) > weightOf(r)).map((x) => c.shared.get(shareKey(x, c)) ?? Infinity);
+    if (above.length) c.shared.set(shareKey(r, c), Math.min(c.shared.get(shareKey(r, c)) ?? Infinity, ...above));
+  });
+  // A detail line, a date or a serial number must not be larger than the main line, even when it is short.
+  const plain = list.filter((r) => rowText(r) !== undefined);
   c.mainWeight = Math.max(0, ...plain.map(weightOf));
   const mainRows = plain.filter((r) => weightOf(r) === c.mainWeight);
   const main = mainRows.map((r) => c.shared.get(shareKey(r, c)) ?? Infinity);
   if (main.length && plain.some((r) => weightOf(r) < c.mainWeight)) c.minor = Math.min(...main) * 0.8;
-  c.mainAlign = mainRows[0]?.align ?? c.align;
+  c.mainAlign = (mainRows[0] as Style | undefined)?.align ?? c.align;
 }
 
-function drawRow(b: Box, r: Row, c: Ctx, top: boolean): Part[] {
+function drawRow(b: Box, r: Row, c: Ctx, top: boolean, limit = Infinity): Part[] {
+  // Text rows of one weight and font share a size, and detail lines stay smaller than the main line.
+  const sized = (o: TextOptions): TextOptions => ({
+    ...o,
+    maxPt: Math.min(o.maxPt ?? Infinity, limit, top ? (c.shared.get(shareKey(r, c)) ?? Infinity) : Infinity, top && weightOf(r) < c.mainWeight ? c.minor : Infinity),
+  });
   if ('t' in r) {
     const o = textOptions(r, c);
     if (r.invert) return text(b, r.t, { ...o, hug: true });
-    if (top) o.maxPt = Math.min(o.maxPt ?? Infinity, c.shared.get(shareKey(r, c)) ?? Infinity, weightOf(r) < c.mainWeight ? c.minor : Infinity);
-    return paint(text(b, r.t, o), c, r.invert);
+    return paint(text(b, r.t, sized(o)), c, r.invert);
   }
   if ('kv' in r) {
     const [l, v] = cols(b, c.kv, 0.8);
     const o = { ...textOptions(r, c), align: 'left' as const };
-    if (top) o.maxPt = c.shared.get(shareKey(r, c));
+    if (top) o.maxPt = Math.min(c.shared.get(shareKey(r, c)) ?? Infinity, weightOf(r) < c.mainWeight ? c.minor : Infinity);
     return [...paint(text(l, r.kv[0], o), c), ...valueParts(v, r.kv[1], { ...o, bold: true }, c)];
   }
-  if ('date' in r) return paint(date(b, r.date, r.offset ?? 0, textOptions(r, c)), c);
-  if ('serial' in r) return paint(serial(b, fullSerial(r.serial), textOptions(r, c)), c);
+  if ('date' in r) return paint(date(b, r.date, r.offset ?? 0, sized(textOptions(r, c))), c);
+  if ('serial' in r) return paint(serial(b, fullSerial(r.serial), sized(textOptions(r, c))), c);
   if ('band' in r) {
     const span = r.span ?? (r.band === 'stripes' || r.band === 'checks' || r.band === 'film' || r.band === 'rays' ? 1 : 0.7);
     const w = b.w * span;
@@ -258,7 +315,8 @@ function drawRow(b: Box, r: Row, c: Ctx, top: boolean): Part[] {
     const o = { ...textOptions(r, c), align: 'left' as const };
     const cells = cols(b, r.ticks.map(() => 1), 1);
     const s = Math.min(b.h * 0.72, cells[0].w * 0.28, 4);
-    const pt = Math.min(...r.ticks.map((label, i) => fitPt(label, box(cells[i].x + s + 0.8, b.y, cells[i].w - s - 0.8, b.h), o)));
+    // Rows of tick boxes share one size.
+    const pt = Math.min(tickPt(b, r, c), top ? (c.shared.get(shareKey(r, c)) ?? Infinity) : Infinity, top && weightOf(r) < c.mainWeight ? c.minor : Infinity);
     return r.ticks.flatMap((label, i) => {
       const cell = cells[i];
       return [rect(box(cell.x, cell.y + (cell.h - s) / 2, s, s), { stroke: 0.3 }), ...paint(text(box(cell.x + s + 0.8, cell.y, cell.w - s - 0.8, cell.h), label, { ...o, maxPt: pt }), c)];
@@ -266,7 +324,15 @@ function drawRow(b: Box, r: Row, c: Ctx, top: boolean): Part[] {
   }
   if ('cols' in r) {
     const cells = cols(b, r.ratios ?? r.cols.map(() => 1), r.gap ?? 1);
-    return r.cols.flatMap((child, i) => drawRow(cells[i], child, c, false));
+    // Text side by side shares one size and one baseline, for example the names of switches on one plate.
+    const shared = Math.min(
+      ...colFits(b, r, c),
+      limit,
+      top ? (c.shared.get(shareKey(r, c)) ?? Infinity) : Infinity,
+      top && weightOf(r) < c.mainWeight ? c.minor : Infinity,
+    );
+    const drawn = r.cols.map((child, i) => drawRow(cells[i], child, c, false, shared));
+    return drawn.every((g) => g.every((p) => !(p instanceof Promise))) ? onBaseline(drawn as FabricObject[][]) : drawn.flat();
   }
   return [];
 }
@@ -361,6 +427,31 @@ function shapeParts(name: ShapeName, w: number, h: number): Part[] {
   }
 }
 
+/**
+ * The circle that text must stay inside on a round label or a round shape:
+ * the inner edge of the frame or the shape, less some space.
+ */
+function textCircle(spec: Spec, w: number, h: number, round: boolean): Circle | undefined {
+  const d = Math.min(w, h);
+  const at = (r: number): Circle => ({ cx: w / 2, cy: h / 2, r: r - Math.max(0.7, d * 0.06) });
+  switch (spec.shape) {
+    case 'disc':
+      return at(d * 0.47);
+    case 'ring':
+      return at(d * 0.47 - 1.3);
+    case 'seal':
+      return at(d * 0.43);
+    case 'sealOutline':
+      return at(d * 0.41);
+    case undefined:
+      break;
+    default:
+      return undefined;
+  }
+  if (!round) return undefined;
+  return spec.frame ? at(d * 0.46 - (spec.frame === 'bold' ? 0.9 : 0.4)) : at(d * 0.5);
+}
+
 /** The part of the label that is inside a background shape. */
 function shapeArea(name: ShapeName, w: number, h: number): Box {
   const d = Math.min(w, h);
@@ -415,12 +506,14 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
   };
 
   let a: Box;
+  // Text on a round label or a round shape stays inside a circle. Each row is as wide as the circle at its outer edge.
+  const ring = textCircle(spec, w, h, round);
   if (spec.shape) {
     parts.push(...shapeParts(spec.shape, w, h));
-    a = shapeArea(spec.shape, w, h);
+    a = ring ? circleArea(ring) : shapeArea(spec.shape, w, h);
   } else if (round) {
     if (spec.frame) parts.push(circle(inset(full, w * 0.04), { stroke: spec.frame === 'bold' ? 0.9 : 0.4 }));
-    a = inset(full, Math.min(w, h) * 0.17);
+    a = ring ? circleArea(ring) : inset(full, Math.min(w, h) * 0.17);
   } else {
     if (spec.frame) parts.push(...frameParts(spec.frame, w, h));
     const [l, t, r, b] = frameSpace(spec.frame, w, h);
@@ -460,7 +553,7 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
     const stacked = h > w * 1.15 || (round && !s.block);
     if (stacked) {
       const [top, rest] = rows(a, [1, 1.5], Math.max(0.8, h * 0.02));
-      const sq = s.block !== undefined ? top : square(top);
+      const sq = s.block !== undefined ? top : square(ring ? chord(top, ring) : top);
       const sp = sideParts(sq, s, c);
       lead = { parts: sp, span: (s.code && extentY(sp)) || [sq.y, sq.y + sq.h] };
       a = rest;
@@ -480,7 +573,8 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
   }
 
   const gap = spec.gap ?? Math.max(0.3, Math.min(0.8, h * 0.018));
-  const boxes = rows(a, spec.rows.map(weightOf), gap);
+  let boxes = rows(a, spec.rows.map(weightOf), gap);
+  if (ring) boxes = circleRows(spec.rows, boxes, ring, c, gap, lead, lead ? whole : a);
   shareSizes(spec.rows, boxes, c);
   const drawn = spec.rows.map((r, i) => drawRow(boxes[i], r, c, true));
   const spans = spec.rows.map((r, i) => rowSpan(r, boxes[i]));
@@ -503,6 +597,49 @@ export function compose(spec: Spec, w: number, h: number, round = false): Part[]
   }
   parts.push(...(beside?.parts ?? []), ...body);
   return parts;
+}
+
+/**
+ * Rows inside a circle. Packing moves rows towards the middle, where the circle
+ * is wider, so the width of each row depends on where it ends up. The first
+ * try gives each row the width of the circle at the outer edge of its box,
+ * which always fits. Each next try gives each row the width of the circle
+ * where the last try put it. The widest try in which every row fits is used.
+ */
+function circleRows(list: Row[], boxes: Box[], ring: Circle, c: Ctx, gap: number, lead: { parts: Part[]; span: [number, number] } | undefined, area: Box): Box[] {
+  const at = (b: Box, y?: [number, number]): Box => ({ ...chord(y ? box(b.x, y[0], b.w, y[1] - y[0]) : b, ring), y: b.y, h: b.h });
+  // Lays out the rows in these boxes and packs them: where each row ends up, and how wide its text is.
+  const place = (bx: Box[]) => {
+    const t: Ctx = { ...c, shared: new Map(), minor: Infinity, mainWeight: 0 };
+    shareSizes(list, bx, t);
+    const drawn = list.map((r, i) => drawRow(bx[i], r, t, true));
+    const known = list.map((r, i) => rowSpan(r, bx[i]));
+    const groups = lead ? [lead.parts, ...drawn] : drawn;
+    const spans = lead ? [lead.span, ...known] : known;
+    const moves = packMoves(groups, area, gap, spans);
+    return list.map((_, i) => {
+      const j = lead ? i + 1 : i;
+      const e = spans[j] ?? extentY(groups[j]);
+      const x = extentX(drawn[i]);
+      const dy = moves?.[j] ?? 0;
+      return { y: e ? ([e[0] + dy, e[1] + dy] as [number, number]) : undefined, w: x ? x[1] - x[0] : 0 };
+    });
+  };
+  let best = boxes.map((b) => at(b));
+  let bestWidth = 0;
+  let current = best;
+  for (let k = 0; k < 5; k++) {
+    const placed = place(current);
+    const room = placed.map((p, i) => at(boxes[i], p.y));
+    const width = current.reduce((s, b) => s + b.w, 0);
+    if (placed.every((p, i) => p.w <= room[i].w + 0.05) && width > bestWidth) {
+      best = current;
+      bestWidth = width;
+    }
+    if (room.every((b, i) => Math.abs(b.w - current[i].w) < 0.1)) break;
+    current = room;
+  }
+  return best;
 }
 
 const isTextRow = (r: Row): boolean => ('t' in r && !r.invert) || 'kv' in r || 'date' in r || 'serial' in r;

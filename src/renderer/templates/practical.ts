@@ -358,7 +358,7 @@ const LAB: TemplateDesign[] = [
     base: { rows: [{ serial: { prefix: 'H', digits: 4 }, bold: true, weight: 1.3 }, { date: 'DD/MM/YY' }], gap: 0.1 },
   }),
   d('petri', 'Petri dish', 'Lab and health', 'Round label with the organism, the medium, the date and initials.', ROUND, {
-    base: { frame: 'line', rows: [{ t: 'E. coli K-12', bold: true, weight: 1.3 }, { t: 'LB agar' }, { date: 'DD/MM/YY' }, { t: 'AM' }] },
+    base: { frame: 'line', rows: [{ t: 'E. coli K-12', bold: true, weight: 1.3 }, { t: 'LB agar' }, { cols: [{ date: 'DD/MM/YY' }, { t: 'AM' }], ratios: [2.2, 1], gap: 1 }] },
   }, { round: true }),
   d('vial-cap', 'Vial cap number', 'Lab and health', 'A number that counts up, for the cap of a tube or a vial.', [[20, 20], [21, 21]], {
     base: { rows: [{ serial: { digits: 3 }, bold: true }] },

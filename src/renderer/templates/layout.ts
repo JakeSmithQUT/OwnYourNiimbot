@@ -6,7 +6,7 @@
 import { Ellipse, FabricImage, Line, Rect, Textbox, type FabricObject } from 'fabric';
 import { LabelBarcode, LabelTable, renderBars } from '../editor/objects';
 import { formatDate, formatSerial, type SerialSettings } from '../editor/placeholders';
-import { mmToUnits as u, ptToUnits } from '../editor/units';
+import { mmToUnits as u, ptToUnits, unitsToPt } from '../editor/units';
 import type { OynData } from '../editor/render';
 
 export interface Box {
@@ -51,6 +51,26 @@ export function rows(b: Box, ratios: number[], gap = 0.5): Box[] {
     return out;
   });
 }
+
+/** A circle in millimetres: centre and radius. */
+export interface Circle {
+  cx: number;
+  cy: number;
+  r: number;
+}
+
+/** The area for rows of text inside a circle: the full width, and most of the height so that the top and bottom rows keep some width. */
+export const circleArea = (o: Circle): Box => box(o.cx - o.r, o.cy - o.r * 0.86, 2 * o.r, o.r * 1.72);
+
+/** The part of a row that is inside a circle: as wide as the circle at the edge of the row that is further from the centre. */
+export function chord(b: Box, o: Circle): Box {
+  const dy = Math.max(Math.abs(b.y - o.cy), Math.abs(b.y + b.h - o.cy));
+  const w = Math.max(0.5, Math.min(b.w, 2 * Math.sqrt(Math.max(0, o.r * o.r - dy * dy))));
+  return { x: o.cx - w / 2, y: b.y, w, h: b.h };
+}
+
+/** The circle for text inside a round edge that is `edge` millimetres from the centre of a w × h label, less some space. */
+export const insideCircle = (w: number, h: number, edge: number): Circle => ({ cx: w / 2, cy: h / 2, r: edge - Math.max(0.7, Math.min(w, h) * 0.06) });
 
 /** Square of the largest size that fits in the box, placed by alignment. */
 export function square(b: Box, align: 'start' | 'center' | 'end' = 'center'): Box {
@@ -461,13 +481,72 @@ export function extentX(parts: Part[]): [number, number] | undefined {
  * do not move. `known` gives the top and bottom of rows that are pictures.
  */
 export function pack(groups: Part[][], a: Box, gap: number, known: ([number, number] | undefined)[] = []): Part[] {
+  const moves = packMoves(groups, a, gap, known);
+  return moves ? groups.flatMap((list, i) => shift(list, 0, moves[i])) : groups.flat();
+}
+
+/** Font size in points of the first text in the parts. */
+export function ptOf(parts: Part[]): number {
+  const t = parts.find((p): p is Textbox => p instanceof Textbox);
+  return t ? unitsToPt(t.fontSize) : Infinity;
+}
+
+/**
+ * Rows of text in a circle, packed. Packing moves rows towards the middle,
+ * where the circle is wider, so the width of each row depends on where it
+ * ends up. The first try gives each row the width of the circle at the outer
+ * edge of its box, which always fits. Each next try gives each row the width
+ * of the circle where the last try put it. The widest try in which every row
+ * fits is used. draw() draws one group of parts for each row box, and known()
+ * gives the top and bottom of rows that are pictures.
+ */
+export function packInCircle(
+  ring: Circle,
+  ratios: number[],
+  gap: number,
+  draw: (boxes: Box[]) => Part[][],
+  known: (boxes: Box[]) => ([number, number] | undefined)[] = () => [],
+): Part[] {
+  const area = circleArea(ring);
+  const base = rows(area, ratios, gap);
+  const at = (b: Box, y?: [number, number]): Box => ({ ...chord(y ? box(b.x, y[0], b.w, y[1] - y[0]) : b, ring), y: b.y, h: b.h });
+  const place = (bx: Box[]) => {
+    const groups = draw(bx);
+    const spans = known(bx);
+    const moves = packMoves(groups, area, gap, spans);
+    return groups.map((g, i) => {
+      const e = spans[i] ?? extentY(g);
+      const x = extentX(g);
+      const dy = moves?.[i] ?? 0;
+      return { y: e ? ([e[0] + dy, e[1] + dy] as [number, number]) : undefined, w: x ? x[1] - x[0] : 0 };
+    });
+  };
+  let best = base.map((b) => at(b));
+  let bestWidth = 0;
+  let current = best;
+  for (let k = 0; k < 5; k++) {
+    const placed = place(current);
+    const room = placed.map((p, i) => at(base[i], p.y));
+    const width = current.reduce((s, b) => s + b.w, 0);
+    if (placed.every((p, i) => p.w <= room[i].w + 0.05) && width > bestWidth) {
+      best = current;
+      bestWidth = width;
+    }
+    if (room.every((b, i) => Math.abs(b.w - current[i].w) < 0.1)) break;
+    current = room;
+  }
+  return pack(draw(best), area, gap, known(best));
+}
+
+/** How far pack() moves each group down, in millimetres. Undefined when the groups stay where they are. */
+export function packMoves(groups: Part[][], a: Box, gap: number, known: ([number, number] | undefined)[] = []): number[] | undefined {
   const ext = groups.map((g, i) => known[i] ?? extentY(g));
-  if (groups.length < 2 || ext.some((e) => !e)) return groups.flat();
+  if (groups.length < 2 || ext.some((e) => !e)) return undefined;
   const spans = ext as [number, number][];
   const heights = spans.map(([y0, y1]) => y1 - y0);
   const used = heights.reduce((s, v) => s + v, 0);
   const spare = a.h - used - gap * (groups.length - 1);
-  if (spare < 0.1) return groups.flat();
+  if (spare < 0.1) return undefined;
   // A little of the free space goes between the rows, and the rest above and below the group.
   const g = gap + Math.min(spare / (groups.length + 1), Math.min(...heights) * 0.25);
   let y = a.y + (a.h - used - g * (groups.length - 1)) / 2;
@@ -481,7 +560,7 @@ export function pack(groups: Part[][], a: Box, gap: number, known: ([number, num
   const top = Math.min(...letters.map(([y0], i) => y0 + moves[i]));
   const bottom = Math.max(...letters.map(([, y1], i) => y1 + moves[i]));
   const centre = a.y + a.h / 2 - (top + bottom) / 2;
-  return groups.flatMap((list, i) => shift(list, 0, moves[i] + centre));
+  return moves.map((m) => m + centre);
 }
 
 /** Top of the tallest letter on the first line of a text, below the top of the text box, in canvas units. */
