@@ -4,7 +4,7 @@
 
 A free desktop app to design and print labels on NIIMBOT label printers (also searched for as Nimmbot or Niimbot printers). It runs on Windows, macOS and Linux, and connects to the printer over Bluetooth or a USB cable. No account, no cloud and no internet connection are needed.
 
-![The design view with a 50 × 30 mm service record label. The insert tools and symbols are on the left. The label size, roll and type are on the right.](docs/images/editor.png)
+![The design view with a 50 × 30 mm server label with a hostname, IP addresses, a serial number and a QR code. The insert tools and symbols are on the left. The roll, the label size and the label type are on the right.](docs/images/editor.png)
 
 ## Features
 
