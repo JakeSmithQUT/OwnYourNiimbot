@@ -32,6 +32,7 @@ import { startRollTracking } from './state/roll';
 import { startMcpHandlers } from './mcp/handlers';
 import { ConnectDialog } from './components/ConnectDialog';
 import { startUpdateTracking, UpdateBanner, UpdatePill } from './components/Updates';
+import { WhatsNew } from './components/WhatsNew';
 import { LanguageMenu } from './components/LanguageMenu';
 import { t, useLanguage } from './i18n';
 import type { MessageKey } from '../i18n/translate';
@@ -166,6 +167,7 @@ export function App() {
 
       {state.printOpen && <PrintDialog onClose={() => appStore.set({ printOpen: false })} />}
       {state.connectOpen && <ConnectDialog onClose={() => appStore.set({ connectOpen: false })} />}
+      <WhatsNew />
       {state.toast && (
         <div className={`toast ${state.toast.kind}`}>
           {state.toast.kind === 'error' ? <CircleAlert size={16} /> : state.toast.kind === 'success' ? <CircleCheck size={16} /> : <Info size={16} />}

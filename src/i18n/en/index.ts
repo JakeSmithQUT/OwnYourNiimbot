@@ -7,7 +7,8 @@ import { dialogs } from './dialogs';
 import { editor } from './editor';
 import { views } from './views';
 import { system } from './system';
+import { changelog } from './changelog';
 
-export const en = { ...common, ...settings, ...dialogs, ...editor, ...views, ...system };
+export const en = { ...common, ...settings, ...dialogs, ...editor, ...views, ...system, ...changelog };
 
 export type MessageKey = keyof typeof en;

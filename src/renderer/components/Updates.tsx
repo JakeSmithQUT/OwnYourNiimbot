@@ -1,4 +1,4 @@
-import { CircleCheck, Download, RefreshCw, RotateCw, X } from 'lucide-react';
+import { CircleCheck, Download, RefreshCw, RotateCw, Sparkles, X } from 'lucide-react';
 import { formatMegabytes, formatSpeed } from '../../main/updateRules';
 import type { UpdateStatus } from '../../main/preload';
 import { api } from '../api';
@@ -7,7 +7,8 @@ import { createStore } from '../state/store';
 import { Check } from './ui';
 import { t } from '../i18n';
 
-export const updateStore = createStore<{ status?: UpdateStatus; dismissed?: string; updatedSeen?: boolean }>({});
+/** whatsNew: the What's new dialog is open. */
+export const updateStore = createStore<{ status?: UpdateStatus; dismissed?: string; updatedSeen?: boolean; whatsNew?: boolean }>({});
 
 let started = false;
 
@@ -49,8 +50,8 @@ export function UpdateBanner() {
       <div className="update-banner" role="status">
         <CircleCheck size={16} />
         <span>{t('updates.updatedTo', { version: status.current })}</span>
-        <button className="btn small" onClick={() => void api.updates.openRelease('current')}>
-          {t('updates.whatsNew')}
+        <button className="btn small" onClick={() => updateStore.set({ whatsNew: true })}>
+          <Sparkles size={14} /> {t('updates.whatsNew')}
         </button>
         <button className="btn small ghost" onClick={() => updateStore.set({ updatedSeen: true })} aria-label={t('common.close')}>
           <X size={14} />
@@ -151,9 +152,16 @@ export function UpdateSettings() {
     <div className="card" style={{ marginBottom: 16 }}>
       <h3>{t('updates.title')}</h3>
       {status.mode === 'none' ? (
-        <p className="muted" style={{ marginTop: 0 }}>
-          {t('updates.devBuild')}
-        </p>
+        <>
+          <p className="muted" style={{ marginTop: 0 }}>
+            {t('updates.devBuild')}
+          </p>
+          <div className="btn-row">
+            <button className="btn" onClick={() => updateStore.set({ whatsNew: true })}>
+              <Sparkles size={15} /> {t('updates.whatsNew')}
+            </button>
+          </div>
+        </>
       ) : (
         <>
           <Check checked={status.checkOnLaunch} onChange={(v) => void api.updates.setCheckOnLaunch(v).then((s) => updateStore.set({ status: s }))}>
@@ -166,6 +174,9 @@ export function UpdateSettings() {
           <div className="btn-row">
             <button className="btn" disabled={busy} onClick={() => void api.updates.check().then((s) => updateStore.set({ status: s }))}>
               <RefreshCw size={15} /> {t('updates.checkNow')}
+            </button>
+            <button className="btn" onClick={() => updateStore.set({ whatsNew: true })}>
+              <Sparkles size={15} /> {t('updates.whatsNew')}
             </button>
             {status.state === 'ready' && (
               <button className="btn primary" onClick={() => void restartAndInstall()}>

@@ -1,0 +1,35 @@
+// English texts. See src/i18n/translate.ts for the rules.
+// Release notes for the What's new dialog. src/i18n/releases.ts lists the
+// versions and their notes. The release workflow puts the English notes of a
+// version on its GitHub release.
+export const changelog = {
+  'changelog.1.9.2.round': 'Text on round labels follows the circle, so long lines are larger and stay inside the edge.',
+  'changelog.1.9.2.sizes': 'Lines that belong together, for example captions and their values, have the same font size.',
+  'changelog.1.9.1.layout': 'The templates are tidier: rows stay together, groups are centred and black bars fit their text.',
+  'changelog.1.9.1.codes': 'QR codes and Data Matrix codes print at the full size of their space.',
+  'changelog.1.9.1.codabar': 'Codabar barcodes work.',
+  'changelog.1.9.0.animals': '126 cute animal symbols, with many Australian animals.',
+  'changelog.1.9.0.japanese': 'The app is available in Japanese.',
+  'changelog.1.8.1.language': 'The app starts in the language of your computer until you choose a language in Settings.',
+  'changelog.1.8.0.vietnamese': 'The app is available in Vietnamese.',
+  'changelog.1.8.0.name': 'A new label gets its name in your language.',
+  'changelog.1.7.0.languages': 'The app is available in 19 more languages.',
+  'changelog.1.6.1.printer': 'The app remembers the last printer that you connected.',
+  'changelog.1.6.0.progress': 'An update on Windows shows its progress while it installs.',
+  'changelog.1.5.3.rename': 'When you rename a label and save it, the app saves a new label and keeps the old one.',
+  'changelog.1.5.2.windows': 'The Start menu shortcut and the restart after an update work on Windows.',
+  'changelog.1.5.0.update': 'A window shows the update at start-up, and the app opens correctly after an update.',
+  'changelog.1.4.0.area': 'The design view and the print preview show the part of the label that the printer can reach.',
+  'changelog.1.4.0.assistants': 'AI assistants keep their labels inside the print area.',
+  'changelog.1.3.1.files': 'Better protection against very large files.',
+  'changelog.1.3.0.templates': '424 more templates in five new groups.',
+  'changelog.1.3.0.symbols': '445 symbols in 15 groups, with a search.',
+  'changelog.1.3.0.updates': 'The app checks for updates when it starts.',
+  'changelog.1.2.0.decorative': '40 decorative templates with ornaments, and a Decorative filter.',
+  'changelog.1.2.0.fonts': '19 fonts come with the app.',
+  'changelog.1.2.0.assistants': 'AI assistants can make, preview and print labels.',
+  'changelog.1.2.0.replace': 'Right-click an element to change it to a different type.',
+  'changelog.1.1.0.templates': 'A template library with layouts for each roll size.',
+  'changelog.1.1.0.rolls': 'The app reads the size of the loaded roll and shows the rolls that fit your printer.',
+  'changelog.1.0.0.first': 'First release: a label editor with text, barcodes, QR codes, tables and images, printing over Bluetooth and USB, and a label library.',
+};

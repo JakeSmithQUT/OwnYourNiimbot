@@ -1201,6 +1201,53 @@ table.data td.num {
   background: var(--panel-2);
 }
 
+/* What's new: the release notes of each version. */
+.changelog .since {
+  margin: 0 0 12px;
+}
+
+.changelog .release + .release {
+  margin-top: 18px;
+}
+
+.changelog h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+.changelog h3 .muted {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.changelog ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 5px;
+  line-height: 1.45;
+}
+
+.changelog details {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.changelog summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.changelog details[open] summary {
+  margin-bottom: 14px;
+}
+
 @keyframes fade {
   from {
     opacity: 0;

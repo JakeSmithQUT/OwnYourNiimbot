@@ -161,15 +161,16 @@ The Windows installer runs `build/installer.nsh` after it installs the files. It
 
 1. Do an independent security review of the code. Fix the findings, or record why a finding is not an issue.
 2. Change `version` in `package.json`.
-3. Commit the change.
-4. Create a tag with the same version and push it:
+3. Write the release notes. Add the notes as texts to `src/i18n/en/changelog.ts`, add the version, the date and the note keys to the top of `src/i18n/releases.ts`, and translate the notes into each language in `src/i18n/locales/`. Write each note for the user: what they can now do or what now works, in one plain sentence. The **What's new** dialog shows them in the app, and the `Release` workflow puts the English notes on the GitHub release. A test fails when the version in `package.json` has no notes.
+4. Commit the changes.
+5. Create a tag with the same version and push it:
 
    ```bash
    git tag v1.0.1
    git push origin main --tags
    ```
 
-5. The `Release` workflow builds the installers on Windows, macOS and Linux. Then it creates a GitHub release with the installers, a `SHA256SUMS.txt` file and the update files (`latest.yml`, `latest-mac.yml`, `latest-linux.yml`, `latest-linux-arm64.yml` and the `.blockmap` files).
+6. The `Release` workflow builds the installers on Windows, macOS and Linux. Then it creates a GitHub release with the release notes, the installers, a `SHA256SUMS.txt` file and the update files (`latest.yml`, `latest-mac.yml`, `latest-linux.yml`, `latest-linux-arm64.yml` and the `.blockmap` files).
 
 CAUTION: The update check reads the `latest*.yml` files of the newest release. Do not remove them from a release. Do not publish a release as the latest release before the workflow has uploaded all the files.
 
