@@ -634,6 +634,7 @@
   "state.dataName": "Dati",
   "state.roll.unknownSize": "Dimensioni sconosciute",
   "state.roll.sizeSet": "Dimensioni dell'etichetta impostate su {width} × {height} mm in base al rotolo caricato",
+  "changelog.1.10.1.templates": "Tre nuovi modelli: una scheda per il rilevatore di fumo, una scheda di ispezione della scala e un cartello per le pile usate.",
   "changelog.1.10.0.whatsnew": "Novità mostra le note sulla versione nell'app, nella tua lingua.",
   "changelog.1.10.0.settings": "Apri Novità in qualsiasi momento da Aggiornamenti in Impostazioni.",
   "changelog.1.10.0.round": "Il testo sulle piccole etichette rotonde resta all'interno del cerchio e le parole lunghe nei modelli non superano più il proprio spazio.",

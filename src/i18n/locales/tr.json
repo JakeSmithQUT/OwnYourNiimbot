@@ -621,6 +621,7 @@
   "state.dataName": "Veriler",
   "state.roll.unknownSize": "Bilinmeyen boyut",
   "state.roll.sizeSet": "Etiket boyutu, takılı ruloya göre {width} × {height} mm olarak ayarlandı",
+  "changelog.1.10.1.templates": "Üç yeni şablon: duman dedektörü kaydı, merdiven kontrol kaydı ve kullanılmış piller için bir tabela.",
   "changelog.1.10.0.whatsnew": "Yenilikler sürüm notlarını uygulamada ve sizin dilinizde gösterir.",
   "changelog.1.10.0.settings": "Yenilikler'i istediğiniz zaman Ayarlar'daki Güncelleştirmeler bölümünden açın.",
   "changelog.1.10.0.round": "Küçük yuvarlak etiketlerdeki metin dairenin içinde kalır ve şablonlardaki uzun sözcükler artık alanlarının dışına taşmaz.",

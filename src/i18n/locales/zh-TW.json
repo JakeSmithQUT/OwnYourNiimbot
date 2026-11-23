@@ -608,6 +608,7 @@
   "state.dataName": "資料",
   "state.roll.unknownSize": "尺寸不明",
   "state.roll.sizeSet": "已依據裝入的標籤捲將標籤尺寸設為 {width} × {height} mm",
+  "changelog.1.10.1.templates": "新增三個範本：煙霧警報器記錄、梯子檢查記錄和廢電池標誌。",
   "changelog.1.10.0.whatsnew": "「新功能」會在應用程式中以您的語言顯示版本資訊。",
   "changelog.1.10.0.settings": "您可以隨時從「設定」中的「更新」開啟「新功能」。",
   "changelog.1.10.0.round": "小型圓形標籤上的文字會保持在圓形內，範本中的長字詞也不會再超出其空間。",

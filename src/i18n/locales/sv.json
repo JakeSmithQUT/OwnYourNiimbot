@@ -621,6 +621,7 @@
   "state.dataName": "Data",
   "state.roll.unknownSize": "Okänd storlek",
   "state.roll.sizeSet": "Etikettstorleken har ställts in på {width} × {height} mm från den isatta rullen",
+  "changelog.1.10.1.templates": "Tre nya mallar: en journal för brandvarnare, en journal för besiktning av stege och en skylt för förbrukade batterier.",
   "changelog.1.10.0.whatsnew": "Nyheter visar versionsinformationen i appen, på ditt språk.",
   "changelog.1.10.0.settings": "Öppna Nyheter när du vill från Uppdateringar i Inställningar.",
   "changelog.1.10.0.round": "Text på små runda etiketter håller sig innanför cirkeln, och långa ord i mallar sticker inte längre ut utanför sina utrymmen.",

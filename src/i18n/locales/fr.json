@@ -634,6 +634,7 @@
   "state.dataName": "Données",
   "state.roll.unknownSize": "Taille inconnue",
   "state.roll.sizeSet": "Taille de l’étiquette définie sur {width} × {height} mm d’après le rouleau chargé",
+  "changelog.1.10.1.templates": "Trois nouveaux modèles : une fiche de détecteur de fumée, une fiche d’inspection d’échelle et un panneau pour les piles usagées.",
   "changelog.1.10.0.whatsnew": "Nouveautés affiche les notes de version dans l’application, dans votre langue.",
   "changelog.1.10.0.settings": "Ouvrez Nouveautés à tout moment depuis Mises à jour dans les Paramètres.",
   "changelog.1.10.0.round": "Le texte des petites étiquettes rondes reste à l’intérieur du cercle, et les mots longs des modèles ne dépassent plus de leur zone.",

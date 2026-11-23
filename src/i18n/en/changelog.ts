@@ -3,6 +3,7 @@
 // versions and their notes. The release workflow puts the English notes of a
 // version on its GitHub release.
 export const changelog = {
+  'changelog.1.10.1.templates': 'Three new templates: a smoke alarm record, a ladder inspection record and a sign for used batteries.',
   'changelog.1.10.0.whatsnew': "What's new shows the release notes in the app, in your language.",
   'changelog.1.10.0.settings': "Open What's new at any time from Updates in Settings.",
   'changelog.1.10.0.round': 'Text on small round labels stays inside the circle, and long words in templates no longer run past their space.',

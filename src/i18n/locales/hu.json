@@ -621,6 +621,7 @@
   "state.dataName": "Adatok",
   "state.roll.unknownSize": "Ismeretlen méret",
   "state.roll.sizeSet": "Címkeméret beállítva a behelyezett tekercs alapján: {width} × {height} mm",
+  "changelog.1.10.1.templates": "Három új sablon: füstérzékelő-nyilvántartás, létraellenőrzési nyilvántartás és tábla a használt elemekhez.",
   "changelog.1.10.0.whatsnew": "Az Újdonságok az alkalmazásban, az Ön nyelvén mutatja meg a kiadási megjegyzéseket.",
   "changelog.1.10.0.settings": "Az Újdonságokat bármikor megnyithatja a Beállítások > Frissítések részében.",
   "changelog.1.10.0.round": "A kis kerek címkéken a szöveg a körön belül marad, és a sablonokban a hosszú szavak már nem lógnak ki a helyükről.",

@@ -608,6 +608,7 @@
   "state.dataName": "数据",
   "state.roll.unknownSize": "尺寸未知",
   "state.roll.sizeSet": "已根据装入的标签卷将标签尺寸设为 {width} × {height} mm",
+  "changelog.1.10.1.templates": "新增三个模板：烟雾报警器记录、梯子检查记录和废旧电池标识。",
   "changelog.1.10.0.whatsnew": "“新增功能”会在应用中以你的语言显示发行说明。",
   "changelog.1.10.0.settings": "可随时从“设置”中的“更新”打开“新增功能”。",
   "changelog.1.10.0.round": "小型圆形标签上的文字会保持在圆形内，模板中的长单词也不会再超出其区域。",

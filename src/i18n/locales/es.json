@@ -634,6 +634,7 @@
   "state.dataName": "Datos",
   "state.roll.unknownSize": "Tamaño desconocido",
   "state.roll.sizeSet": "Tamaño de etiqueta establecido en {width} × {height} mm según el rollo cargado",
+  "changelog.1.10.1.templates": "Tres plantillas nuevas: un registro de detector de humo, un registro de inspección de escaleras y un cartel para pilas usadas.",
   "changelog.1.10.0.whatsnew": "Novedades muestra las notas de la versión en la aplicación, en tu idioma.",
   "changelog.1.10.0.settings": "Abre Novedades cuando quieras desde Actualizaciones, en Ajustes.",
   "changelog.1.10.0.round": "El texto de las etiquetas redondas pequeñas queda dentro del círculo, y las palabras largas de las plantillas ya no se salen de su espacio.",

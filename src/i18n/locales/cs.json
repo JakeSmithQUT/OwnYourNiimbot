@@ -647,6 +647,7 @@
   "state.dataName": "Data",
   "state.roll.unknownSize": "Neznámá velikost",
   "state.roll.sizeSet": "Velikost štítku byla podle vložené role nastavena na {width} × {height} mm",
+  "changelog.1.10.1.templates": "Tři nové šablony: záznam o hlásiči kouře, záznam o kontrole žebříku a označení pro použité baterie.",
   "changelog.1.10.0.whatsnew": "Co je nového zobrazuje poznámky k verzi přímo v aplikaci, ve vašem jazyce.",
   "changelog.1.10.0.settings": "Co je nového můžete kdykoli otevřít v části Aktualizace v Nastavení.",
   "changelog.1.10.0.round": "Text na malých kulatých štítcích zůstává uvnitř kruhu a dlouhá slova v šablonách už nepřesahují svůj prostor.",

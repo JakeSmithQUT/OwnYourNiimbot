@@ -634,6 +634,7 @@
   "state.dataName": "Podaci",
   "state.roll.unknownSize": "Nepoznata veličina",
   "state.roll.sizeSet": "Veličina naljepnice postavljena je na {width} × {height} mm prema umetnutoj roli",
+  "changelog.1.10.1.templates": "Tri nova predloška: zapis za detektor dima, zapis o pregledu ljestava i oznaka za istrošene baterije.",
   "changelog.1.10.0.whatsnew": "Što je novo prikazuje napomene o izdanju u aplikaciji, na vašem jeziku.",
   "changelog.1.10.0.settings": "Otvorite Što je novo u bilo kojem trenutku iz kartice Ažuriranja u Postavkama.",
   "changelog.1.10.0.round": "Tekst na malim okruglim naljepnicama ostaje unutar kruga, a duge riječi u predlošcima više ne izlaze izvan svojeg prostora.",

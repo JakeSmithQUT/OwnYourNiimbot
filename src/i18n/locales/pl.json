@@ -647,6 +647,7 @@
   "state.dataName": "Dane",
   "state.roll.unknownSize": "Nieznany rozmiar",
   "state.roll.sizeSet": "Ustawiono rozmiar etykiety {width} × {height} mm na podstawie włożonej rolki",
+  "changelog.1.10.1.templates": "Trzy nowe szablony: karta czujki dymu, karta przeglądu drabiny i oznaczenie dla zużytych baterii.",
   "changelog.1.10.0.whatsnew": "Co nowego pokazuje informacje o wydaniu w aplikacji, w twoim języku.",
   "changelog.1.10.0.settings": "Otwórz Co nowego w dowolnej chwili w sekcji Aktualizacje w ustawieniach.",
   "changelog.1.10.0.round": "Tekst na małych okrągłych etykietach mieści się w okręgu, a długie słowa w szablonach nie wychodzą już poza swoje miejsce.",

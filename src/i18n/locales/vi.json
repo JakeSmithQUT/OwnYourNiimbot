@@ -608,6 +608,7 @@
   "state.dataName": "Dữ liệu",
   "state.roll.unknownSize": "Không rõ kích thước",
   "state.roll.sizeSet": "Đã đặt kích thước nhãn thành {width} × {height} mm theo cuộn nhãn đang lắp",
+  "changelog.1.10.1.templates": "Ba mẫu mới: phiếu ghi thiết bị báo khói, phiếu kiểm tra thang và biển báo pin đã qua sử dụng.",
   "changelog.1.10.0.whatsnew": "Có gì mới hiển thị ghi chú phát hành ngay trong ứng dụng, bằng ngôn ngữ của bạn.",
   "changelog.1.10.0.settings": "Mở Có gì mới bất kỳ lúc nào từ mục Cập nhật trong Cài đặt.",
   "changelog.1.10.0.round": "Chữ trên nhãn tròn nhỏ nằm gọn trong hình tròn, và các từ dài trong mẫu không còn tràn ra ngoài vùng của chúng.",
