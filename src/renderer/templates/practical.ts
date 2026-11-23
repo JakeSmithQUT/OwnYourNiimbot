@@ -139,6 +139,8 @@ const HOME: TemplateDesign[] = [
     coded('qr', 'https://example.com/manuals/dishwasher-dw60', 'Dishwasher', 'Model DW60-S', 'Scan for the manual', 'Bought 03/2026')),
   d('water-shutoff', 'Water shut-off valve', 'Home and kitchen', 'Marks the main water valve and gives the direction to close it.', SIGN, sign('liquid', 'WATER SHUT-OFF', 'Turn clockwise to close', 'info')),
   d('gas-shutoff', 'Gas shut-off valve', 'Home and kitchen', 'Marks the gas valve and gives the direction to close it.', SIGN, sign('flammable', 'GAS SHUT-OFF', 'Quarter turn to close', 'info')),
+  d('smoke-alarm', 'Smoke alarm record', 'Home and kitchen', 'Date that the smoke alarm was fitted, the date to replace it (ten years later) and the date of the last test.', CARD,
+    card('SMOKE ALARM', [['Fitted', today], ['Replace by', inDays(3652)], ['Last tested', '']])),
   d('opened-on', 'Opened on', 'Home and kitchen', 'Date that a jar or packet was opened and how long it keeps.', [...SMALL, ...NARROW_SHORT, [40, 30]], {
     base: { align: 'left', rows: [{ kv: ['Opened', today] }, { kv: ['Use within', '3 days'] }] },
     narrow: { rows: [{ cols: [{ t: 'Opened', bold: true }, { date: 'DD/MM/YY' }] }] },
@@ -320,6 +322,8 @@ const WORKSHOP: TemplateDesign[] = [
     small: { bands: 'stripes', rows: [{ t: 'OUT OF SERVICE', bold: true }, { date: 'DD/MM/YYYY' }] },
   }),
   d('rcd-test', 'Safety switch test', 'Electrical and workshop', 'Date of the last push-button test and the next date, three months later.', CARD, card('SAFETY SWITCH', [['Tested', today], ['Test next', inDays(91)]])),
+  d('ladder-check', 'Ladder inspection', 'Electrical and workshop', 'Date of the last inspection, the next date (six months later) and the load rating of the ladder.', CARD,
+    card('LADDER CHECK', [['Inspected', today], ['Next check', inDays(182)], ['Rated load', '150 kg']])),
   d('solar-isolator', 'Solar isolator', 'Electrical and workshop', 'Marks the DC isolator of a solar system.', SIGN, sign('sun', 'SOLAR DC ISOLATOR', 'Turn off before work', 'info')),
   d('circuit-origin', 'Circuit origin', 'Electrical and workshop', 'Board, circuit number and breaker rating, for socket outlets and fixed equipment.', NARROW, lines('DB-2 · C14 · 20 A')),
   d('phase-markers', 'Phase markers', 'Electrical and workshop', 'L1, L2, L3 and N in black blocks, to cut apart.', [[40, 12], [50, 15], [75, 12], [50, 20], [40, 20]], {
@@ -627,6 +631,7 @@ const SIGN_DEFS: SignDef[] = [
   ['speed-limit', 'Speed limit', 'For car parks and yards.', 'gauge', '10 km/h', 'Speed limit', 'ban'],
   ['recycling-station', 'Recycling station', 'For a shared recycling area.', 'recycle', 'RECYCLING', 'Bottles, cans, paper', 'info'],
   ['general-waste', 'General waste', 'For a waste bin.', 'bin', 'GENERAL WASTE', 'No recycling', 'plain'],
+  ['used-batteries', 'Used batteries', 'For a box that collects flat batteries for recycling.', 'battery low', 'USED BATTERIES', 'Tape the ends', 'info'],
   ['fragile-roof', 'Do not climb', 'For shelves, racks and roofs that are not safe to climb.', 'not allowed', 'DO NOT CLIMB', '', 'ban'],
   ['this-door', 'Use other door', 'Sends people to a different entry.', 'big arrow right', 'USE OTHER DOOR', '', 'plain'],
   ['wifi-sign', 'Free Wi-Fi', 'Tells guests that Wi-Fi is available and where to ask.', 'wifi', 'FREE WI-FI', 'Ask at the counter', 'plain'],
