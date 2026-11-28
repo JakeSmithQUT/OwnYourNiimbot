@@ -23,6 +23,18 @@ export interface LabelProduct {
 
 export const LABELS: LabelProduct[] = catalogue as LabelProduct[];
 
+/** Largest roll size in mm that the app uses, the same as the printer check and the label file limits. */
+const MAX_ROLL_MM = { width: 300, length: 500 };
+
+/**
+ * True for a roll size that the app can use. Saved rolls come from the data
+ * folder, where another program can change them.
+ */
+export function rollSizeOk(widthMm: unknown, lengthMm: unknown): boolean {
+  const ok = (v: unknown, max: number) => typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= max;
+  return ok(widthMm, MAX_ROLL_MM.width) && ok(lengthMm, MAX_ROLL_MM.length);
+}
+
 /** Editor size (width × height as shown on screen) for a physical label on a model. */
 export function editorSize(widthMm: number, lengthMm: number, model: PrinterModel): { widthMm: number; heightMm: number } {
   return isRotated(model) ? { widthMm: lengthMm, heightMm: widthMm } : { widthMm, heightMm: lengthMm };

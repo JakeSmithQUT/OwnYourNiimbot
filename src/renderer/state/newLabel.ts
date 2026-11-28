@@ -2,6 +2,7 @@
 // dependency on the editor, so that the tests can use it.
 
 import type { LabelTemplate } from '../editor/template';
+import { LIMITS } from '../editor/validate';
 
 export interface NewLabelSettings {
   widthMm: number;
@@ -17,6 +18,15 @@ export interface RollSize {
 }
 
 const near = (a: number, b: number) => Math.abs(a - b) < 0.3;
+
+/**
+ * A label size inside the limits of label files, to 0.1 mm. The size can come
+ * from the printer or a saved roll, so every new or changed size goes through this.
+ */
+export function clampLabelSize(widthMm: number, heightMm: number): { widthMm: number; heightMm: number } {
+  const clamp = (v: number, max: number) => Math.round(Math.min(max, Math.max(LIMITS.minMm, Number.isFinite(v) ? v : LIMITS.minMm)) * 10) / 10;
+  return { widthMm: clamp(widthMm, LIMITS.maxWidthMm), heightMm: clamp(heightMm, LIMITS.maxHeightMm) };
+}
 
 /**
  * The first values of the New label dialog. They are the size and type of the

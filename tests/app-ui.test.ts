@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NAV } from '../src/renderer/nav';
 import { fitInside } from '../src/renderer/editor/imageFit';
-import { isNewLabelKey, newLabelCornerRadius, newLabelDefaults } from '../src/renderer/state/newLabel';
+import { clampLabelSize, isNewLabelKey, newLabelCornerRadius, newLabelDefaults } from '../src/renderer/state/newLabel';
 import { LabelType } from '../src/printer/protocol';
 
 describe('navigation rail', () => {
@@ -48,6 +48,13 @@ describe('new label', () => {
     expect(newLabelCornerRadius(last, 40, 30)).toBe(15);
     expect(newLabelCornerRadius(last, 40.1, 30)).toBe(15);
     expect(newLabelCornerRadius(last, 50, 30)).toBeUndefined();
+  });
+
+  it('keeps a new label size inside the label file limits', () => {
+    expect(clampLabelSize(40.04, 30)).toEqual({ widthMm: 40, heightMm: 30 });
+    // A saved roll that another program changed must not give a huge canvas.
+    expect(clampLabelSize(1e9, 1e9)).toEqual({ widthMm: 300, heightMm: 500 });
+    expect(clampLabelSize(Number.NaN, -5)).toEqual({ widthMm: 5, heightMm: 5 });
   });
 
   it('opens with Ctrl+N or Cmd+N', () => {

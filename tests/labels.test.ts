@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { savesAsNewLabel } from '../src/renderer/state/saveRules';
-import { compatibleLabels, editorSize, findLabelByBarcode, hasConfirmedLabels, LABELS, physicalSize } from '../src/printer/labels';
+import { compatibleLabels, editorSize, findLabelByBarcode, hasConfirmedLabels, LABELS, physicalSize, rollSizeOk } from '../src/printer/labels';
 import { findModelByName, MODELS } from '../src/printer/models';
 
 const model = (name: string) => {
@@ -75,5 +75,17 @@ describe('saving a renamed label', () => {
   it('saves a label that was never saved with its own new id', () => {
     expect(savesAsNewLabel('', 'Freezer', undefined)).toBe(false);
     expect(savesAsNewLabel('', 'Freezer v2', 'Freezer')).toBe(false);
+  });
+});
+
+describe('saved roll sizes', () => {
+  it('accepts only sizes inside the printer limits', () => {
+    expect(rollSizeOk(50, 30)).toBe(true);
+    expect(rollSizeOk(300, 500)).toBe(true);
+    expect(rollSizeOk(1e9, 30)).toBe(false);
+    expect(rollSizeOk(50, 501)).toBe(false);
+    expect(rollSizeOk(0, 30)).toBe(false);
+    expect(rollSizeOk(Number.NaN, 30)).toBe(false);
+    expect(rollSizeOk('50', 30)).toBe(false);
   });
 });

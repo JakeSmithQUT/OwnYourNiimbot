@@ -2,7 +2,7 @@ import { api } from '../api';
 import { createStore } from './store';
 import { printer, activeModel } from './printer';
 import { appStore, applyLabelSize, isTemplateBlank, toast } from './app';
-import { editorSize, findLabelByBarcode, labelName } from '../../printer/labels';
+import { editorSize, findLabelByBarcode, labelName, rollSizeOk } from '../../printer/labels';
 import { t } from '../i18n';
 
 /** Where the size of the loaded roll comes from. */
@@ -51,7 +51,7 @@ export async function loadRememberedRolls(): Promise<void> {
   const list = await api.store.list<RememberedRoll>('rolls');
   const remembered = rollMap();
   for (const r of list) {
-    if (r && typeof r.barcode === 'string' && typeof r.widthMm === 'number' && typeof r.lengthMm === 'number') remembered[r.barcode] = r;
+    if (r && typeof r.barcode === 'string' && rollSizeOk(r.widthMm, r.lengthMm)) remembered[r.barcode] = r;
   }
   rollStore.set({ remembered });
   update();

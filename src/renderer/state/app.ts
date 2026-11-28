@@ -1,9 +1,10 @@
 import { api, newId } from '../api';
 import { createStore } from './store';
 import { savesAsNewLabel } from './saveRules';
+import { clampLabelSize } from './newLabel';
 import { emptyTemplate, type Dataset, type LabelTemplate } from '../editor/template';
 import { editor } from '../editor/EditorController';
-import { LIMITS, validateTemplate } from '../editor/validate';
+import { validateTemplate } from '../editor/validate';
 import type { PrintVariant } from '../../printer/models';
 import type { LanguageCode } from '../../i18n/languages';
 import { setLanguage, t } from '../i18n';
@@ -161,10 +162,11 @@ export async function openTemplate(label: LabelTemplate): Promise<boolean> {
 }
 
 export async function newTemplate(widthMm: number, heightMm: number, labelType?: number, cornerRadiusMm?: number): Promise<void> {
-  const label = emptyTemplate(widthMm, heightMm, labelType);
+  const size = clampLabelSize(widthMm, heightMm);
+  const label = emptyTemplate(size.widthMm, size.heightMm, labelType);
   if (cornerRadiusMm !== undefined) label.cornerRadiusMm = cornerRadiusMm;
   appStore.set({ template: label, dirty: false, savedName: undefined, view: 'design' });
-  await editor.load(label.canvas, widthMm, heightMm);
+  await editor.load(label.canvas, size.widthMm, size.heightMm);
 }
 
 /**
@@ -190,10 +192,7 @@ export function isTemplateBlank(): boolean {
 
 /** Changes the size (and optionally the label type) of the open label. */
 export function applyLabelSize(widthMm: number, heightMm: number, labelType?: number): void {
-  // The size can come from the printer or a saved roll, so keep it inside the same limits as label files.
-  const clamp = (v: number, max: number) => Math.min(max, Math.max(LIMITS.minMm, Number.isFinite(v) ? v : LIMITS.minMm));
-  const w = Math.round(clamp(widthMm, LIMITS.maxWidthMm) * 10) / 10;
-  const h = Math.round(clamp(heightMm, LIMITS.maxHeightMm) * 10) / 10;
+  const { widthMm: w, heightMm: h } = clampLabelSize(widthMm, heightMm);
   if (editor.canvas) editor.setLabelSize(w, h);
   const label = appStore.get().template;
   appStore.set({ template: { ...label, widthMm: w, heightMm: h, labelType: labelType ?? label.labelType } });
