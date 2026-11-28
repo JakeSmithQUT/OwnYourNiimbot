@@ -333,7 +333,7 @@ export class NiimbotClient {
   async heartbeat(): Promise<PrinterStatus> {
     const p = await this.request(Req.Heartbeat, [1], HEARTBEAT_RESPONSES, 1500);
     const prev = this.status;
-    this.status = parseHeartbeat(p.data);
+    this.status = parseHeartbeat(p.data, this.info.modelId);
     if (this.status.batteryLevel !== undefined) this.info.batteryLevel = this.status.batteryLevel;
     // A closed cover, newly loaded labels or a new tag read can mean a different roll.
     const became = (a: boolean | undefined, b: boolean | undefined) => a === false && b === true;
@@ -551,7 +551,14 @@ function formatSerial(data: Uint8Array): string {
   return toHex(data).replace(/ /g, '').toUpperCase();
 }
 
-export function parseHeartbeat(d: Uint8Array): PrinterStatus {
+/**
+ * Models whose heartbeat cover byte is the other way round: 1 means closed.
+ * They are the D11, Fust, D11S, B3S P, A8 P, S6 P, B16, D110, D101, B18, H1,
+ * H1S and C1. The list comes from the heartbeat notes at printers.niim.blue.
+ */
+const COVER_BYTE_INVERTED = new Set([512, 513, 514, 272, 273, 274, 1792, 2304, 2560, 3584, 3840, 4352, 5120]);
+
+export function parseHeartbeat(d: Uint8Array, modelId?: number): PrinterStatus {
   let closing: number | undefined;
   let power: number | undefined;
   let paper: number | undefined;
@@ -582,8 +589,9 @@ export function parseHeartbeat(d: Uint8Array): PrinterStatus {
       closing = d[8];
       break;
   }
+  const inverted = modelId !== undefined && COVER_BYTE_INVERTED.has(modelId);
   return {
-    lidClosed: closing === undefined ? undefined : closing === 0,
+    lidClosed: closing === undefined ? undefined : (closing === 0) !== inverted,
     paperLoaded: paper === undefined ? undefined : paper === 0,
     rfidRead: rfid === undefined ? undefined : rfid !== 0,
     batteryLevel: power,

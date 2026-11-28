@@ -175,7 +175,7 @@ The heartbeat response length changes with the model. The app reads these bytes:
 | 19 | byte 15 | byte 16 | byte 17 | byte 18 |
 | 20 | | | byte 18 | byte 19 |
 
-For the cover and the labels, 0 means closed and loaded.
+For the cover and the labels, 0 means closed and loaded. Some models send the cover byte the other way round, with 1 for closed: the D11, Fust, D11S, B3S P, A8 P, S6 P, B16, D110, D101, B18, H1, H1S and C1 (model IDs 512, 513, 514, 272, 273, 274, 1792, 2304, 2560, 3584, 3840, 4352 and 5120). `parseHeartbeat` reverses the cover value for these model IDs.
 
 The RFID response (`1B`) starts with `00` when no tag is found. Otherwise it contains these fields in sequence:
 

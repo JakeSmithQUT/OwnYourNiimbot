@@ -119,6 +119,21 @@ describe('status parsing', () => {
     expect(parseHeartbeat(d)).toMatchObject({ lidClosed: true, batteryLevel: 4, paperLoaded: true, rfidRead: true });
   });
 
+  it('reads the cover the other way round for the D110 and similar models', () => {
+    // A 10-byte heartbeat from a D110 (model ID 2304): 1 in byte 8 means that the cover is closed.
+    const d = new Uint8Array(10);
+    d[8] = 1;
+    d[9] = 4;
+    expect(parseHeartbeat(d, 2304).lidClosed).toBe(true);
+    d[8] = 0;
+    expect(parseHeartbeat(d, 2304).lidClosed).toBe(false);
+    // The B1 (4096) and a printer without a known model use 0 for closed.
+    expect(parseHeartbeat(d, 4096).lidClosed).toBe(true);
+    expect(parseHeartbeat(d).lidClosed).toBe(true);
+    // A heartbeat without a cover byte gives no cover state.
+    expect(parseHeartbeat(new Uint8Array(20), 2304).lidClosed).toBeUndefined();
+  });
+
   it('reads RFID label data', () => {
     const enc = new TextEncoder();
     const barcode = enc.encode('6972842743589');
