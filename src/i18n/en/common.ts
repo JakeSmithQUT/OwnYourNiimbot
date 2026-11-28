@@ -24,6 +24,7 @@ export const common = {
   'app.labelName': 'Label name',
   'app.notSaved': 'Not saved',
   'app.saveTitle': 'Save (Ctrl+S)',
+  'app.newLabelTitle': 'New label (Ctrl+N)',
   'app.print': 'Print',
   'app.printTitle': 'Print (Ctrl+P)',
   'app.connectPrinter': 'Connect printer',
@@ -33,6 +34,7 @@ export const common = {
   'lang.choose': 'Choose the language of the app',
 
   'menu.file': 'File',
+  'menu.newLabel': 'New label…',
   'menu.exit': 'Exit',
   'menu.edit': 'Edit',
   'menu.undo': 'Undo',

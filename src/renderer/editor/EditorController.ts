@@ -15,7 +15,8 @@ import {
 } from 'fabric';
 import { LabelBarcode, LabelTable, barcodeFormat, renderBars } from './objects';
 import { oyn, type OynData } from './render';
-import { DEFAULT_IMAGE_SETTINGS, processImage, type ImageSettings } from './imageProcessing';
+import { DEFAULT_IMAGE_SETTINGS, loadImage, processImage, type ImageSettings } from './imageProcessing';
+import { fitInside } from './imageFit';
 import { formatDate, formatSerial, type SerialSettings } from './placeholders';
 import { mmToUnits, ptToUnits, UNITS_PER_MM } from './units';
 import { outsideArea, type PrintArea } from '../../printer/printArea';
@@ -96,6 +97,7 @@ export class EditorController {
   private listeners = new Set<Listener>();
   private contentListeners = new Set<Listener>();
   private menuListeners = new Set<(req: ContextMenuRequest) => void>();
+  private imageListeners = new Set<(target: FabricImage) => void>();
   private history: string[] = [];
   private historyIndex = -1;
   private suspendHistory = false;
@@ -118,6 +120,12 @@ export class EditorController {
   onContextMenu(fn: (req: ContextMenuRequest) => void): () => void {
     this.menuListeners.add(fn);
     return () => this.menuListeners.delete(fn);
+  }
+
+  /** Called when the user double-clicks an image element. */
+  onImageDoubleClick(fn: (target: FabricImage) => void): () => void {
+    this.imageListeners.add(fn);
+    return () => this.imageListeners.delete(fn);
   }
 
   /** Notifies React that something changed. */
@@ -163,6 +171,8 @@ export class EditorController {
     canvas.on('after:render', () => this.drawGuides());
     canvas.on('mouse:dblclick', (e: TPointerEventInfo) => {
       if (e.target instanceof LabelTable || e.target instanceof LabelBarcode) this.emit();
+      const target = e.target;
+      if (target instanceof FabricImage && this.kindOf(target) === 'image') for (const fn of this.imageListeners) fn(target);
     });
     canvas.on('contextmenu', ({ e, target }) => {
       if (!target || (target as { isEditing?: boolean }).isEditing) return;
@@ -502,10 +512,9 @@ export class EditorController {
 
   /** Loads an image, scaled to fit in maxW × maxH, and converts it at print resolution. */
   private async newImage(dataUrl: string, settings: ImageSettings, maxW: number, maxH: number): Promise<FabricImage> {
-    const probe = await util.loadImage(dataUrl);
-    const scale = Math.min(maxW / probe.width, maxH / probe.height);
-    const targetW = probe.width * scale;
-    const targetH = probe.height * scale;
+    // The app's own loader, so that a file that is not an image gives a short message without the file data.
+    const probe = await loadImage(dataUrl);
+    const { width: targetW, height: targetH } = fitInside(maxW, maxH, probe.naturalWidth, probe.naturalHeight);
     const processed = await processImage(dataUrl, (targetW / UNITS_PER_MM) * this.dotsPerMm, (targetH / UNITS_PER_MM) * this.dotsPerMm, settings);
     const img = await FabricImage.fromURL(processed);
     img.set({ imageSmoothing: false });
@@ -529,6 +538,28 @@ export class EditorController {
     this.canvas?.requestRenderAll();
     this.recordHistory();
     this.emit();
+  }
+
+  /**
+   * Puts a new picture in an image element. The picture fits inside the box of
+   * the element and keeps its aspect ratio. It gets the centre, rotation, layer
+   * and black and white settings of the element, and is converted at the
+   * resolution of the selected printer. The change is one undo step.
+   */
+  async replaceImage(old: FabricObject, dataUrl: string): Promise<FabricImage | undefined> {
+    const canvas = this.canvas;
+    if (!canvas || this.kindOf(old) !== 'image' || oyn(old).locked) return undefined;
+    const settings: ImageSettings = { ...DEFAULT_IMAGE_SETTINGS, ...(oyn(old).settings as Partial<ImageSettings> | undefined) };
+    const img = await this.newImage(dataUrl, settings, old.getScaledWidth(), old.getScaledHeight());
+    // The label can change, or the element can go, while the image loads.
+    if (this.canvas !== canvas) return undefined;
+    const index = canvas.getObjects().indexOf(old);
+    if (index < 0) return undefined;
+    img.set({ angle: old.angle ?? 0, flipX: old.flipX, flipY: old.flipY, opacity: old.opacity });
+    img.setPositionByOrigin(old.getCenterPoint(), 'center', 'center');
+    img.setCoords();
+    this.swap(old, img, index);
+    return img;
   }
 
   async addSvg(svg: string, name: string): Promise<FabricObject | undefined> {
@@ -629,13 +660,23 @@ export class EditorController {
     if (this.canvas !== canvas) return undefined;
     const index = canvas.getObjects().indexOf(old);
     if (index < 0) return undefined;
+    this.swap(old, obj, index);
+    return obj;
+  }
+
+  /**
+   * Puts a new element in the layer of an old one and selects it. The removal
+   * and the addition record one history step together.
+   */
+  private swap(old: FabricObject, obj: FabricObject, index: number): void {
+    const canvas = this.canvas;
+    if (!canvas) return;
     canvas.discardActiveObject();
     canvas.remove(old);
     canvas.insertAt(index, obj);
     canvas.setActiveObject(obj);
     canvas.requestRenderAll();
     this.emit();
-    return obj;
   }
 
   /** Text that a replacement can keep: the words of a text element or the value of a code. */

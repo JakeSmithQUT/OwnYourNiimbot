@@ -53,6 +53,8 @@ export interface AppState {
   settings: Settings;
   printOpen: boolean;
   connectOpen: boolean;
+  /** The open step of a new label: save the changes of the open label, or choose the size. */
+  newLabel?: 'save' | 'size';
   toast?: { text: string; kind: 'info' | 'error' | 'success'; id: number };
 }
 
@@ -158,10 +160,22 @@ export async function openTemplate(label: LabelTemplate): Promise<boolean> {
   return true;
 }
 
-export async function newTemplate(widthMm: number, heightMm: number, labelType?: number): Promise<void> {
+export async function newTemplate(widthMm: number, heightMm: number, labelType?: number, cornerRadiusMm?: number): Promise<void> {
   const label = emptyTemplate(widthMm, heightMm, labelType);
+  if (cornerRadiusMm !== undefined) label.cornerRadiusMm = cornerRadiusMm;
   appStore.set({ template: label, dirty: false, savedName: undefined, view: 'design' });
   await editor.load(label.canvas, widthMm, heightMm);
+}
+
+/**
+ * Starts a new label from the New label button, Ctrl+N or the File menu. If
+ * the open label has changes that are not saved, the app asks to save them
+ * first. Then it asks for the size and type. Does nothing while a dialog is open.
+ */
+export function requestNewLabel(): void {
+  const { newLabel, printOpen, connectOpen, dirty } = appStore.get();
+  if (newLabel || printOpen || connectOpen) return;
+  appStore.set({ newLabel: dirty ? 'save' : 'size' });
 }
 
 export function confirmDiscard(): boolean {

@@ -8,7 +8,7 @@ A free desktop app to design and print labels on NIIMBOT label printers (also se
 
 ## Features
 
-- **Label editor**: text, barcodes, QR codes, Data Matrix, PDF417, Aztec, images, shapes, lines, tables and 571 symbols, which include 126 cute animals (koala, wombat, quokka, kangaroo, platypus and others, each with four expressions). Right-click an element to replace it with a different type.
+- **Label editor**: text, barcodes, QR codes, Data Matrix, PDF417, Aztec, images, shapes, lines, tables and 571 symbols, which include 126 cute animals (koala, wombat, quokka, kangaroo, platypus and others, each with four expressions). Right-click an element to replace it with a different type. Double-click an image to put a new picture in its place.
 - **Template library**: 532 ready-made designs for IT, cables, the kitchen, retail, shipping, the workshop, school, events and more, filtered to the printer and the roll that you use.
 - **Batch printing**: one label for each row of an Excel, CSV or TSV file, or of a table that you paste.
 - **Serial numbers and dates**: count up on each label, and calculate best-before or expiry dates.
@@ -58,7 +58,7 @@ The printer does not need to be paired in the system settings. The app remembers
 
 ## Design and print a label
 
-1. On the **Labels** page, click **New label**. Or start from a design on the **Templates** page.
+1. Click **New label** at the top of the **Design** page or on the **Labels** page, or press Ctrl+N. The app asks for the size and type of the label. Or start from a design on the **Templates** page.
 2. Add elements from the **Insert** panel on the left. Select an element to change it in the panel on the right.
 3. Click **Print**, check the preview, set the copies and the density, and click **Print**.
 

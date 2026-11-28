@@ -44,7 +44,7 @@
 
 The editor stores positions and sizes in units of 0.1 mm. A 50 × 30 mm label is 500 × 300 units. At print time, the label is rendered at the resolution of the printer and converted to 1 bit with a threshold.
 
-Barcodes are drawn with a whole number of dots for each module, so that the printed code scans reliably. Images are converted to black and white when you insert or resize them, at the resolution of the selected printer.
+Barcodes are drawn with a whole number of dots for each module, so that the printed code scans reliably. Images are converted to black and white when you insert, replace or resize them, at the resolution of the selected printer.
 
 ## Add a template
 

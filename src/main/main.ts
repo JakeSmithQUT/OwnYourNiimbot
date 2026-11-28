@@ -629,7 +629,12 @@ function buildMenu(): void {
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
     {
       label: tm('menu.file'),
-      submenu: [isMac ? { role: 'close', label: tm('menu.closeWindow') } : { role: 'quit', label: tm('menu.exit') }],
+      submenu: [
+        // The window opens the New label dialog. It also handles the shortcut itself, so a second request does nothing.
+        { label: tm('menu.newLabel'), accelerator: 'CmdOrCtrl+N', click: () => mainWindow?.webContents.send('menu:newLabel') },
+        { type: 'separator' },
+        isMac ? { role: 'close', label: tm('menu.closeWindow') } : { role: 'quit', label: tm('menu.exit') },
+      ],
     },
     {
       label: tm('menu.edit'),

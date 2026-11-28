@@ -102,6 +102,8 @@ const api = {
     /** Tells the main process the language for menus and system dialogs. */
     setLanguage: (code: string): Promise<void> => ipcRenderer.invoke('app:setLanguage', code),
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke('app:openExternal', url),
+    /** New label in the File menu. */
+    onNewLabel: (cb: () => void) => listen('menu:newLabel', cb),
   },
 };
 

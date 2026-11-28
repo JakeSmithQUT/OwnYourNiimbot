@@ -19,13 +19,16 @@ export const views = {
   'labels.library.text': 'The template library has labels for servers, cables, storage, food, retail, shipping and more.',
   'labels.library.open': 'Open the template library',
 
-  // Labels view, New label dialog
+  // New label dialog, from the Labels view, the Design view and the File menu
   'labels.new.title': 'New label',
   'labels.new.create': 'Create',
   'labels.new.roll': 'NIIMBOT roll for the {model}',
   'labels.new.rollSelected': 'The roll in the printer is selected.',
   'labels.new.width': 'Width',
   'labels.new.height': 'Height',
+  'labels.new.saveTitle': 'Save the changes?',
+  'labels.new.saveText': 'The label "{name}" has changes that are not saved. Save them before you make a new label?',
+  'labels.new.dontSave': "Don't save",
 
   // Templates view (template library)
   'templates.title': 'Template library',

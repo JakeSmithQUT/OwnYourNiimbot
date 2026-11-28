@@ -171,6 +171,7 @@ export const editor = {
 
   // Right-click menu of an element
   'element.menu': 'Element',
+  'element.replaceImage': 'Replace image…',
   'element.replaceWith': 'Replace with',
   'element.replaceOne': 'Select one element to replace it',
   'element.replaceUnlock': 'Unlock the element to replace it',

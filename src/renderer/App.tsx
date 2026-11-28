@@ -1,23 +1,10 @@
 import { useEffect } from 'react';
-import {
-  BatteryMedium,
-  Bluetooth,
-  CircleAlert,
-  CircleCheck,
-  Database,
-  FolderOpen,
-  History,
-  Info,
-  LayoutTemplate,
-  PenTool,
-  Printer as PrinterIcon,
-  Save,
-  Settings as SettingsIcon,
-  Tag,
-  Usb,
-} from 'lucide-react';
-import { appStore, loadSettings, markDirty, saveTemplate, type View } from './state/app';
+import { BatteryMedium, Bluetooth, CircleAlert, CircleCheck, FilePlus2, Info, Printer as PrinterIcon, Save, Settings as SettingsIcon, Tag, Usb } from 'lucide-react';
+import { appStore, loadSettings, markDirty, requestNewLabel, saveTemplate } from './state/app';
+import { isNewLabelKey } from './state/newLabel';
 import { usePrinter } from './state/printer';
+import { api } from './api';
+import { NAV } from './nav';
 import { editor } from './editor/EditorController';
 import { batteryPercent } from '../printer/client';
 import { DesignView } from './views/DesignView';
@@ -34,17 +21,8 @@ import { ConnectDialog } from './components/ConnectDialog';
 import { startUpdateTracking, UpdateBanner, UpdatePill } from './components/Updates';
 import { WhatsNew } from './components/WhatsNew';
 import { LanguageMenu } from './components/LanguageMenu';
+import { NewLabelDialog } from './components/NewLabelDialog';
 import { t, useLanguage } from './i18n';
-import type { MessageKey } from '../i18n/translate';
-
-const NAV: { view: View; label: MessageKey; icon: typeof PenTool }[] = [
-  { view: 'design', label: 'app.nav.design', icon: PenTool },
-  { view: 'library', label: 'app.nav.templates', icon: LayoutTemplate },
-  { view: 'templates', label: 'app.nav.labels', icon: FolderOpen },
-  { view: 'data', label: 'app.nav.data', icon: Database },
-  { view: 'printer', label: 'app.nav.printer', icon: PrinterIcon },
-  { view: 'history', label: 'app.nav.history', icon: History },
-];
 
 export function App() {
   const state = appStore.use();
@@ -57,7 +35,12 @@ export function App() {
     startRollTracking();
     startMcpHandlers();
     startUpdateTracking();
-    return editor.onContentChange(() => markDirty());
+    const offMenu = api.app.onNewLabel(() => requestNewLabel());
+    const offContent = editor.onContentChange(() => markDirty());
+    return () => {
+      offMenu();
+      offContent();
+    };
   }, []);
 
   useEffect(() => {
@@ -81,6 +64,10 @@ export function App() {
       } else if (mod && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         appStore.set({ printOpen: true });
+      } else if (isNewLabelKey(e)) {
+        // The File menu has the same shortcut. requestNewLabel does nothing when the dialog is already open.
+        e.preventDefault();
+        requestNewLabel();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -126,9 +113,14 @@ export function App() {
           {state.view === 'design' && state.dirty && <span className="muted">{t('app.notSaved')}</span>}
           <div className="grow" />
           {state.view === 'design' && (
-            <button className="btn" onClick={() => void saveTemplate()} title={t('app.saveTitle')}>
-              <Save size={16} /> {t('common.save')}
-            </button>
+            <>
+              <button className="btn" onClick={requestNewLabel} title={t('app.newLabelTitle')}>
+                <FilePlus2 size={16} /> {t('labels.newLabel')}
+              </button>
+              <button className="btn" onClick={() => void saveTemplate()} title={t('app.saveTitle')}>
+                <Save size={16} /> {t('common.save')}
+              </button>
+            </>
           )}
           <UpdatePill />
           <button className="printer-pill" onClick={() => (p.connected ? appStore.set({ view: 'printer' }) : appStore.set({ connectOpen: true }))}>
@@ -167,6 +159,7 @@ export function App() {
 
       {state.printOpen && <PrintDialog onClose={() => appStore.set({ printOpen: false })} />}
       {state.connectOpen && <ConnectDialog onClose={() => appStore.set({ connectOpen: false })} />}
+      <NewLabelDialog />
       <WhatsNew />
       {state.toast && (
         <div className={`toast ${state.toast.kind}`}>

@@ -92,6 +92,7 @@ function browserApi(): DesktopApi {
       openExternal: async (url: string) => {
         window.open(url, '_blank', 'noopener');
       },
+      onNewLabel: noop,
     },
   };
 }

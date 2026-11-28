@@ -1,5 +1,7 @@
+import type { FabricObject } from 'fabric';
 import { api } from '../api';
 import { t } from '../i18n';
+import { editor } from './EditorController';
 
 const IMAGE_TYPES: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
 
@@ -9,4 +11,10 @@ export async function pickImage(): Promise<string | null> {
   if (!file) return null;
   const ext = file.name.split('.').pop()?.toLowerCase() ?? 'png';
   return `data:${IMAGE_TYPES[ext] ?? 'image/png'};base64,${file.data}`;
+}
+
+/** Asks for an image file and puts it in an image element. Does nothing if the user cancels. */
+export async function replaceImageFromFile(target: FabricObject): Promise<void> {
+  const dataUrl = await pickImage();
+  if (dataUrl) await editor.replaceImage(target, dataUrl);
 }

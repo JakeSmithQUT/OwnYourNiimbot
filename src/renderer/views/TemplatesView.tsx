@@ -1,75 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
 import { api, newId } from '../api';
-import { appStore, confirmDiscard, newTemplate, openTemplate, toast } from '../state/app';
+import { appStore, confirmDiscard, openTemplate, requestNewLabel, toast } from '../state/app';
 import type { LabelTemplate } from '../editor/template';
 import { isPreview, validateTemplate } from '../editor/validate';
-import { LabelPicker } from '../components/LabelPicker';
-import { activeModel, usePrinter } from '../state/printer';
-import { rollEditorSize, rollStore } from '../state/roll';
-import { Field, Modal, NumberInput } from '../components/ui';
 import { t } from '../i18n';
 
 function formatDate(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function NewLabelDialog(props: { onClose: () => void }) {
-  usePrinter();
-  const model = activeModel();
-  const { roll } = rollStore.use();
-  // The default size in the model table is already in screen orientation.
-  const start = (roll && rollEditorSize(roll)) ?? { widthMm: model.defaultLabelMm.width, heightMm: model.defaultLabelMm.height };
-  const [w, setW] = useState(start.widthMm);
-  const [h, setH] = useState(start.heightMm);
-  const [labelType, setLabelType] = useState<number | undefined>(roll?.labelType);
-  const create = () => {
-    void newTemplate(w, h, labelType);
-    props.onClose();
-  };
-  return (
-    <Modal
-      title={t('labels.new.title')}
-      onClose={props.onClose}
-      footer={
-        <>
-          <button className="btn" onClick={props.onClose}>
-            {t('common.cancel')}
-          </button>
-          <button className="btn primary" onClick={create}>
-            {t('labels.new.create')}
-          </button>
-        </>
-      }
-    >
-      <Field label={t('labels.new.roll', { model: model.name })} hint={roll?.widthMm ? t('labels.new.rollSelected') : undefined}>
-        <LabelPicker
-          model={model}
-          widthMm={w}
-          heightMm={h}
-          labelType={labelType}
-          onPick={(p) => {
-            setW(p.widthMm);
-            setH(p.heightMm);
-            setLabelType(p.labelType);
-          }}
-        />
-      </Field>
-      <div className="field-row">
-        <Field label={t('labels.new.width')}>
-          <NumberInput unit="mm" min={5} max={300} value={w} onChange={setW} />
-        </Field>
-        <Field label={t('labels.new.height')}>
-          <NumberInput unit="mm" min={5} max={500} value={h} onChange={setH} />
-        </Field>
-      </div>
-    </Modal>
-  );
-}
-
 export function TemplatesView() {
   const [items, setItems] = useState<LabelTemplate[]>([]);
-  const [creating, setCreating] = useState(false);
 
   const reload = async () => {
     const list = await api.store.list<LabelTemplate>('templates');
@@ -134,12 +76,7 @@ export function TemplatesView() {
           <button className="btn" onClick={() => void importFile()}>
             <Upload size={15} /> {t('labels.import')}
           </button>
-          <button
-            className="btn primary"
-            onClick={() => {
-              if (confirmDiscard()) setCreating(true);
-            }}
-          >
+          <button className="btn primary" onClick={requestNewLabel}>
             <FilePlus2 size={15} /> {t('labels.newLabel')}
           </button>
         </div>
@@ -183,8 +120,6 @@ export function TemplatesView() {
           {t('labels.library.open')}
         </button>
       </div>
-
-      {creating && <NewLabelDialog onClose={() => setCreating(false)} />}
     </div>
   );
 }

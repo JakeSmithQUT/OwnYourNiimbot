@@ -41,7 +41,7 @@ import { activeModel, usePrinter } from '../state/printer';
 import { PropertiesPanel } from '../components/PropertiesPanel';
 import { COMMON_ICONS, ICON_GROUPS, ICONS, iconSvg, searchIcons, type SymbolEntry } from '../editor/icons';
 import { oyn } from '../editor/render';
-import { pickImage } from '../editor/pickImage';
+import { pickImage, replaceImageFromFile } from '../editor/pickImage';
 import { pixelsPerMm } from '../../printer/models';
 import { rollEditorSize, rollStore, applyRollSize } from '../state/roll';
 import { SOURCE_TEXT } from '../components/LabelPicker';
@@ -279,10 +279,25 @@ function Stage() {
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
+  // A double-click on an image opens the file picker for a new picture.
+  useEffect(
+    () =>
+      editor.onImageDoubleClick((target) => {
+        if (oyn(target).locked) {
+          toast(t('element.replaceUnlock'));
+          return;
+        }
+        replaceImageFromFile(target).catch((err: unknown) => toast((err as Error).message, 'error'));
+      }),
+    [],
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return;
+      // Keys in a dialog, for example on its buttons, do not change the label behind it.
+      if (target.closest?.('[role="dialog"]')) return;
       const active = editor.active as unknown as { isEditing?: boolean } | undefined;
       if (active?.isEditing) return;
       const mod = e.ctrlKey || e.metaKey;

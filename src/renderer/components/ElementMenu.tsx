@@ -12,6 +12,7 @@ import {
   Copy,
   Hash,
   Image as ImageIcon,
+  ImageUp,
   Lock,
   Minus,
   QrCode,
@@ -28,7 +29,7 @@ import {
 } from 'lucide-react';
 import { editor, type ContextMenuRequest, type ElementKind } from '../editor/EditorController';
 import { iconSvg, searchIcons } from '../editor/icons';
-import { pickImage } from '../editor/pickImage';
+import { pickImage, replaceImageFromFile } from '../editor/pickImage';
 import { oyn } from '../editor/render';
 import { toast } from '../state/app';
 import { t } from '../i18n';
@@ -318,6 +319,17 @@ export function ElementMenu() {
         onKeyDown={onMenuKey}
         onContextMenu={(e) => e.preventDefault()}
       >
+        {current === 'image' && (
+          <Item
+            icon={ImageUp}
+            label={t('element.replaceImage')}
+            disabled={locked}
+            title={locked ? t('element.replaceUnlock') : undefined}
+            onClick={run(() => replaceImageFromFile(target))}
+            onHover={() => setPanel('none')}
+            onFocus={() => setPanel('none')}
+          />
+        )}
         <div ref={replaceRef} className="ctx-row">
           <Item
             icon={Replace}
