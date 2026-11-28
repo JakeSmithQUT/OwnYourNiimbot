@@ -3,6 +3,10 @@
 // versions and their notes. The release workflow puts the English notes of a
 // version on its GitHub release.
 export const changelog = {
+  'changelog.1.11.0.replaceImage': 'Double-click an image, or right-click it and click Replace image, to put a new picture in the same place and size.',
+  'changelog.1.11.0.newLabel': 'Start a new label from the Design page with New label or Ctrl+N, with the size and type of your last label.',
+  'changelog.1.11.0.sideBar': 'Labels is now above Templates in the side bar.',
+  'changelog.1.11.0.cover': 'The Printer page shows the correct cover state on the D110 and similar printers.',
   'changelog.1.10.1.templates': 'Three new templates: a smoke alarm record, a ladder inspection record and a sign for used batteries.',
   'changelog.1.10.0.whatsnew': "What's new shows the release notes in the app, in your language.",
   'changelog.1.10.0.settings': "Open What's new at any time from Updates in Settings.",
